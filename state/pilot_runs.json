@@ -12,6 +12,16 @@
       "status": "completed_success",
       "updatedAt": "2026-10-16T20:24:08.650642+00:00",
       "workflow": "runner-dispatch-canary.yml"
+    },
+    {
+      "canary": "runner-canary-38967023305-stock",
+      "coordinatorRunId": 38967023305,
+      "createdAt": "2026-10-16T21:06:29.824655+00:00",
+      "id": "pilot:stock:2026-10-18",
+      "repo": "chaonpu/Stock",
+      "status": "reserved",
+      "updatedAt": "2026-10-16T21:06:29.824655+00:00",
+      "workflow": "runner-dispatch-canary.yml"
     }
   ]
 }
