@@ -19,11 +19,10 @@ TARGETS = {
     "stock": ("chaonpu/Stock", "CHAONPU_ACTIONS_READ_TOKEN"),
     "test": ("anwpustudent-lab/Test", "TEST_ACTIONS_READ_TOKEN"),
     "signer": ("chaonpu/ziwuxilv-android", "CHAONPU_ACTIONS_READ_TOKEN"),
-    "publish": ("chaonpu/ziwuxilv", "CHAONPU_ACTIONS_READ_TOKEN"),
 }
 WORKFLOW = "runner-dispatch-canary.yml"
 USER_AGENT = "ziwuxilv-coordinator-permission-canary/1.0"
-ID = re.compile(r"^runner-canary-[0-9]{8,20}-(stock|test|signer|publish)$")
+ID = re.compile(r"^runner-canary-[0-9]{8,20}-(stock|test|signer)$")
 
 def payload(target: str, github_run_id: str) -> tuple[str, dict, str]:
     if target not in TARGETS:
