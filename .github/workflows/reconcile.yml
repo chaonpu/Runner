@@ -1,8 +1,6 @@
-name: Reconcile dispatched tasks (cloud, monitor only)
+name: Manual exceptional task reconciliation (no schedule)
 
 on:
-  schedule:
-    - cron: "*/5 * * * *"
   workflow_dispatch:
 
 permissions:
@@ -35,7 +33,7 @@ jobs:
       - name: Confirm no automatic retry or release until full handoff validation
         run: echo 'Monitor only. No dispatch, cancellation, compensation, ledger write or publication.'
   finalize-noop-stock-pilot:
-    name: Persist verified no-op pilot completion (no business dispatch)
+    name: Manual recovery of verified no-op pilot completion only
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
     timeout-minutes: 5
