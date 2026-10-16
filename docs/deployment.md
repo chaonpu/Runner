@@ -1,10 +1,19 @@
 # 统一调度中心部署与迁移计划（2026-10-17）
 
+## 2026-10-17 新入口：正式调度仅开放只读安全验收
+
+- 已创建 `.github/workflows/production-dispatch.yml`（仅 `workflow_dispatch`、管理员 `chaonpu`、`main`；全 Job `permissions: contents:read`）。当前仅允许 A股、美股业务日期的**只读安全门**，没有真实 `dispatch`、无登记表 PUT、无 database 写入、无 APK 发布、无定时任务。
+- `scheduler/production_dry_run.py` 先验证自身 GitHub workflow/ref/actor/首次 Run、完整日历日期、任务白名单及**仍关闭**的全局和单任务派发开关。使用只读 `GH_TOKEN` 经 GitHub Contents REST GET **实时**获取公开任务登记，然后复用 `scheduler.preflight` 做只读账户额度和现存运行检查；即使路由建议为 cloud，也强制输出 `dispatchAuthorized=false` 等全关状态。
+- `scheduler/production_store.py` 修复 GitHub Base64 内容换行兼容，仅剔除 CR/LF，不接受其它非法字符；已加入回归测试。
+- [Runner 安全测试 #38973465844](https://github.com/chaonpu/Runner/actions/runs/38973465844) **116/116 通过**。这是 GitHub-hosted 对代码和工作流边界的安全验收，**不是**新入口真实手工执行、也**不是**生产执行端到端验收。
+- Stock 双侧核验器的 RUNNER 输入已同步为 `task` + `business_date`，与 `production-dispatch.yml` 实际输入一致。 [Stock Windows 回归 #38973623420](https://github.com/chaonpu/Stock/actions/runs/38973623420) **56/56 通过**，临时 push 测试触发随后已移除，核验工作流恢复手动-only。
+- 真正的 `verified` 必须独立核验完成的协调 Run、Stock Run、实际数据库版本，并处理来源及任务输入缺失；**目前不允许**由只读入口写入 `verified`，也不会自动补算。需要后续单独完成安全副作用验收，才考虑连接派发。
+
 ## 2026-10-17 继续跟进：双 Run ID + 私有回执 + 公开登记只读交叉核验
 
 - Stock 正式 A股、美股工作流新增可选 `coordinator_run_id`；当 `task_id` 非空时，两者必须成对有效，否则任务在真正运行策略前终止。回执中新加入 `coordinatorRunId`，并在后续私有 Git 提交验证时检查（GitHub REST 若返回调度输入，还校对输入中的原始 Run ID）。
 - 私有 `private_coordinator_link.py` 在手动只读诊断中取得公开 Runner 的 `config/repositories.json`、`state/tasks.json` 和原调度 Run，结合 Stock 目标 Run 及私有提交验证结果，拒绝任何 task ID、两侧 Run ID、仓库、工作流、时间口径或结果错配。公开 HTTP GET 不携带私有 PAT；数据库及持仓绝不复制到公开 RUNNER。
-- `private-effect-probe.yml` 已恢复为只有人工 `workflow_dispatch`，当提供准确的 `database_commit_sha` 时再进行双仓核查。**当前生产 RUNNER `production-dispatch.yml` 尚未部署**，公开生产注册状态 `state/tasks.json` 仍为空，因此只验证代码契约，没有可供真实生产验收的同源 Run。
+- `private-effect-probe.yml` 已恢复为只有人工 `workflow_dispatch`，当提供准确的 `database_commit_sha` 时再进行双仓核查。**当前 `production-dispatch.yml` 已部署但只读、禁止生产派发**，公开生产注册状态 `state/tasks.json` 仍为空，因此只验证代码契约，没有可供真实生产验收的同源 Run。
 - [Stock Windows 合成安全测试 #38972769647](https://github.com/chaonpu/Stock/actions/runs/38972769647)：**56/56 通过**；测试后移除了临时 push 触发，不影响用户既有工作流。
 - 即使证据在模拟中完全一致，检查器也不允许写入 `verified`、自动补偿或自动重新派发，维持 `coordinatorVerified=false`、`businessVerified=false`、`safeToRetry=false`。下一步需先部署**默认禁用/只读**的生产调度入口、完成与真实私有策略的一次非重复日期验收，再设计最终写入许可门禁，切勿提前开启正式派发。
 
@@ -39,7 +48,7 @@
 
 本节是**当前实施规则**；下文关于“五分钟定时复核”的文字只是迁移历史，不再代表当前配置。
 
-- 已逐一检查 `Runner/.github/workflows/` 的全部七个工作流：**无任何 `schedule`/cron 触发器**。
+- 已逐一检查 `Runner/.github/workflows/` 的全部八个工作流：**无任何 `schedule`/cron 触发器**。
 - 正常路径：手动启动 `stock-noop-pilot.yml` → 原子登记测试日期 → 唯一 `workflow_dispatch` 派发私有 Stock 无业务 canary → 保存返回的准确 Run ID → **同一个 GitHub-hosted Ubuntu Job** 每约 30 秒 GET 该 Run 的实际状态 → 完成后先核验目标仓库、工作流、事件、分支、Run ID、结论，再原子写回 `completed_success` 或 `completed_failure`，**随后退出，没有常驻后台轮询器**。
 - 监控最长约 50 分钟，Job 上限 60 分钟。GitHub API 连续失败、任务长时间排队、Runner 离线、状态或身份不可信时停止并保留同一 Run 的登记，**不重派、不重算、不修改正式账本**。
 - `stock-noop-pilot.yml` 的 `mode=monitor_only` 仅供有必要时**手动**恢复原 Run 的监控，绝不重新执行业务；`reconcile.yml` 也已改成只有 `workflow_dispatch` 的手动异常核对入口，不会自行启动。
