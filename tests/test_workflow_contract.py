@@ -11,6 +11,7 @@ MANUAL_ONLY = {
     "dispatch-extra-canary.yml",
     "reconcile.yml",
     "scheduler.yml",
+    "production-dispatch.yml",
     "stage-android-apk.yml",
     "stock-noop-pilot.yml",
 }
@@ -39,6 +40,21 @@ class WorkflowContractTests(unittest.TestCase):
                 actual = event_keys(path.read_text(encoding="utf-8"))
                 wanted = {"workflow_dispatch", "push"} if name == VALIDATE else {"workflow_dispatch"}
                 self.assertEqual(actual, wanted, "No scheduled, PR, or other automatic task trigger")
+
+    def test_production_workflow_is_effectively_read_only(self):
+        src = (WORKFLOWS / "production-dispatch.yml").read_text(encoding="utf-8")
+        self.assertIn("github.actor == 'chaonpu'", src)
+        self.assertIn("github.ref == 'refs/heads/main'", src)
+        self.assertIn("permissions:\n  contents: read", src)
+        self.assertNotIn("contents: write", src)
+        self.assertNotIn("actions: write", src)
+        self.assertNotRegex(src, r"(?m)^\s*(schedule|cron):")
+        self.assertIn("scheduler.production_dry_run", src)
+        self.assertNotIn("workflow_dispatch --", src)
+        self.assertNotIn("scheduler.production_store.save", src)
+        self.assertNotIn("checkout@v4\n        with:\n          repository:", src)
+        self.assertNotIn("run-a-share.yml", src)
+        self.assertNotIn("run-us.yml", src)
 
     def test_pilot_dispatch_watch_finalize_remain_same_job(self):
         src = (WORKFLOWS / "stock-noop-pilot.yml").read_text(encoding="utf-8")
