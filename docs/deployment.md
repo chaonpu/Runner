@@ -107,3 +107,27 @@ Billing Usage Summary 返回 `grossQuantity`、`discountQuantity` 及按 SKU 的
 Stock 当前的 A/US 工作流是 `ubuntu-latest` 上的 Bash、Node、Python 组合，不能因为 `ziwuxilv-stock-win` 在线就直接换成 Windows 标签。Android 当前已实测不同的 Windows 构建和私有签名 Runner，第三层必须严格串行完成双方的提交与产物核验。
 
 公众可以看到调度代码、仓库标识和测试结果，但不能通过 Runner 获得私有仓库内容、策略明细或签名材料。
+
+## 2026-10-17 新增：经批准的 APK 公开暂存（真实发布仍独立）
+
+新增 `.github/workflows/stage-android-apk.yml` 和 `scheduler/apk_stage.py`，运行于公开 Runner 的 GitHub-hosted Ubuntu、**仅手动触发**；不从公开仓库克隆私有 Test 或 Stock 源码。
+
+手动输入：`signing_run_id`、`test_run_id`、`source_commit`、`version_name`、`version_code`、`public_staging_approval`。批准口令必须逐字为 `STAGE-PUBLIC-APK-<version_name>-<signing_run_id>`，仅 `chaonpu` 账户、`main` 分支允许执行。批准意味着**签名 APK 将通过公开 Pre-release 提前对所有人可下载**；不等于正式版发布批准。
+
+签名仓库私有 Run 必须是 `windows-signing-verified-handoff.yml` 的 `workflow_dispatch` 成功执行，且其私有 Artifact 名称恰为 `windows-signed-release`，内含从**新版本签名流程**生成的 `publish-candidate-metadata.json`。历史 v2.3.4 Artifact 缺少此清单，且与现有正式 versionCode 117 相等，将被拒绝。
+
+云端暂存工作流采用此前已验证的两个私有 Actions 令牌 **只读** 查询/下载：
+- `CHAONPU_ACTIONS_READ_TOKEN` 仅读私有签名 Run 和签名 Artifact；
+- `TEST_ACTIONS_READ_TOKEN` 仅读 Test Run 的原始提交/成功状态；
+- `Runner` 仓库自身的 `GITHUB_TOKEN`，`contents:write` **仅创建本仓库公开 Pre-release**。不扩展私有令牌到 `chaonpu/ziwuxilv`。
+
+内部校验：Test/签名 Run ID、原仓库、指定工作流、`workflow_dispatch` 事件、`main`、`completed/success`、源 SHA、候选 metadata 的精确字段、APK/侧边 SHA256、证书、包名与版本；目录文件白名单不允许 `release-source.zip`、密钥或其他新增文件。另对当前 `chaonpu/ziwuxilv/android-native/version.json` 做在线 versionCode 检查，版本不高于正式版、相同版本已在 Runner 暂存都拒绝。
+
+允许上传到 `chaonpu/Runner` 公开 Release 的资产只有：
+1. `ziwuxilv-verified-v<version>.zip`（内含正式签名 APK 和最少的验证文件）；
+2. `staging-receipt.json`（公开源 URL、ZIP/APK SHA、Test/Signer Run、源码 SHA、版本和证书）。
+
+Release tag `staged-apk-v<version>-signrun-<runId>`，`--prerelease`；现有相同 Tag 或版本不覆盖。创建后验证匿名 ZIP 下载 SHA256。**网络/上传响应不确定时不自动重试**，需先人工核查是否已经创建公开资源。公开暂存 ZIP 可用于将来的 `ziwuxilv/android-publish-request.json`，但本阶段不会自动提交正式发布请求。
+
+演练记录：`Runner scheduler safety tests` Run `38954953009` **39 项通过**。真正的跨公开 APK 上传及公开 Release 创建操作**尚未进行**；用户同意的是经审批的未来新 APK 暂存，而不是重发 v2.3.4 或直接推送用户更新。
+
