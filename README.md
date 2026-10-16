@@ -19,7 +19,7 @@
 - `TEST_BILLING_READ_TOKEN`、`CHAONPU_BILLING_READ_TOKEN`：仅用于对应个人账户 Billing Usage GET。
 - `TEST_RUNNER_READ_TOKEN`、`RUNNER_READ_TOKEN`：仅用于目标仓库的 Runner 状态 GET。
 
-组织 `ZIWUXILV` 的 Billing/Runner 访问需要单独授权。任何未配置或权限不足都记录 `unknown`，不使用另一所有者的额度冒充。
+`ZIWUXILV/database` 当前仅参与 Stock 的私有数据依赖，不由调度中心派发工作流，因此不要求该组织的 Billing、Actions 或 Runner 令牌。
 
 目标阶段：安全完成 Stock 单任务演练后，再逐项迁移 database、Test、Android 私有签名与公开正式发布；所有切换都需明确定义输出验证和幂等机制。详见 `docs/deployment.md`。
 
@@ -30,4 +30,4 @@
 - [安全单元测试](https://github.com/chaonpu/Runner/actions/workflows/validate.yml)
 - [完整部署状态与授权要求](docs/deployment.md)
 
-**正式派发尚未启用**：还需三所有者的独立 Actions:write 凭据、ZIWUXILV 的只读权限和业务工作流中的任务标识、核验与幂等适配。
+**正式策略／构建派发尚未启用**：已有的 `TEST_ACTIONS_READ_TOKEN`、`CHAONPU_ACTIONS_READ_TOKEN` 虽名称含 READ，但用户确认它们具备 Actions:write，已在 Stock 和 Test 两次真实无业务副作用 canary 中验证成功。仍需业务工作流的任务编号、核验、幂等适配，以及可靠额度判断。
