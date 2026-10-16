@@ -1,5 +1,15 @@
 # 统一调度中心部署与迁移计划（2026-10-17）
 
+## 2026-10-17 Windows 正式 `checkout@v7` 验收发现生产级网络可靠性阻断
+
+- 私有 Stock 新增仅手动 `windows-checkout-acceptance.yml`：在 `ziwuxilv-stock-win` 上连续三次使用**与正式 A股/美股策略一致的 `actions/checkout@v7`**，每次使用独立本机工作目录与只读 Job Token，不访问 database。成功后才允许尝试静态 `compile`、`node --check` 和私有合成测试；任何 checkout 真实 `outcome` 为失败，最终验收明确失败，绝不以 `continue-on-error` 的绿色 `conclusion` 作为成功。
+- [第一批 #38980440449](https://github.com/chaonpu/Stock/actions/runs/38980440449)：**3/3 真正检出成功**，随后 PowerShell 5.1 直接书写中文内联路径变成问号，导致测试脚本路径失败，不构成策略语法异常。用 ASCII Unicode 转义修正该测试脚本。
+- [第二批 #38980645250](https://github.com/chaonpu/Stock/actions/runs/38980645250)：真实 `outcome` 为 **0/3 成功**，全部失败于 `github.com:443` 超时/连接重置。该批静态与合成检查均未执行，强制汇总步骤正确拒绝通过。两批合计 **3/6**，实际完整检出存在明显间歇性故障；即使同一分钟此前 Git 引用或浅层抓取成功，也不能忽略此证据。严禁在此基础上自动切至 Windows 生产策略或自动重试业务任务。
+- [私有源码 API 无检出语法验收 #38981450738](https://github.com/chaonpu/Stock/actions/runs/38981450738)：新增仅人工 `windows-private-syntax-api.yml`，使用 Stock 自己的 `contents:read` Token 通过 `api.github.com` 获取当前 GitHub Run 确切提交的两份中文策略及辅助 Python、两份 Node 账本脚本；**3 个 Python 文件和 2 个 Node 文件纯语法检查通过**，输出不含源码或提交 SHA。此方式成功避开 Git HTTPS，但**只是验证语法，不是无 Git 源码入口的真实策略执行路径**，不替换生产版 `actions/checkout`。
+- 已修正手动 checkout 验收脚本的展示，明确真实 `outcome`，尝试清除临时工作目录，避免误认绿色为成功。所有本轮诊断 workflow 的临时 `push` 入口已移除，没有新增 schedule、后台轮询或正式派发。
+- 后续应先做 Windows 出站到 `github.com:443` 的网络稳定性排查（时间分布、DNS/代理/安全软件/运营商路由、系统代理与 Git 代理差异），**优先修好网络而非擅自将生产源码转移到公开 RUNNER 或 Gitee**。如果需要进程内的安全下载重试，必须仅允许**策略开始前**的检出阶段，且带严格上限，不得重派实际业务工作流或复用旧账本并声称本次成功。
+- `dispatchEnabled`、各任务 `enabledForDispatch` 必须保持 `false`，公共 `state/tasks.json` 不得新增未经完整来源注册的生产状态。生产 `verified` 仍需独立私有数据库回执和 RUNNER 原始 Run 证据。
+
 ## 2026-10-17 Windows GitHub 连接诊断：公开/私有 Git 引用和对象传输均通过
 
 - 之前的 `actions/checkout` 偶尔出现 `github.com:443` 连接超时；经过 Node 22、Git Bash、Python3.14 等 Windows 工具链与依赖验收后，进一步将普通 TLS/端口检查和真正 Git 协议测试分开，防止把 TLS 握手成功当作私有 Git 检出成功。
