@@ -12,7 +12,6 @@ on:
           - stock_us
           - stock_etf
           - android
-          - apk_publish
       business_date:
         description: "YYYY-MM-DD, required for Stock tasks"
         required: false
@@ -22,7 +21,7 @@ on:
         required: false
         type: string
       source_version:
-        description: "Verified source/version key, required for database or publication"
+        description: "Reserved: no database or APK publication dispatch from this coordinator"
         required: false
         type: string
 
