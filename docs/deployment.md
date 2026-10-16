@@ -1,5 +1,13 @@
 # 统一调度中心部署与迁移计划（2026-10-17）
 
+## 2026-10-17 交易所官方 2026 年日历校核（只读安全门）
+
+- 在 `config/exchange_schedule_2026.json` 存储按交易所公告整理的 **2026 年**公开普通股票休市与提前收盘快照：A 股同时对照 [上交所 2026 休市安排](https://www.sse.com.cn/disclosure/dealinstruc/closed/) 与 [深交所 2026 通知](https://www.szse.cn/disclosure/notice/general/t20251222_618087.html)；美股同时对照 [NYSE 2026 日历](https://www.nyse.com/trade/hours-calendars) 与 [Nasdaq 2026 日历](https://nasdaqtrader.com/Trader.aspx?id=Calendar)。这是**截至 2026-10-17 核对的公布安排**，不构成临时休市实时证明。没有任何外部市场 API 令牌、调度任务或后台网络拉取。
+- `scheduler.exchange_schedule` 将现有北京时间/纽约时间候选提升为“2026 年公开日历候选”：周末、法定休市日自动跳过；美股 11 月 27 日与 12 月 24 日按纽约当地 **13:00** 提前收盘处理；普通交易日 A 股按 15:00、美股按 16:00，自动遵循时区夏令时变化。
+- 与真正派发证明严格分离：输出 `publishedScheduleMatched`、`scheduledSessionClosed`、`scheduledClose`、`calendarStatus`；`exchangeSessionVerified=false`、`marketDataReady=false`、`dispatchAuthorized=false`、`productionReady=false` 保持不变。即使日期属于公布交易日并已到计划收盘时点，也不能证明临时停市没有发生、行情源已完成收盘写入、选股结果有效或实际 database 处于可执行状态。
+- **2027 年及其他未纳入公开快照的年份一律返回 `hold_calendar_coverage_unavailable`**，不能沿用上一年日历，必须先从交易所公告更新并通过回归。手动日期覆盖同样不得绕过休市与未收盘核验。
+- [RUNNER 安全回归 #38975524871](https://github.com/chaonpu/Runner/actions/runs/38975524871) 已执行 **141 项测试通过**（含春节与国庆长假、NYSE 感恩节/圣诞节提前收盘、纳斯达克休市、纽约夏令时、2027 年范围失效、错误日历及无副作用门禁）。没有执行真实策略或更新账本。
+
 ## 2026-10-17 第一次线上只读 API 联通验收成功（一次性）
 
 - [RUNNER #38974929403](https://github.com/chaonpu/Runner/actions/runs/38974929403) 利用已有 `validate.yml` 安全测试执行了一次**真实 GitHub REST Contents 读取**。新增的一次性 `scheduler.live_readonly_acceptance` 验证了线上 `state/tasks.json` 的结构和原始 SHA、两个市场的自动日期、既有运行状态查询及只读路由判断，未访问私有仓库内容、未更新任务文件、未派发任务。
