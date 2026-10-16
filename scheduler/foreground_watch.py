@@ -44,6 +44,8 @@ def observe(row, reader, pause=time.sleep, now=time.monotonic,
             if status == "hold" and reason != "pilot_failed_check_runner":
                 raise PilotGuard("run_identity_or_state_unverified")
             errors = 0
+        except PilotGuard:
+            raise  # An untrusted run identity is not a transient API outage.
         except (OSError, ValueError, TypeError, KeyError) as exc:
             errors += 1
             if errors >= 3:
@@ -55,7 +57,11 @@ def observe(row, reader, pause=time.sleep, now=time.monotonic,
             last = status
         if status == "pilot_completed":
             return "completed_success"
-        if status == "hold" and run.get("status") == "completed":
+        if (status == "hold" and reason == "pilot_failed_check_runner"
+                and run.get("status") == "completed"
+                and run.get("conclusion") in ("failure", "cancelled", "timed_out",
+                                             "action_required", "startup_failure",
+                                             "neutral", "skipped")):
             return "completed_failure"
         pause(min(interval, max(0, deadline - now())))
     raise PilotGuard("monitor_deadline_manual_reconciliation")
