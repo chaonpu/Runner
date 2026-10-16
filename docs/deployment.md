@@ -121,7 +121,7 @@ Stock 当前的 A/US 工作流是 `ubuntu-latest` 上的 Bash、Node、Python �
 - `TEST_ACTIONS_READ_TOKEN` 仅读 Test Run 的原始提交/成功状态；
 - `Runner` 仓库自身的 `GITHUB_TOKEN`，`contents:write` **仅创建本仓库公开 Pre-release**。不扩展私有令牌到 `chaonpu/ziwuxilv`。
 
-内部校验：Test/签名 Run ID、原仓库、指定工作流、`workflow_dispatch` 事件、`main`、`completed/success`、源 SHA、候选 metadata 的精确字段、APK/侧边 SHA256、证书、包名与版本；目录文件白名单不允许 `release-source.zip`、密钥或其他新增文件。另对当前 `chaonpu/ziwuxilv/android-native/version.json` 做在线 versionCode 检查，版本不高于正式版、相同版本已在 Runner 暂存都拒绝。
+内部校验：Test/签名 Run ID、原仓库、指定工作流、Test 允许 `push` 或 `workflow_dispatch`，签名工作流仅允许 `workflow_dispatch`、`main`、`completed/success`、源 SHA、候选 metadata 的精确字段、APK/侧边 SHA256、证书、包名与版本；目录文件白名单不允许 `release-source.zip`、密钥或其他新增文件。另对当前 `chaonpu/ziwuxilv/android-native/version.json` 做在线 versionCode 检查，版本不高于正式版、相同版本已在 Runner 暂存都拒绝。
 
 允许上传到 `chaonpu/Runner` 公开 Release 的资产只有：
 1. `ziwuxilv-verified-v<version>.zip`（内含正式签名 APK 和最少的验证文件）；
