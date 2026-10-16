@@ -26,6 +26,7 @@
 ## 使用入口
 
 - [云端按需预检（手动）](https://github.com/chaonpu/Runner/actions/workflows/scheduler.yml)
+- [Stock 持久化防重派发演练（手动，仅无操作 canary）](https://github.com/chaonpu/Runner/actions/workflows/stock-noop-pilot.yml)
 - [云端待执行任务复核（每 5 分钟）](https://github.com/chaonpu/Runner/actions/workflows/reconcile.yml)
 - [经批准签名 APK 公开暂存（手动，Pre-release）](https://github.com/chaonpu/Runner/actions/workflows/stage-android-apk.yml)
 - [安全单元测试](https://github.com/chaonpu/Runner/actions/workflows/validate.yml)
@@ -38,3 +39,11 @@
 新 APK 经 `Test` 完整验证和 `ziwuxilv-android` 私有生产签名后，管理员可以使用版本专用批准口令手动将**签名 APK 和校验清单**存放到 `Runner` 的公开预发布 Release，创建匿名 HTTPS 下载地址。需要新版本、精确的 Test/签名 Run、源码 SHA、生产证书及 APK 哈希核验。**此操作会提前公开 APK，请勿在未获准时触发。**
 
 这不更新用户 APP：正式版 `chaonpu/ziwuxilv` 仍须独立审批和发布请求。流程详见 [完整部署说明](docs/deployment.md)。历史 v2.3.4 不会自动重新暂存或发布。
+
+## 私有 Stock 防重复派发演练
+
+`.github/workflows/stock-noop-pilot.yml` **只允许 `chaonpu` 从 `main` 手动启动**。填写测试日期（YYYY-MM-DD），先将 `pilot:stock:日期` 原子登记到公开的 `state/pilot_runs.json`，然后仅派发私有 `chaonpu/Stock/.github/workflows/runner-dispatch-canary.yml`（无源码检出、无策略、无 database 操作、无邮件）。返回的实际 Run ID 继续写入同一登记文件；每 5 分钟的 `reconcile.yml` 通过已有只读令牌查询其实际状态，**不自动重试或执行策略**。
+
+同一日期的再次请求会停止，不会盲目重复派发；写入响应未知时需人工检查登记表和运行页面。测试日期只是公开演练标签，**不是交易日期计算结果**。
+
+正式策略的 `dispatchEnabled` 和 `enabledForDispatch` 仍全部关闭。不得把 canary Success 当成正式账本已入账。
