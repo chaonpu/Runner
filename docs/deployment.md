@@ -1,5 +1,13 @@
 # 统一调度中心部署与迁移计划（2026-10-17）
 
+## 2026-10-17 交易日历与私有账本“双门禁”验收
+
+- RUNNER 官方休市表、提前收盘时间检查已接入 `scheduler.production_dry_run`。若手动指定交易所休市日/尚未到收盘时刻，`routeRecommendation` 会强制变为 `hold`；不允许单凭缓存的“云端额度可用”建议忽略日历错误。有效日期也只能得到**路由建议**，绝不授权真实派发；跨越公开日历覆盖年（2026）直接 hold。
+- 私有 Stock 新增 `private_market_readiness.py`，对已有 private database 快照/账本一致性做不泄露持仓的只读分类：`hold_existing_same_date_pair_origin_unverified`、`hold_newer_ledger_already_exists`、`hold_upstream_market_data_not_attested` 或 `hold_private_pair_unavailable`。无论哪种结果，**既有账本都不构成行情数据源就绪证明**，所以 `upstreamQuotesVerified=false`、`dispatchAuthorized=false`、`automaticRetryAuthorized=false`。已接入 Stock 手动诊断入口，不会作为正常自动工作流运行。
+- [RUNNER 线上只读验收 #38976033933](https://github.com/chaonpu/Runner/actions/runs/38976033933) **142 项安全测试通过**，并通过实际 GitHub API 读取到公开生产登记表 0 条、A股/美股日历候选均为 `2026-10-16`、`publishedScheduleMatched=true`、`scheduledSessionClosed=true`、`exchangeSessionVerified=false`、`marketDataReady=false`、`routeRecommendation=deferred`、`dispatchAuthorized=false`。只证明发布日历与登记 API 正常，不证明 Stock 私有数据库在生产环境的实时行情准备状态。
+- [Stock Windows 安全回归 #38975711719](https://github.com/chaonpu/Stock/actions/runs/38975711719) **75 项测试通过**，不读取真实账本，无策略执行/无 database 写入。两处一次性 push/线上联通验收步骤在通过后均已移除，不添加定时任务或轮询。
+- **剩余阻断**：尚无 Stock 各供应商行情源的可审计收盘数据覆盖/完整性契约；尚未独立证明 GitHub-hosted 可免费执行额度及 Windows 正式策略的运行条件；正式调度登记→派发→同任务运行→database 私有回执→`verified` 的真实业务闭环仍未上线。请勿将安全单测、日历已收盘、存量账本一致三者任一项误当正式入账成功。
+
 ## 2026-10-17 交易所官方 2026 年日历校核（只读安全门）
 
 - 在 `config/exchange_schedule_2026.json` 存储按交易所公告整理的 **2026 年**公开普通股票休市与提前收盘快照：A 股同时对照 [上交所 2026 休市安排](https://www.sse.com.cn/disclosure/dealinstruc/closed/) 与 [深交所 2026 通知](https://www.szse.cn/disclosure/notice/general/t20251222_618087.html)；美股同时对照 [NYSE 2026 日历](https://www.nyse.com/trade/hours-calendars) 与 [Nasdaq 2026 日历](https://nasdaqtrader.com/Trader.aspx?id=Calendar)。这是**截至 2026-10-17 核对的公布安排**，不构成临时休市实时证明。没有任何外部市场 API 令牌、调度任务或后台网络拉取。
