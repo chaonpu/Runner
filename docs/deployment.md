@@ -1,5 +1,14 @@
 # 统一调度中心部署与迁移计划（2026-10-17）
 
+## 2026-10-17 Windows Python/Node 账本合成实测通过（仍非真实 GitHub 入账）
+
+- 最新 [Stock Windows Run #38983987118](https://github.com/chaonpu/Stock/actions/runs/38983987118) 完整 **Success**。在私有 Windows Runner 第一次成功检出 Stock 源码，使用 Windows 隔离 venv 安装实际 `requirements.txt` 和 `tzdata`，核实 A股/纽约时区，运行现有真实账本/回执代码的**合成数据**测试，日志 `Ran 109 tests in 10.193s / OK`；Node 22 四组收益贡献和历史回补测试 **18 pass / 0 fail**；退出后成功删除临时源码和 venv。
+- [Stock #38983133101](https://github.com/chaonpu/Stock/actions/runs/38983133101) 的 Windows **本地** Git 裸仓库模拟仍为 Success：A_SHARE/US 两市场均先成功提交/推送同一次合成账本与回执，再拒绝竞争分支非快进推送，并发现重复回执。仅对临时目录的本地 Git remote 写入，未对真实数据库或 Stock 发起 push。
+- 当前两套正式 `run-a-share.yml`、`run-us.yml` 已明确**带 `task_id` 的协调任务只运行一次业务策略**，原有无标记任务最多 3 次策略尝试保持不变。Windows 源码与 database 检出前置最多 3 次恢复，与业务任务单次执行严格分离；真实的业务运行和远程 Git 推送未被触发。
+- 之前 [Stock #38983291254](https://github.com/chaonpu/Stock/actions/runs/38983291254) 的模拟单测在系统 Python 缺少 `tzdata` 时提前停止；[#38983694988](https://github.com/chaonpu/Stock/actions/runs/38983694988) 安装依赖成功，但 PowerShell 5.1 引号转义破坏 `python -c` 时区代码，未进入断言。已使用 stdin/here-string 解决，并通过 #38983987118 确认。错误不会被误记为账本算法失败。
+- 本轮临时验收 push 路径全部删除，`windows-bounded-checkout-recovery.yml` 和 `windows-local-git-transaction-audit.yml` 仅允许人工 `workflow_dispatch`，没有新增定时巡检、真实策略、邮件、APK、database 变动。
+- **尚未闭环**：GitHub 私有仓库完整检出可靠性仍存在时好时坏、向真实 `ZIWUXILV/database` 的有证据安全写入及不确定结果后的只读确认未验收、上游真实收盘数据与云端/Windows 结果一致性未证明、Runner 账户额度/派发来源/生产 `verified` 链路仍未完整通过。所有生产自动派发开关保持关闭；不得把安全合成测试通过当作可直接启用自动补算。
+
 ## 2026-10-17 业务任务单次执行与 Windows 本地 Git 并发事务验证
 
 - 私有 Stock 已分别修改 `run-a-share.yml` / `run-us.yml`：只在收到协调任务 `task_id` 时，策略运行次数由旧 3 次降为**仅 1 次**，避免业务已经产生部分副作用后还重试。原有**无协调标记**的 A/US 工作流仍为 3 次旧机制。Windows 仅在业务前对 Stock/DB 两个仓库进行最多 3 次检出，二者不可混同；任何失败不能自动再次派发业务或自动推进旧账本。
