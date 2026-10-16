@@ -18,7 +18,7 @@ from scheduler.probes import GitHubReadOnly
 
 
 def finalizable(row: dict, run: dict) -> bool:
-    if row.get("status") != "dispatched":
+    if row.get("status") not in ("dispatched", "reconciliation_required"):
         return False
     if run.get("head_branch") != "main":
         return False
@@ -31,18 +31,28 @@ def plan_completion(state: dict, run_getter, now: str) -> tuple[dict, list[str]]
     result = json.loads(json.dumps(state))
     verified = []
     for row in result["tasks"]:
-        if row["status"] != "dispatched":
+        if row["status"] not in ("dispatched", "reconciliation_required"):
             continue
         rid = row.get("runId")
         if type(rid) is not int or rid < 1:
             continue
-        # API outages/errors raise and abort before ANY writes. We never
-        # guess task status from timestamp, GitHub billing, or missing data.
+        # API outages/errors abort before writes. Never infer success from
+        # timestamps, failed queries, or another workflow's green status.
         run = run_getter(f"/repos/{REPO}/actions/runs/{rid}")
         if finalizable(row, run):
             row["status"] = "completed_success"
-            row["updatedAt"] = now
-            verified.append(row["id"])
+        elif (run.get("head_branch") == "main"
+              and classify(row, run) == ("hold", "pilot_failed_check_runner")
+              and run.get("status") == "completed"
+              and run.get("conclusion") in (
+                  "failure", "cancelled", "timed_out",
+                  "startup_failure", "action_required", "skipped", "neutral"
+              )):
+            row["status"] = "completed_failure"
+        else:
+            continue
+        row["updatedAt"] = now
+        verified.append(row["id"])
     return validate_registry(result), verified
 
 
@@ -51,7 +61,7 @@ def finalize(env: dict,
              client_factory=GitHubReadOnly) -> dict:
     if (env.get("GITHUB_REPOSITORY") != "chaonpu/Runner" or
         env.get("GITHUB_REF") != "refs/heads/main" or
-        env.get("GITHUB_EVENT_NAME") not in ("schedule", "workflow_dispatch")):
+        env.get("GITHUB_EVENT_NAME") != "workflow_dispatch"):
         raise PilotGuard("untrusted_finalize_context")
     public_token = env.get("GH_TOKEN")
     private_token = env.get("CHAONPU_ACTIONS_READ_TOKEN")
