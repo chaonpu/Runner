@@ -1,20 +1,20 @@
-name: Verify signer and release workflow dispatch scopes (no-op)
+name: Verify private Android signer dispatch scope (no-op)
 
 on:
   workflow_dispatch:
     inputs:
       target:
-        description: "Which no-op permission canary to test"
+        description: "Only private Android signer canary"
         required: true
-        default: publish
+        default: signer
         type: choice
-        options: [publish, signer, both]
+        options: [signer]
 
 permissions:
   contents: read
 
 concurrency:
-  group: cross-repository-signer-publish-canary
+  group: cross-repository-private-signer-canary
   cancel-in-progress: false
 
 jobs:
@@ -30,14 +30,9 @@ jobs:
       - name: Verify only no-op canary dispatches permitted
         run: python3 -m unittest discover -s tests -p 'test_*.py' -q
       - name: Verify private signer repository write scope without signing
-        if: inputs.target == 'signer' || inputs.target == 'both'
+        if: inputs.target == 'signer'
         env:
           CHAONPU_ACTIONS_READ_TOKEN: ${{ secrets.CHAONPU_ACTIONS_READ_TOKEN }}
         run: python3 -m scheduler.canary_dispatch --target signer
-      - name: Verify public release repository write scope without publishing
-        if: inputs.target == 'publish' || inputs.target == 'both'
-        env:
-          CHAONPU_ACTIONS_READ_TOKEN: ${{ secrets.CHAONPU_ACTIONS_READ_TOKEN }}
-        run: python3 -m scheduler.canary_dispatch --target publish
       - name: State explicit nonproduction result
         run: echo 'No strategy, ledger, APK signing, publication or private source download.'
