@@ -7,13 +7,14 @@ workflow dispatch, status transitions or compensation. All output is public-safe
 from __future__ import annotations
 
 import argparse
-from datetime import date
+from datetime import datetime
 import json
 import os
 import re
 import sys
 from pathlib import Path
 
+from scheduler.market_clock import resolve_date
 from scheduler.preflight import preflight
 from scheduler.production_registry import RegistryGuard, validate
 from scheduler.production_store import load
@@ -38,15 +39,15 @@ def context_allowed(env: dict) -> None:
         raise RegistryGuard("production_dry_run_context_untrusted")
 
 
-def check(config: dict, registry: dict, task: str, business_date: str,
-          *, env: dict | None = None, preflight_fn=preflight) -> dict:
+def check(config: dict, registry: dict, task: str, business_date: str = "",
+          *, env: dict | None = None, preflight_fn=preflight,
+          clock: datetime | None = None) -> dict:
     """Calculate recommendation, but physically never authorize any side effect."""
     env = {} if env is None else env
     if task not in SUPPORTED or task not in config.get("tasks", {}):
         raise RegistryGuard("production_dry_run_task_not_allowed")
     try:
-        if date.fromisoformat(business_date).isoformat() != business_date:
-            raise ValueError()
+        session = resolve_date(task, business_date, now=clock)
     except (ValueError, TypeError) as exc:
         raise RegistryGuard("production_dry_run_date_invalid") from exc
     validate(config, registry)
@@ -56,7 +57,7 @@ def check(config: dict, registry: dict, task: str, business_date: str,
         for name in SUPPORTED
     ):
         raise RegistryGuard("production_dispatch_lock_is_not_off")
-    report = preflight_fn(config, task, business_date=business_date,
+    report = preflight_fn(config, task, business_date=session["businessDate"],
                           env=env, registry_state=registry)
     if (not isinstance(report, dict) or not isinstance(report.get("taskId"), str)
             or not isinstance(report.get("execution"), dict)
@@ -72,6 +73,11 @@ def check(config: dict, registry: dict, task: str, business_date: str,
     return {
         "status": "locked_read_only",
         "taskId": report["taskId"],
+        "businessDate": session["businessDate"],
+        "dateMode": session["dateMode"],
+        "marketTimezone": session["marketTimezone"],
+        "marketLocalClock": session["marketLocalClock"],
+        "exchangeSessionVerified": False,
         "registeredTaskStatus": state.get("status", "unavailable"),
         "routeRecommendation": recommended.get("route", "hold"),
         "routeReason": recommended.get("reason", "not_ready"),
@@ -86,7 +92,7 @@ def check(config: dict, registry: dict, task: str, business_date: str,
 def main() -> int:
     p = argparse.ArgumentParser()
     p.add_argument("--task", choices=sorted(SUPPORTED), required=True)
-    p.add_argument("--business-date", required=True)
+    p.add_argument("--business-date", default="")
     args = p.parse_args()
     try:
         context_allowed(os.environ)
@@ -113,6 +119,9 @@ def main() -> int:
         with open(summary, "a", encoding="utf-8") as f:
             f.write("## 子午汐律｜正式调度只读安全门\n\n")
             f.write(f"- 状态：{result['status']}\n")
+            f.write(f"- 日期来源：{result.get('dateMode', 'unavailable')}\n")
+            f.write(f"- 市场日期候选：{result.get('businessDate', 'unavailable')}\n")
+            f.write("- 交易所节假日和提前收盘尚未核实；仅用于只读预检。\n")
             f.write("- **真实派发、任务登记写入、账本更新及自动补算均禁止**\n")
             f.write("- 本次工作流完成后退出，不启动后台监控或定时复核。\n")
     # Exit successfully for a deliberately blocked audit, with explicit status.
