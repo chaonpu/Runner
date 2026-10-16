@@ -7,6 +7,7 @@ from urllib.error import HTTPError
 from scheduler.policies import billing_state, runner_available, decide, request_id
 from scheduler.probes import account_usage, runner_for_repo, safe_error, GitHubReadOnly
 from scheduler.preflight import preflight
+from scheduler.production_registry import reserve, RegistryGuard
 
 CONFIG = json.loads((Path(__file__).resolve().parents[1] / "config/repositories.json").read_text())
 
@@ -110,6 +111,39 @@ class RouteTests(unittest.TestCase):
         self.assertEqual(result["taskId"], "stock_us:2026-10-16")
         self.assertFalse(result["execution"]["dispatchAuthorized"])
         self.assertEqual(result["recommendation"]["route"], "hold")
+
+    def test_existing_reserved_production_task_blocks_public_preflight(self):
+        from copy import deepcopy
+        mock_cfg = deepcopy(CONFIG)
+        mock_cfg["dispatchEnabled"] = True
+        mock_cfg["tasks"]["stock_a"]["enabledForDispatch"] = True
+        state = reserve(mock_cfg, {"schema":1,"tasks":[]}, "stock_a",
+                        route="cloud", coordinator_run_id=123,
+                        business_date="2026-10-19", at="2026-10-17T06:00:00+08:00")
+        response = preflight(CONFIG, "stock_a", business_date="2026-10-19",
+                             env={}, registry_state=state)
+        self.assertEqual(response["registeredTask"]["status"], "reserved")
+        self.assertEqual(response["recommendation"]["route"], "hold")
+        self.assertFalse(response["execution"]["dispatchAuthorized"])
+
+    def test_effect_verified_registry_id_is_skipped_not_reissued(self):
+        from copy import deepcopy
+        mock_cfg = deepcopy(CONFIG)
+        mock_cfg["dispatchEnabled"] = True
+        mock_cfg["tasks"]["stock_a"]["enabledForDispatch"] = True
+        state = reserve(mock_cfg, {"schema":1,"tasks":[]}, "stock_a",
+                        route="cloud", coordinator_run_id=123,
+                        business_date="2026-10-19", at="2026-10-17T06:00:00+08:00")
+        state["tasks"][0].update(status="verified", runId=456)
+        response = preflight(CONFIG, "stock_a", business_date="2026-10-19",
+                             env={}, registry_state=state)
+        self.assertEqual(response["recommendation"]["route"], "skip")
+        self.assertEqual(response["registeredTask"]["status"], "verified")
+
+    def test_untrusted_production_registry_fails_closed(self):
+        with self.assertRaises(RegistryGuard):
+            preflight(CONFIG, "stock_us", business_date="2026-10-19", env={},
+                      registry_state={"schema":1,"tasks":[{"privateToken":"no"}]})
 
 if __name__ == "__main__":
     unittest.main()
