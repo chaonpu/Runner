@@ -53,6 +53,20 @@ class ProductionStoreTests(unittest.TestCase):
         self.assertEqual(sha, SHA)
         self.assertEqual(caller.call_args.args[1:], ("GET", CONTENTS_PATH + "?ref=main"))
 
+    def test_actual_github_wrapped_base64_content(self):
+        data = empty()
+        encoded = base64.b64encode(json.dumps(data).encode()).decode()
+        # GitHub REST Contents includes a newline in base64 content.
+        wrapped = "\n".join(encoded[i:i+60] for i in range(0, len(encoded), 60)) + "\n"
+        record = {"type": "file", "encoding": "base64", "sha": SHA,
+                  "content": wrapped}
+        found, blob = load(config(False), "synthetic-only", Mock(return_value=record))
+        self.assertEqual(found, data)
+        self.assertEqual(blob, SHA)
+        invalid = dict(record, content=wrapped + "?")
+        with self.assertRaisesRegex(RegistryGuard, "registry_content_invalid"):
+            load(config(False), "synthetic-only", Mock(return_value=invalid))
+
     def test_load_rejects_non_base64_or_wrong_blob_sha(self):
         payload = {"type": "file", "encoding": "base64", "sha": "invalid",
                    "content": base64.b64encode(json.dumps(empty()).encode()).decode()}
