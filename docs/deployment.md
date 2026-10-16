@@ -131,3 +131,12 @@ Release tag `staged-apk-v<version>-signrun-<runId>`，`--prerelease`；现有相
 
 演练记录：`Runner scheduler safety tests` Run `38954953009` **39 项通过**。真正的跨公开 APK 上传及公开 Release 创建操作**尚未进行**；用户同意的是经审批的未来新 APK 暂存，而不是重发 v2.3.4 或直接推送用户更新。
 
+
+## 2026-10-17 Stock Windows 完整依赖及离线策略回归验收
+
+`Stock` Windows Run [38958263612](https://github.com/chaonpu/Stock/actions/runs/38958263612) **Success**，通过 Python 正式依赖完整安装、43 项 A/美股及账本回归、18 项 Node 账本测试、10 个账本契约文件、Git Bash 与 Windows 工具链校验。期间修复了回归测试默认 GBK 读取 UTF-8 报告问题；并仅在 Job 环境为 Runner 添加 Git Bash PATH，未修改生产策略运算。
+
+`chaonpu/Stock/.github/workflows/run-a-share.yml` 与 `run-us.yml` 现均允许显式 `runner_mode=windows`，但默认仍为 `ubuntu`；Windows 必须传正确 `task_id`，运行时使用 Git Bash 和隔离的系统 Python 3.14 venv，随后执行原业务步骤。**尚未受控实跑真实行情、策略调仓和 database 读写**，因此本项目 `config/repositories.json` 对这两个市场仍保留 `windowsWorkflow=null`，任务自动派发继续关闭。不能因为离线回归 Success 就自动切换真实策略。
+
+私有 [Windows 验收说明](https://github.com/chaonpu/Stock/blob/main/docs/windows-runner-validation.md) 记录了后续实际数据源验证、连接失败恢复与任务幂等门禁。诊断流程已改为仅手动触发，不额外安排重复运行。
+
