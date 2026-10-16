@@ -1,0 +1,44 @@
+name: Runner scheduler safety tests
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "scheduler/**"
+      - "config/**"
+      - "tests/**"
+      - ".github/workflows/validate.yml"
+      - ".github/workflows/scheduler.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Checkout public coordinator code only
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          clean: true
+      - name: Run route, billing and permissions tests
+        run: python3 -m unittest discover -s tests -p 'test_*.py' -v
+      - name: Enforce public repository secrets boundary
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          root = Path('.')
+          wf = root / '.github/workflows/scheduler.yml'
+          if wf.exists():
+              text = wf.read_text()
+              assert 'pull_request:' not in text and 'pull_request_target:' not in text
+              assert 'contents: write' not in text
+          config = (root / 'config/repositories.json').read_text()
+          assert not re.search(r'gh[pousr]_[a-zA-Z0-9]{20,}', config)
+          print('Public source and token exposure guardrails passed.')
+          PY
