@@ -1,5 +1,15 @@
 # 统一调度中心部署与迁移计划（2026-10-17）
 
+## 2026-10-17 已实现 Windows 两私有仓库的有限检出恢复，生产派发继续关闭
+
+- 根因状态：`ziwuxilv-stock-win` 到 `github.com:443` 的 Git HTTPS 连接**偶发超时/重置**，虽可通过 GitHub API、短请求及某些完整检出，仍不应当成网络已根治。Stock 完整 `checkout@v7` 两批成功率为 **3/3、0/3**，说明可靠性不足。
+- Stock [安全检出恢复验收 #38981835435](https://github.com/chaonpu/Stock/actions/runs/38981835435) 已在 Windows 真实故障下通过：第一轮失败，等待 25 秒，第二轮成功并完成 3 个 Python 文件的**仅语法解析**，第三轮自动跳过；没有策略执行、无业务数据访问。独立诊断只读，临时文件清理成功。
+- `chaonpu/Stock/main` 的 **`run-a-share.yml`、`run-us.yml` 已接入恢复方案**，仅在 Windows 协调执行路径下，在任何策略启动前为 Stock 源码与 `ZIWUXILV/database` 两个仓库各提供最多三轮 `actions/checkout@v7`，前两次失败后分别等待 25 秒、45 秒；每次严格使用 GitHub `outcome`，一旦成功不再重试；全部失败立即阻断。还会校验 Stock HEAD 与触发 Run 的 `GITHUB_SHA` 一致，且 database 工作目录和 origin 正确。原 Ubuntu 云端单次检出、策略规则、邮件、仓库存储和单个业务任务的去重机制保持不变。
+- Stock [数据库真实只读检出验收 #38982711532](https://github.com/chaonpu/Stock/actions/runs/38982711532) 完成，第一轮即成功，后两轮跳过；校验了正确私有 Git 远端且已删除本地临时检出目录。使用原有 database Token 做**不保留凭据的只读 checkout**，没有输出持仓/账本或推进 database。
+- Stock [Windows API 无检出契约验收 #38982579267](https://github.com/chaonpu/Stock/actions/runs/38982579267) 成功：使用 GitHub 本仓库只读 API，对准确提交的 A/US 两条工作流进行静态契约核验，并完成 3 个 Python、2 个 Node 的语法检查；确认源码与 database 保护都在业务发生之前，检出恢复不会触发真实策略重试。
+- **重要**：这是 **代码层有限缓解措施**，不是系统级修复 `github.com` 网络。未来 Windows 检出仍可能全部失败并安全退出；即使检出成功，也不能自动证明行情源稳定、后续 Git push、实际策略结果和私有回执已经通过端到端验收。不能据此打开 RUNNER 自动派发，不能把超时重试扩展到调仓或数据库写操作。
+- 所有额外验收入口当前仅手动 `workflow_dispatch`，一次性 `push` 触发均已撤销，没有五分钟定时复核、自动业务重算、自动邮件或 APK 构建。生产总开关 `dispatchEnabled=false`、四项 `enabledForDispatch=false`，等待后续单独受控实测和闭环确认。
+
 ## 2026-10-17 Windows 正式 `checkout@v7` 验收发现生产级网络可靠性阻断
 
 - 私有 Stock 新增仅手动 `windows-checkout-acceptance.yml`：在 `ziwuxilv-stock-win` 上连续三次使用**与正式 A股/美股策略一致的 `actions/checkout@v7`**，每次使用独立本机工作目录与只读 Job Token，不访问 database。成功后才允许尝试静态 `compile`、`node --check` 和私有合成测试；任何 checkout 真实 `outcome` 为失败，最终验收明确失败，绝不以 `continue-on-error` 的绿色 `conclusion` 作为成功。
