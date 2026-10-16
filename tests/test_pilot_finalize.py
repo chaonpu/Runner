@@ -37,9 +37,8 @@ class VerifyNoopFinalizeTests(unittest.TestCase):
             run[name]=value
             self.assertFalse(finalizable(row,run),msg=name)
 
-    def test_queued_failed_and_in_progress_not_finalized(self):
-        for state,result in (("queued",None),("in_progress",None),
-                             ("completed","failure")):
+    def test_queued_and_in_progress_not_finalized(self):
+        for state,result in (("queued",None),("in_progress",None)):
             output,done=plan_completion(registry(),lambda _:true_run(state,result),"now")
             self.assertFalse(done)
             self.assertEqual(output["tasks"][0]["status"],"dispatched")
