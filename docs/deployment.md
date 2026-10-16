@@ -64,7 +64,7 @@ Billing Usage Summary 返回 `grossQuantity`、`discountQuantity` 及按 SKU 的
 - `TEST_BILLING_READ_TOKEN`, `TEST_ACTIONS_READ_TOKEN`, `TEST_RUNNER_READ_TOKEN`；
 - `CHAONPU_BILLING_READ_TOKEN`, `CHAONPU_ACTIONS_READ_TOKEN`, `RUNNER_READ_TOKEN`。
 
-待增加：组织 `ZIWUXILV` 自身有权限的相应只读 Secret（名称写在 `config/repositories.json`）；需要真正派发时另配三个**严格分属所有者的** `Actions:write` 调度凭据。公开调度中心的 Actions 仓库 secrets 仅允许受信任的 `main` 分支手动/计划工作流使用，**不得暴露给 PR、公开 Issue、第三方脚本或构建产物**。发布仓库额外副作用需独立授权。
+当前没有新增令牌需求。已验证的两枚 Actions 令牌具备写入授权，但必须仅用于白名单工作流，并按敏感令牌保护。公开调度中心的 Actions Secrets 只能由受信任的 `main` 分支手动/计划工作流使用，**不得暴露给 PR、公开 Issue、第三方脚本或构建产物**。正式发布仍需额外产物核验和独立的发布门禁。
 
 ## 旧方案迁移边界
 
