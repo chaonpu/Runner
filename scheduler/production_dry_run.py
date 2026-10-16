@@ -7,7 +7,7 @@ workflow dispatch, status transitions or compensation. All output is public-safe
 from __future__ import annotations
 
 import argparse
-from datetime import datetime
+from datetime import datetime, timezone
 import json
 import os
 import re
@@ -15,6 +15,7 @@ import sys
 from pathlib import Path
 
 from scheduler.market_clock import resolve_date
+from scheduler.exchange_schedule import CalendarGuard, evaluate as audit_schedule
 from scheduler.preflight import preflight
 from scheduler.production_registry import RegistryGuard, validate
 from scheduler.production_store import load
@@ -46,8 +47,12 @@ def check(config: dict, registry: dict, task: str, business_date: str = "",
     env = {} if env is None else env
     if task not in SUPPORTED or task not in config.get("tasks", {}):
         raise RegistryGuard("production_dry_run_task_not_allowed")
+    instant = datetime.now(timezone.utc) if clock is None else clock
     try:
-        session = resolve_date(task, business_date, now=clock)
+        session = resolve_date(task, business_date, now=instant)
+        published = audit_schedule(task, business_date, now=instant)
+    except CalendarGuard as exc:
+        raise RegistryGuard("published_schedule_unavailable_or_invalid") from exc
     except (ValueError, TypeError) as exc:
         raise RegistryGuard("production_dry_run_date_invalid") from exc
     validate(config, registry)
@@ -57,7 +62,25 @@ def check(config: dict, registry: dict, task: str, business_date: str = "",
         for name in SUPPORTED
     ):
         raise RegistryGuard("production_dispatch_lock_is_not_off")
-    report = preflight_fn(config, task, business_date=session["businessDate"],
+    if not published.get("businessDate") or published["calendarCoverageCurrent"] is not True:
+        return {
+            "status": "hold_calendar_coverage_unavailable",
+            "businessDate": published.get("businessDate"),
+            "dateMode": published["dateMode"],
+            "marketTimezone": published["marketTimezone"],
+            "marketLocalClock": published["marketLocalClock"],
+            "calendarStatus": published["calendarStatus"],
+            "publishedScheduleMatched": False,
+            "scheduledSessionClosed": False,
+            "exchangeSessionVerified": False,
+            "marketDataReady": False,
+            "dispatchAuthorized": False,
+            "registryWriteAuthorized": False,
+            "databaseWriteAuthorized": False,
+            "automaticRetryAuthorized": False,
+            "productionReady": False,
+        }
+    report = preflight_fn(config, task, business_date=published["businessDate"],
                           env=env, registry_state=registry)
     if (not isinstance(report, dict) or not isinstance(report.get("taskId"), str)
             or not isinstance(report.get("execution"), dict)
@@ -73,11 +96,16 @@ def check(config: dict, registry: dict, task: str, business_date: str = "",
     return {
         "status": "locked_read_only",
         "taskId": report["taskId"],
-        "businessDate": session["businessDate"],
-        "dateMode": session["dateMode"],
-        "marketTimezone": session["marketTimezone"],
-        "marketLocalClock": session["marketLocalClock"],
+        "businessDate": published["businessDate"],
+        "dateMode": published["dateMode"],
+        "marketTimezone": published["marketTimezone"],
+        "marketLocalClock": published["marketLocalClock"],
+        "calendarStatus": published["calendarStatus"],
+        "publishedScheduleMatched": published["publishedScheduleMatched"],
+        "scheduledSessionClosed": published["scheduledSessionClosed"],
+        "scheduledClose": published["scheduledClose"],
         "exchangeSessionVerified": False,
+        "marketDataReady": False,
         "registeredTaskStatus": state.get("status", "unavailable"),
         "routeRecommendation": recommended.get("route", "hold"),
         "routeReason": recommended.get("reason", "not_ready"),
@@ -121,7 +149,8 @@ def main() -> int:
             f.write(f"- 状态：{result['status']}\n")
             f.write(f"- 日期来源：{result.get('dateMode', 'unavailable')}\n")
             f.write(f"- 市场日期候选：{result.get('businessDate', 'unavailable')}\n")
-            f.write("- 交易所节假日和提前收盘尚未核实；仅用于只读预检。\n")
+            f.write(f"- 已公布交易日历判断：{result.get('calendarStatus', 'unavailable')}\n")
+            f.write("- 仅核对 2026 年官方常规休市/提前收盘公告；并未实时确认临时休市及源数据就绪。\n")
             f.write("- **真实派发、任务登记写入、账本更新及自动补算均禁止**\n")
             f.write("- 本次工作流完成后退出，不启动后台监控或定时复核。\n")
     # Exit successfully for a deliberately blocked audit, with explicit status.
