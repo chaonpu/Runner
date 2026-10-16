@@ -77,7 +77,7 @@ def decode_record(record: dict, config: dict) -> tuple[dict, str]:
             raise RegistryGuard("registry_content_invalid")
         # The GitHub Contents API wraps base64 at line boundaries. Reject
         # non-alphabet characters other than the API's CR/LF formatting.
-        raw = base64.b64decode(encoded.replace("\\n", "").replace("\\r", ""),
+        raw = base64.b64decode(encoded.replace("\n", "").replace("\r", ""),
                                validate=True)
         state = json.loads(raw.decode("utf-8"))
     except (KeyError, ValueError, TypeError, UnicodeError) as exc:
