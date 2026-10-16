@@ -1,12 +1,14 @@
 # 统一调度中心部署与迁移计划（2026-10-17）
 
-## 2026-10-17 继续：Stock RUNNER 标记任务的发布前行情结果校验（未完成运行验收）
+## 2026-10-17 Stock RUNNER 标记任务的发布前行情结果校验（Windows 合成验收已通过）
 
 - 私有 Stock 新增 `private_postrun_source_gate.py`：仅对显式包含 `task_id` 的未来协调任务，在运行器产生 **Run ID 对应开始标记**后，读取本次生成的 A股 / 美股正式结果。校验文件更新时间晚于本次标记、实际生成时刻、`as_of` 与任务日期一致、顶层正式状态、核心行情完整日期/覆盖/缺失/收盘条件、A股概念与流通市值及证券状态覆盖、美股行情失败和挂牌目录状态。失败直接阻止 `database_ledger_sync.py`、账本投影和私有 Git 提交，且不输出持仓/报价详情。
 - Stock A/US 现有正式工作流的旧式 `Reconcile verified ... ledger projection` 会在运行策略前推送 database。已对**带 task_id** 的协调任务跳过该旧提前写入步骤，避免新校验失败后账本却已变动；**不带任务标记的现有生产任务不受影响**。原 GitHub 工作流发布机制、自动邮件及原交易规则不变。
 - 校验只以策略执行过程中已生成的结果为依据，不保证独立实时验证行情源，也不证明运行前的供应商状态；未来策略派发仍需要单独完成权威收盘数据与供应商独立就绪证明。 `upstreamProviderIndependentlyVerified=false`、`preDispatchQuoteReadinessVerified=false`、`privateDatabaseBusinessVerified=false`、`automaticRetryAuthorized=false`，不会用该结果写 `verified`。
-- **本轮 Windows 验收受网络阻断，尚未通过**：[Stock #38976761436](https://github.com/chaonpu/Stock/actions/runs/38976761436) 和 [#38976852825](https://github.com/chaonpu/Stock/actions/runs/38976852825) 的 Windows 自托管 Job 已分配，但 `actions/checkout@v4` 无法连接 `https://github.com/chaonpu/Stock/`（TCP 443 timeout / reset）；新增单测步骤均被跳过，不能据此宣称代码通过。Stock 手动安全诊断工作流的合成测试 Job 已在 checkout 前新增纯 TCP 连通性检查，测试阶段不读取实际数据。没有部署额外定时触发。
-- 即使有自托管 Runner 在线，**也不能把 Windows 运行器状态直接等同于“可拉取源码、可访问数据源并可完成策略”**。生产派发总开关、各任务开关保持 false；待 Windows HTTPS 恢复并完成实际合成验收后再推进。
+- 历史 [Stock #38976761436](https://github.com/chaonpu/Stock/actions/runs/38976761436) 和 [#38976852825](https://github.com/chaonpu/Stock/actions/runs/38976852825) 曾因 Windows → GitHub HTTPS 443 失败而未执行测试，故障仍保留为历史记录。
+- **网络恢复后 [Stock #38978211786](https://github.com/chaonpu/Stock/actions/runs/38978211786) 成功**：`ziwuxilv-stock-win` 的 TCP 探针、私有 `actions/checkout` 与 `python -m unittest` 实际执行通过，日志 `Ran 86 tests in 10.195s`、`OK`。包含 A/US 源行情摘要、同次结果时间戳、正式状态、完整性、database 写入顺序及私有执行来源合成测试。未触发任何真实生产策略、数据库推进或 APK 构建。
+- 合成测试所用临时 push 路径已删除，私有核验入口恢复为**仅人工启动**。保留检出前网络连通检查，不添加定时复核、后台轮询或自动重试。
+- 本次仅证实自托管 Runner 的 `github.com` 检出及合成 Python 测试恢复正常，**不代表正式 Windows 策略的行情供应商、全部依赖和真实入账路径已经验收**。账户额度状态、最终 `verified` 自动升级和全链真实调度仍待验证；生产锁保持关闭。
 
 ## 2026-10-17 交易日历与私有账本“双门禁”验收
 
