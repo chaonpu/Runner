@@ -14,17 +14,25 @@ import sys
 from pathlib import Path
 
 from scheduler.policies import decide, request_id
+from scheduler.production_registry import validate as validate_production_registry
 from scheduler.probes import account_usage, existing_attempt, runner_for_repo
 
 CONFIG = Path(__file__).resolve().parents[1] / "config" / "repositories.json"
+STATE = Path(__file__).resolve().parents[1] / "state" / "tasks.json"
 
 def preflight(config: dict, task_name: str, *, business_date: str = "",
               source_sha: str = "", source_version: str = "",
-              env: dict | None = None) -> dict:
+              env: dict | None = None, registry_state: dict | None = None) -> dict:
     env = os.environ if env is None else env
     task = config["tasks"][task_name]
     key = request_id(task_name, task, business_date=business_date,
                      source_sha=source_sha, source_version=source_version)
+    # Use durable public-safe task metadata only. The default disk file is
+    # committed state; no private repo read or state write is performed here.
+    state = (registry_state if registry_state is not None else
+             json.loads(STATE.read_text(encoding="utf-8")))
+    state = validate_production_registry(config, state)
+    existing = next((r for r in state["tasks"] if r["id"] == key), None)
     owners = set()
     repository = task["repo"]
     owners.add(repository.split("/")[0])
@@ -50,7 +58,11 @@ def preflight(config: dict, task_name: str, *, business_date: str = "",
         repository, task.get("cloudWorkflow"), config["accounts"][main_owner], env)
     # Do not declare a task "not running" if Actions metadata cannot be read.
     active_or_unverifiable = (attempts["status"] != "no_active_run")
-    decision = decide(task_name, task, quota, runners, active=active_or_unverifiable)
+    # Any earlier reservation, uncertain dispatch, or incomplete effect check
+    # blocks the same task. Green workflow status is never proof of ledger data.
+    decision = decide(task_name, task, quota, runners,
+                      active=active_or_unverifiable or (existing is not None and existing["status"] != "verified"),
+                      already_verified=existing is not None and existing["status"] == "verified")
     # Workflows may be limited by policy, code readiness, upstream dependency
     # and permission independently of a route recommendation.
     allowed = bool(config.get("dispatchEnabled", False)
@@ -62,6 +74,8 @@ def preflight(config: dict, task_name: str, *, business_date: str = "",
         "billing": quota,
         "runner": runners,
         "attempt": attempts,
+        "registeredTask": {"status": existing["status"] if existing else "not_registered",
+                           "hasTargetRun": bool(existing and existing.get("runId"))},
         "recommendation": {
             "route": decision.route,
             "reason": decision.reason,
