@@ -95,6 +95,24 @@ class APKStagingTests(unittest.TestCase):
             validate_run(run, "anwpustudent-lab/Test",
                          ".github/workflows/test-self-hosted.yml", 123)
 
+    def test_verified_test_main_push_allowed_but_signer_push_is_rejected(self):
+        test = dict(id=123, repository={"full_name": "anwpustudent-lab/Test"},
+                    path=".github/workflows/test-self-hosted.yml",
+                    status="completed", conclusion="success",
+                    event="push", head_branch="main", head_sha=SHA)
+        validate_run(test, "anwpustudent-lab/Test",
+                     ".github/workflows/test-self-hosted.yml", 123, SHA)
+        signer = dict(id=456, repository={"full_name": "chaonpu/ziwuxilv-android"},
+                      path=".github/workflows/windows-signing-verified-handoff.yml",
+                      status="completed", conclusion="success",
+                      event="push", head_branch="main")
+        with self.assertRaisesRegex(GuardError, "workflow_run_not_verified"):
+            validate_run(signer, "chaonpu/ziwuxilv-android",
+                         ".github/workflows/windows-signing-verified-handoff.yml", 456)
+        signer["event"] = "workflow_dispatch"
+        validate_run(signer, "chaonpu/ziwuxilv-android",
+                     ".github/workflows/windows-signing-verified-handoff.yml", 456)
+
     def test_candidate_artifact_matches_all_metadata(self):
         with tempfile.TemporaryDirectory() as d:
             req = params()
