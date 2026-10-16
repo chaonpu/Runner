@@ -1,12 +1,21 @@
 # 统一调度中心部署与迁移计划（2026-10-17）
 
+## 2026-10-17 私有执行回执：Stock 已完成代码接入与 Windows 合成验收
+
+- Stock 的 A 股 `run-a-share.yml` 与美股 `run-us.yml` 已在**原有 private_publish 阶段**增加可选 `task_id` 回执制作：默认旧任务的 `task_id` 为空时无变化；仅显式 `workflow_dispatch`、首次 Run、非 force、实际源码 SHA 匹配、快照/账本完备、市场日期准确、`latest.json` 市场版本确有变化时才生成一次专属回执。
+- `private_run_receipt.py` 将回执置于私有 `ZIWUXILV/database/runner_receipts/<market>/<date>.json`，记录 task ID、Stock Run ID、源码 SHA、database 父提交 SHA 及市场版本/摘要。它与对应变更过的 snapshots/ledger/latest 一起通过**现有同一 Git commit/push**提交。文件使用排他创建，不允许覆盖和同日期重复覆盖。无市场数据更新时不制造只有回执的假数据提交。
+- `private_receipt_verify.py` 读取 GitHub Actions Run 的真实元数据及数据库 Git 提交历史，检查原 Run、确切父提交、回执新增、变更集合、提交中的 snapshot/ledger/manifest 内容和摘要。私有只读人工入口可以提供可选 database commit SHA 运行历史核验，要求已配置的 Windows 自托管 Runner、已有 `database` token 及当前 Stock 仓库自身的 Actions 只读令牌；不向公开 Runner 下载私有数据。
+- [Stock Windows Run #38971542897](https://github.com/chaonpu/Stock/actions/runs/38971542897) 的**45 项合成回归全部通过**，包括生成/验证 Git commit 树和 Run ID 的不同伪造、损坏、重复/非法日期等情形。测试不调用真实策略，不写入真实 database。
+- 先前短暂启用的一次性 push 合成测试入口已取消；`private-effect-probe.yml` 恢复为仅 `workflow_dispatch` 手动入口，无 cron。GitHub 托管分钟不足时，安全测试已验证可在 `ziwuxilv-stock-win` 上运行。
+- **还不能称为生产验收完成**：没有新式任务 ID 真实生成的 private database 回执，没有将私有核验结论与公开 Runner 的原预约身份及 Run ID 进行独立可信交叉核对，也没有允许公开 registry 写 `verified`。即使私有提交与 Run 一致，也继续输出 `coordinatorVerified=false`、`businessVerified=false`、`safeToRetry=false`。保持正式派发开关关闭，不重跑历史交易日。
+
 ## 2026-10-17 最新验收：全新 Stock 无操作闭环已通过，正式任务防重基础已接入预检
 
 - [Runner 调度 Run 38967023305](https://github.com/chaonpu/Runner/actions/runs/38967023305) 于 2026-10-17 北京时间 05:06 启动，先预约 `pilot:stock:2026-10-18`，再派发私有 [Stock Run 38967039826](https://github.com/chaonpu/Stock/actions/runs/38967039826)。
 - 同一调度 Job 的预约、派发、前台监控、完成回写和退出步骤均为 Success。公开 `state/pilot_runs.json` 的新任务为 `completed_success`，此前 `pilot:stock:2026-10-17` 保留。新任务已成功验证全部无业务副作用闭环。
 - 新增纯函数 `scheduler/production_registry.py`：严格验证 A/US/ETF 的日期任务 ID 与 Android SHA、阻止重复预约、将目标 Run ID 仅绑定一次、核验目标仓库/工作流/分支/事件/Run Attempt。失败或身份不可信时拒绝自动重派。
 - 新增 `tests/test_production_registry.py`，并在只读 `scheduler.preflight` 中检查 `state/tasks.json` 的已有任务：未完成/不可信记录为 hold，已可信标记 `verified` 的任务跳过。
-- **新生产任务模块当前仅为无副作用的状态契约**：没有持久化 CAS 写入接口、没有正式跨仓库 dispatch、没有 database 账本/快照核验接口，也没有自动补偿。不能将模拟 `verified` 测试误解为真实账本验证。
+- **历史阶段说明（已由下述阶段更新）**：当时仅有纯状态契约。当前已有尚未接入正式派发的 CAS 存储模块与 Stock 私有核验代码；仍没有生产级自动完成核验、正式派发或自动补偿。不能将模拟 `verified` 测试误解为真实账本验证。
 - `config/repositories.json` 的全局和逐任务正式派发开关仍全部关闭；Stock 的 Windows 生产路径未验收，APK 发布审批保持独立。以上全部改动均未运行真实策略、未写入 database、未发送策略邮件、未构建或发布 APK。
 
 ## 2026-10-17 第一阶段实施：生产登记存储 + 私有入账只读核验（未启用正式派发）
