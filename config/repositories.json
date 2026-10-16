@@ -1,7 +1,7 @@
 {
   "version": 1,
   "dispatchEnabled": false,
-  "description": "Public allowlist: identifiers only. No private source or data.",
+  "description": "Public allowlist: Test, Stock, Android signer and public APK; ZIWUXILV/database is a downstream data dependency, not an executable workflow",
   "accounts": {
     "anwpustudent-lab": {
       "kind": "user",
@@ -14,12 +14,6 @@
       "billingSecret": "CHAONPU_BILLING_READ_TOKEN",
       "actionsSecret": "CHAONPU_ACTIONS_READ_TOKEN",
       "runnerSecret": "RUNNER_READ_TOKEN"
-    },
-    "ZIWUXILV": {
-      "kind": "organization",
-      "billingSecret": "ZIWUXILV_BILLING_READ_TOKEN",
-      "actionsSecret": "ZIWUXILV_ACTIONS_READ_TOKEN",
-      "runnerSecret": "ZIWUXILV_RUNNER_READ_TOKEN"
     }
   },
   "tasks": {
@@ -69,17 +63,6 @@
       "estimatedMinutes": 80,
       "reserveMinutes": 200,
       "idempotencyScope": "source-sha",
-      "enabledForDispatch": false
-    },
-    "database_sync": {
-      "kind": "data",
-      "repo": "ZIWUXILV/database",
-      "cloudWorkflow": null,
-      "windowsWorkflow": null,
-      "runnerName": null,
-      "estimatedMinutes": 30,
-      "reserveMinutes": 100,
-      "idempotencyScope": "source-version",
       "enabledForDispatch": false
     },
     "apk_publish": {
