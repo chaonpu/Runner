@@ -1,4 +1,15 @@
 # 统一调度中心部署与迁移计划（2026-10-17）
+## 2026-10-17 公开发布边界纠正
+
+**用户明确指定 `CHAONPU_ACTIONS_READ_TOKEN` 仅覆盖私有仓库**，这一最小授权不需要扩大。此前尝试从 Runner 直接触发公开 `chaonpu/ziwuxilv` 的无业务 canary 返回 403 是**预期的权限隔离效果**，不能归类为待修复的 PAT 问题。
+
+调度路由重新划分：
+- `chaonpu/Runner` 使用现有私有令牌只向 `chaonpu/Stock`、`anwpustudent-lab/Test` 和 `chaonpu/ziwuxilv-android` 派发**已批准的私有工作流**；
+- `chaonpu/ziwuxilv` **不再是 Runner 的 dispatch 目标**；发布仓库原有 `.github/workflows/publish-android-release.yml` 由本仓库自身 `GITHUB_TOKEN` 配合 `contents:write` 执行发布，接受被严格校验的 `android-publish-request.json` 更新或仓库内手动启动；
+- 私有签名成功**不能直接构成**公开发布许可。必须以独立身份核对签名 APK 的证书、版本、源 SHA、artifact hash，结合发布请求与现有版本约束后，才由公开仓库完成最终发布。暂不自动把私有 signed Artifact 推送到公开仓库，也不添加跨公开仓库写入 PAT。
+
+已从 Runner 的可派发任务列表移除 `apk_publish`，也删除了私有写令牌对公开仓库的 canary 路由和入口。新旧工作流此阶段不会因此自动启动业务或发布 APK。
+
 ## 2026-10-17 跨仓库真实权限与 Windows Stock 验收
 
 仅对固定的 `runner-dispatch-canary.yml` 发起过 `workflow_dispatch`；这些测试 workflow 不检出私有代码、数据库和签名密钥：
@@ -8,9 +19,9 @@
 | `chaonpu/Stock` | `38948088743` → `38948101845` | Success |
 | `anwpustudent-lab/Test` | `38948088743` → `38948104668` | Success |
 | `chaonpu/ziwuxilv-android` | `38950285244` → `38950299547` | Success |
-| `chaonpu/ziwuxilv` | `38950285244` | HTTP 403，尚未授予可用范围 |
+| `chaonpu/ziwuxilv` | `38950285244` | HTTP 403：**预期隔离**，不是私有令牌缺陷；不再作为 Runner 目标 |
 
-因此 `TEST_ACTIONS_READ_TOKEN` 对 Test、`CHAONPU_ACTIONS_READ_TOKEN` 对 Stock 和签名仓库已实测具有工作流派发能力。**不要把这一结果扩大成 CHAONPU 令牌已覆盖所有仓库。** 公开发布仓库的令牌资源范围需由用户检查：Fine-grained PAT 选定 `chaonpu/ziwuxilv` 和 Repository Actions:write。403 也可能来自额外仓库政策，修改之前应核对 Token 的允许仓库列表。
+因此 `TEST_ACTIONS_READ_TOKEN` 对 Test、`CHAONPU_ACTIONS_READ_TOKEN` 对 Stock 和签名仓库已实测具有工作流派发能力。**CHAONPU 令牌只覆盖私有业务仓库是预期的安全边界**，不扩大 Fine-grained PAT Repository access。公开版发布沿用公开仓库现有验证与仓库自身发布工作流，作为独立、受控的下游阶段。
 
 公共调度仓库的权限测试 workflow 已调为 **manual-only**，避免错误重试。真实 A/US 策略、APK 签名和正式发布未被此次派发实验运行。
 
@@ -65,7 +76,7 @@ A 股与美股正式工作流新增*可选* `task_id` 输入校验（`stock_a:YY
 - `stock_a` / `stock_us` / `stock_etf`：填写 `business_date`（YYYY-MM-DD）。
 - `android`：填写 `source_sha`（Test/main 的完整 40 位提交）。
 - `database_sync`：填写 `source_version`；目前仅提示缺乏具体执行合同。
-- `apk_publish`：填写 `source_version`；目前仅执行规则验证，不上传。
+- 公开 APK 发布**不在 Runner 的可派发任务列表中**；仅由公开仓库自身的验证后发布工作流处理。
 
 Scheduler 优先使用 GitHub-hosted Ubuntu 运行预检，因此 Windows 关机时也能**预检、记录暂不可用的原因**。但如果没有有效执行资源，它不能凭空完成策略计算或 APK 签名。
 
@@ -77,7 +88,7 @@ Billing Usage Summary 返回 `grossQuantity`、`discountQuantity` 及按 SKU 的
 
 当状态为 `unknown`，仅在目标仓库已经有经过测试的 Windows 工作流、Runner 在线空闲且标签正确时，允许推荐本地路径；但**不直接派发**。任何无效凭据、Runner 403、网络故障或进度未知都会保持待处理。
 
-## 三个 Owner 的权限
+## 私有所有者的权限
 
 现有截图中的六项只读 Secret：
 - `TEST_BILLING_READ_TOKEN`, `TEST_ACTIONS_READ_TOKEN`, `TEST_RUNNER_READ_TOKEN`；
