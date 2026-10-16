@@ -52,6 +52,10 @@ def accept(env: dict, *, at: datetime | None = None,
         if (out.get("status") != "locked_read_only"
                 or out.get("dateMode") != "auto_official_schedule_candidate"
                 or out.get("exchangeSessionVerified") is not False
+                or out.get("marketDataReady") is not False
+                or out.get("publishedScheduleMatched") is not True
+                or out.get("scheduledSessionClosed") is not True
+                or out.get("calendarStatus") != "published_session_past_scheduled_close"
                 or any(out.get(key) is not False for key in (
                     "dispatchAuthorized",
                     "registryWriteAuthorized",
@@ -69,6 +73,9 @@ def accept(env: dict, *, at: datetime | None = None,
             "recommendation": out["routeRecommendation"],
             "dispatchAuthorized": False,
             "exchangeSessionVerified": False,
+            "marketDataReady": False,
+            "publishedScheduleMatched": True,
+            "scheduledSessionClosed": True,
         })
     return {
         "status": "live_registry_read_only_confirmed",
