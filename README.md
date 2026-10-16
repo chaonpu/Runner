@@ -11,9 +11,11 @@
 
 ## 当前状态
 
+**安全验收新入口（2026-10-17）**：新增 [production-dispatch.yml](.github/workflows/production-dispatch.yml)，当前**仅人工 workflow_dispatch + contents:read**，支持 A股、美股指定交易日的只读登记和额度/Runner 预检。Python 入口 `scheduler.production_dry_run` 从公开 GitHub Contents API GET 当前 `state/tasks.json`，发现异常直接 hold，即使预检推荐 cloud 也永远输出 `dispatchAuthorized=false`、`registryWriteAuthorized=false`、`databaseWriteAuthorized=false`、`automaticRetryAuthorized=false`。没有任何跨仓库派发、状态写入、账本同步或定时触发。GitHub Base64 换行兼容已修复。[RUNNER 测试 #38973465844](https://github.com/chaonpu/Runner/actions/runs/38973465844) **116 项通过**。该入口**尚未真实手动执行**，不能把单元测试视为在线预检结果。
+
 **目前已部署：云端按需预检 + 调度启动后同一 Job 前台监控。** Stock 的无操作试验通过 `stock-noop-pilot.yml`：先登记并派发确定 Run ID，随后每约 30 秒查询状态；目标任务结束后写回 `completed_success` 或 `completed_failure` 并停止监控 Job。**已移除独立五分钟 `schedule`。** `reconcile.yml` 仅保留手动异常恢复入口，正常运行不使用。正式策略自动派发仍关闭，避免重复生产计算。
 
-**最新验收（2026-10-17）**：Stock 无业务测试 [Runner #38967023305](https://github.com/chaonpu/Runner/actions/runs/38967023305) → [Stock #38967039826](https://github.com/chaonpu/Stock/actions/runs/38967039826)，已走通登记、唯一派发、同一 Job 持续监控、自动结果回写及退出；两笔公开 canary 登记均为 `completed_success`。原五分钟 cron 已删除，所有七个 Runner 工作流由安全测试防止重引入定时触发。公开生产任务 CAS 状态存储、只读预检和防重门禁已实现，但**正式生产调度未启用**。[RUNNER 安全测试 #38969991137](https://github.com/chaonpu/Runner/actions/runs/38969991137) **106 项通过**。
+**最新验收（2026-10-17）**：Stock 无业务测试 [Runner #38967023305](https://github.com/chaonpu/Runner/actions/runs/38967023305) → [Stock #38967039826](https://github.com/chaonpu/Stock/actions/runs/38967039826)，已走通登记、唯一派发、同一 Job 持续监控、自动结果回写及退出；两笔公开 canary 登记均为 `completed_success`。原五分钟 cron 已删除，现有 Runner 工作流由安全测试防止重引入定时触发。公开生产任务 CAS 状态存储、只读预检和防重门禁已实现，但**正式生产调度未启用**。[RUNNER 安全测试 #38969991137](https://github.com/chaonpu/Runner/actions/runs/38969991137) **106 项通过**。
 
 **私有执行回执（2026-10-17）**：`chaonpu/Stock` 的 A/US 发布步骤已经加入**显式 task_id 才启用**的同一数据库提交回执。无新市场版本则不会伪造回执，普通不带 task_id 的旧策略不改变。私有核验检查源 Run、数据库 Git 历史、回执、快照/账本及最新版本哈希。[Windows 合成测试 #38972033613](https://github.com/chaonpu/Stock/actions/runs/38972033613) **47 项通过**。但 GitHub REST 可能不返回工作流原始输入，且尚未核对公开 Runner 登记，所以验证器明确保持 `coordinatorVerified=false`、`businessVerified=false`、`safeToRetry=false`。私有核验工作流仍为手动执行，**不得把模拟成功视为真实生产入账或允许自动补算**。详见 [部署计划](docs/deployment.md)。
 
@@ -29,6 +31,7 @@
 
 ## 使用入口
 
+- [正式生产只读安全验收入口（手动；不可派发）](https://github.com/chaonpu/Runner/actions/workflows/production-dispatch.yml)
 - [云端按需预检（手动）](https://github.com/chaonpu/Runner/actions/workflows/scheduler.yml)
 - [Stock 持久化防重派发演练（手动，仅无操作 canary）](https://github.com/chaonpu/Runner/actions/workflows/stock-noop-pilot.yml)
 - [手动异常恢复核对（非定时）](https://github.com/chaonpu/Runner/actions/workflows/reconcile.yml)
