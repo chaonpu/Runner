@@ -1,0 +1,77 @@
+name: Stage approved signed APK in public Runner prerelease
+
+on:
+  workflow_dispatch:
+    inputs:
+      signing_run_id:
+        description: "Successful private Windows signing Run ID (must contain publish-candidate-metadata.json)"
+        required: true
+        type: string
+      test_run_id:
+        description: "Exact successful Test Windows full CI Run ID"
+        required: true
+        type: string
+      source_commit:
+        description: "Exact Test source SHA, 40 lowercase hex"
+        required: true
+        type: string
+      version_name:
+        description: "New Android version (e.g. 2.3.5, cannot be current/older)"
+        required: true
+        type: string
+      version_code:
+        description: "New Android versionCode (must be higher than current release)"
+        required: true
+        type: string
+      public_staging_approval:
+        description: "Type STAGE-PUBLIC-APK-<version>-<signing_run_id> to approve public prerelease disclosure"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: public-apk-stage-${{ inputs.version_name }}
+  cancel-in-progress: false
+
+jobs:
+  approved-staging:
+    name: Inspect private signed artifact, then stage only approved APK
+    if: github.ref == 'refs/heads/main' && github.actor == 'chaonpu'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - name: Checkout public coordinator code only
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: false
+          clean: true
+      - name: Validate staging allowlist and dry-run safety tests
+        run: python3 -m unittest discover -s tests -p 'test_apk_stage.py' -v
+      - name: Verify exact approved private signing and stage public APK prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CHAONPU_ACTIONS_READ_TOKEN: ${{ secrets.CHAONPU_ACTIONS_READ_TOKEN }}
+          TEST_ACTIONS_READ_TOKEN: ${{ secrets.TEST_ACTIONS_READ_TOKEN }}
+          SIGNING_RUN_ID: ${{ inputs.signing_run_id }}
+          TEST_RUN_ID: ${{ inputs.test_run_id }}
+          SOURCE_COMMIT: ${{ inputs.source_commit }}
+          VERSION_NAME: ${{ inputs.version_name }}
+          VERSION_CODE: ${{ inputs.version_code }}
+          STAGING_APPROVAL: ${{ inputs.public_staging_approval }}
+        run: |
+          set -euo pipefail
+          python3 -m scheduler.apk_stage \
+            --signing-run-id "$SIGNING_RUN_ID" \
+            --test-run-id "$TEST_RUN_ID" \
+            --source-commit "$SOURCE_COMMIT" \
+            --version-name "$VERSION_NAME" \
+            --version-code "$VERSION_CODE" \
+            --approval "$STAGING_APPROVAL"
+      - name: Confirm formal APP publication remains isolated
+        run: |
+          echo 'Runner staging creates only a public prerelease under chaonpu/Runner.'
+          echo 'No Test source checkout. No publication to chaonpu/ziwuxilv.'
+          echo 'Formal APP release workflow is separately gated.'
