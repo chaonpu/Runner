@@ -94,7 +94,21 @@ def main() -> int:
         print(json.dumps({"status": "invalid_task_identity", "task": args.task,
                           "dispatchAuthorized": False}))
         return 2
-    print(json.dumps(result, ensure_ascii=False, sort_keys=True))
+    # GitHub-hosted jobs in this repository have PUBLIC logs.
+    # Retain quantities in memory for future verified policy evaluation, but
+    # never expose detailed personal/organization billing records publicly.
+    public_result = dict(result)
+    public_result["billing"] = {
+        owner: {
+            "accountType": report.get("accountType"),
+            "read": report.get("read"),
+            "status": report.get("status"),
+            "independentlyVerified": report.get("independentlyVerified", False),
+            "usageDataPresent": bool(report.get("minuteUsageBySku")),
+        }
+        for owner, report in result["billing"].items()
+    }
+    print(json.dumps(public_result, ensure_ascii=False, sort_keys=True))
     step_summary = os.environ.get("GITHUB_STEP_SUMMARY", "")
     if step_summary:
         with open(step_summary, "a", encoding="utf-8") as f:
