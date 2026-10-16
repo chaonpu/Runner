@@ -91,6 +91,9 @@ def verify_change(config: dict, before: dict, after: dict, source_run_id: int) -
     """
     validate(config, before)
     validate(config, after)
+    if ({k: v for k, v in before.items() if k != "tasks"} !=
+            {k: v for k, v in after.items() if k != "tasks"}):
+        raise RegistryGuard("registry_root_metadata_immutable")
     if type(source_run_id) is not int or source_run_id <= 0:
         raise RegistryGuard("invalid_source_run")
     initial = {row["id"]: row for row in before["tasks"]}
