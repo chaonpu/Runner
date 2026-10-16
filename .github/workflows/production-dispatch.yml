@@ -1,0 +1,53 @@
+name: Production dispatch safety gate (READ ONLY - NO DISPATCH)
+
+on:
+  workflow_dispatch:
+    inputs:
+      task:
+        description: "Select A/US strategy for a read-only production gate; NO execution"
+        required: true
+        type: choice
+        options: [stock_a, stock_us]
+      business_date:
+        description: "Requested business date YYYY-MM-DD; validation only"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: runner-production-gate-readonly
+  cancel-in-progress: false
+
+jobs:
+  read-only-gate:
+    name: Verify task identity, registry and hosted account route, then exit
+    if: github.actor == 'chaonpu' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - name: Checkout trusted public scheduler only
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: false
+          clean: true
+      - name: Enforce public production dispatch lock in unit tests
+        run: python3 -m unittest discover -s tests -p 'test_*.py' -q
+      - name: Read live public task registry and private Actions metadata only
+        env:
+          GH_TOKEN: \${{ github.token }}
+          TASK: \${{ inputs.task }}
+          BUSINESS_DATE: \${{ inputs.business_date }}
+          CHAONPU_ACTIONS_READ_TOKEN: \${{ secrets.CHAONPU_ACTIONS_READ_TOKEN }}
+          CHAONPU_BILLING_READ_TOKEN: \${{ secrets.CHAONPU_BILLING_READ_TOKEN }}
+          RUNNER_READ_TOKEN: \${{ secrets.RUNNER_READ_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m scheduler.production_dry_run --task "$TASK" --business-date "$BUSINESS_DATE"
+      - name: Confirm no business side effects
+        run: |
+          echo 'READ ONLY: no private checkout, no dispatch, no state commit, no database changes.'
+          echo 'No five-minute schedule, no background watcher; workflow exits here.'
