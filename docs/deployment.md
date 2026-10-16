@@ -1,5 +1,13 @@
 # 统一调度中心部署与迁移计划（2026-10-17）
 
+## 2026-10-17 继续跟进：双 Run ID + 私有回执 + 公开登记只读交叉核验
+
+- Stock 正式 A股、美股工作流新增可选 `coordinator_run_id`；当 `task_id` 非空时，两者必须成对有效，否则任务在真正运行策略前终止。回执中新加入 `coordinatorRunId`，并在后续私有 Git 提交验证时检查（GitHub REST 若返回调度输入，还校对输入中的原始 Run ID）。
+- 私有 `private_coordinator_link.py` 在手动只读诊断中取得公开 Runner 的 `config/repositories.json`、`state/tasks.json` 和原调度 Run，结合 Stock 目标 Run 及私有提交验证结果，拒绝任何 task ID、两侧 Run ID、仓库、工作流、时间口径或结果错配。公开 HTTP GET 不携带私有 PAT；数据库及持仓绝不复制到公开 RUNNER。
+- `private-effect-probe.yml` 已恢复为只有人工 `workflow_dispatch`，当提供准确的 `database_commit_sha` 时再进行双仓核查。**当前生产 RUNNER `production-dispatch.yml` 尚未部署**，公开生产注册状态 `state/tasks.json` 仍为空，因此只验证代码契约，没有可供真实生产验收的同源 Run。
+- [Stock Windows 合成安全测试 #38972769647](https://github.com/chaonpu/Stock/actions/runs/38972769647)：**56/56 通过**；测试后移除了临时 push 触发，不影响用户既有工作流。
+- 即使证据在模拟中完全一致，检查器也不允许写入 `verified`、自动补偿或自动重新派发，维持 `coordinatorVerified=false`、`businessVerified=false`、`safeToRetry=false`。下一步需先部署**默认禁用/只读**的生产调度入口、完成与真实私有策略的一次非重复日期验收，再设计最终写入许可门禁，切勿提前开启正式派发。
+
 ## 2026-10-17 私有执行回执：Stock 已完成代码接入与 Windows 合成验收
 
 - Stock 的 A 股 `run-a-share.yml` 与美股 `run-us.yml` 已在**原有 private_publish 阶段**增加可选 `task_id` 回执制作：默认旧任务的 `task_id` 为空时无变化；仅显式 `workflow_dispatch`、首次 Run、非 force、实际源码 SHA 匹配、快照/账本完备、市场日期准确、`latest.json` 市场版本确有变化时才生成一次专属回执。
