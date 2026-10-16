@@ -1,4 +1,26 @@
 # 统一调度中心部署与迁移计划（2026-10-17）
+## 2026-10-17 实测进度
+
+- GitHub hosted `Runner scheduler safety tests`：Run `38946066842`，21 项路由与业务副作用安全测试通过。
+- GitHub hosted `Coordinator cloud preflight live smoke`：Run `38945358576`，实际读取 Stock/Android Actions 状态、两个个人账户 Billing Usage、Test 与签名 Windows Runner；不调用任何私有仓库的 GET Contents、下载或 POST。一次性测试 workflow 已移除，结果仍可从 Runs 查证。
+- GitHub hosted `Reconcile dispatched tasks (cloud, monitor only)`：Run `38946240769`，空注册表的只读状态复核通过。保留每 5 分钟 cron / 手动入口；测试用 push 触发已去除。
+- 原私有签名仓库 `android-route-observer.yml` 及其相关四个旧工作流与三份探针脚本已删除；公开 APP 仓库旧的 `android-build-route-tests.yml` 和 `tools/build_route_policy.py` 已删除。
+- 已验证过的 `Test` Windows 构建、签名仓库 Linux/Windows 正式签名，以及公开 APK 发布工作流均保留；**未修改策略、账本或最新正式版资产**。
+
+目前 `state/tasks.json` 的 `tasks` 数组为空，因此 5 分钟复核只会验证当前队列，**没有实际任务被派发**。真正的 `dispatched/running/verified` 登记、冲突检测与恢复提交机制需要 `Runner` 自身任务登记写入及目标仓库的 Actions 写入授权完成后才能启用。
+
+### 下一步所需权限（均为最小权限，令牌绝不存储在 Git）
+
+当前只有六个只读 Secret。对每个跨账户业务 Owner 还需要 **Actions:write** 的单独授权：
+
+- `TEST_ACTIONS_WRITE_TOKEN`：由 `anwpustudent-lab` 所有，唯一选中 `Test`。
+- `CHAONPU_ACTIONS_WRITE_TOKEN`：由 `chaonpu` 所有，只选中要调度的 `Stock`、`ziwuxilv-android`、`ziwuxilv`。
+- `ZIWUXILV_ACTIONS_WRITE_TOKEN`：`ZIWUXILV` 组织授权，只选中 `database`；该组织可能需要管理员审批。
+
+还需要单独的 `ZIWUXILV_BILLING_READ_TOKEN`、`ZIWUXILV_ACTIONS_READ_TOKEN` 和 `ZIWUXILV_RUNNER_READ_TOKEN`（只在这些接口确实必要时授权；组织 Runner 是 `Self-hosted runners:read`，仓库 Runner 是 `Administration:read`）。**不要将这些令牌值发在聊天里。**
+
+即便拥有 Actions:write，仍需完成每种任务的输入校验、账本去重、产物验收和可信额度/预算判定，不能直接打开全部自动派发。
+
 
 ## 实际部署
 
