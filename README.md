@@ -27,7 +27,14 @@
 
 - [云端按需预检（手动）](https://github.com/chaonpu/Runner/actions/workflows/scheduler.yml)
 - [云端待执行任务复核（每 5 分钟）](https://github.com/chaonpu/Runner/actions/workflows/reconcile.yml)
+- [经批准签名 APK 公开暂存（手动，Pre-release）](https://github.com/chaonpu/Runner/actions/workflows/stage-android-apk.yml)
 - [安全单元测试](https://github.com/chaonpu/Runner/actions/workflows/validate.yml)
 - [完整部署状态与授权要求](docs/deployment.md)
 
 **正式策略／构建派发尚未启用**：已有的 `TEST_ACTIONS_READ_TOKEN`、`CHAONPU_ACTIONS_READ_TOKEN` 虽名称含 READ，但用户确认它们具备 Actions:write，已在 Stock 和 Test 两次真实无业务副作用 canary 中验证成功。仍需业务工作流的任务编号、核验、幂等适配，以及可靠额度判断。
+
+## APK 暂存与正式发布分离
+
+新 APK 经 `Test` 完整验证和 `ziwuxilv-android` 私有生产签名后，管理员可以使用版本专用批准口令手动将**签名 APK 和校验清单**存放到 `Runner` 的公开预发布 Release，创建匿名 HTTPS 下载地址。需要新版本、精确的 Test/签名 Run、源码 SHA、生产证书及 APK 哈希核验。**此操作会提前公开 APK，请勿在未获准时触发。**
+
+这不更新用户 APP：正式版 `chaonpu/ziwuxilv` 仍须独立审批和发布请求。流程详见 [完整部署说明](docs/deployment.md)。历史 v2.3.4 不会自动重新暂存或发布。
