@@ -80,7 +80,10 @@ def validate_run(data: dict, repo: str, workflow: str, run_id: int,
             or (data.get("repository") or {}).get("full_name") != repo
             or str(data.get("path", "")).split("@")[0] != workflow
             or data.get("status") != "completed" or data.get("conclusion") != "success"
-            or data.get("event") != "workflow_dispatch"
+            or data.get("event") not in (
+                ("push", "workflow_dispatch") if repo == SOURCE_REPO
+                else ("workflow_dispatch",)
+            )
             or data.get("head_branch") != "main"):
         raise GuardError("workflow_run_not_verified")
     if source_sha is not None and data.get("head_sha") != source_sha:
