@@ -1,0 +1,38 @@
+name: Verify signer and release workflow dispatch scopes (no-op)
+
+on:
+  # One-time main-branch smoke trigger; will be removed after verified success.
+  push:
+    branches: [main]
+    paths: [".github/workflows/dispatch-extra-canary.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cross-repository-signer-publish-canary
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: false
+      - name: Verify only no-op canary dispatches permitted
+        run: python3 -m unittest discover -s tests -p 'test_*.py' -q
+      - name: Verify private signer repository write scope without signing
+        env:
+          CHAONPU_ACTIONS_READ_TOKEN: ${{ secrets.CHAONPU_ACTIONS_READ_TOKEN }}
+        run: python3 -m scheduler.canary_dispatch --target signer
+      - name: Verify public release repository write scope without publishing
+        env:
+          CHAONPU_ACTIONS_READ_TOKEN: ${{ secrets.CHAONPU_ACTIONS_READ_TOKEN }}
+        run: python3 -m scheduler.canary_dispatch --target publish
+      - name: State explicit nonproduction result
+        run: echo 'No strategy, ledger, APK signing, publication or private source download.'
