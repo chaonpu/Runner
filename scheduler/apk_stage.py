@@ -149,8 +149,9 @@ def assert_clean_artifact(folder: Path, expected: dict) -> tuple[Path, dict, lis
         name, name + ".sha256", "source-commit.txt",
         "signing-cert-sha256.txt", "publish-candidate-metadata.json",
     }
-    present = {entry.name for entry in folder.iterdir() if entry.is_file()}
-    if present != required or any(not entry.is_file() for entry in folder.iterdir()):
+    entries = list(folder.iterdir())
+    present = {entry.name for entry in entries if entry.is_file() and not entry.is_symlink()}
+    if present != required or any(not entry.is_file() or entry.is_symlink() for entry in entries):
         raise GuardError("artifact_files_not_allowlisted")
     apk = folder / name
     if apk.stat().st_size > MAX_APK_BYTES or apk.stat().st_size < 1024:
@@ -332,12 +333,31 @@ def main() -> int:
             receipt_file.write_text(json.dumps(receipt, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
             release_env = dict(os.environ)
             release_env["GH_TOKEN"] = os.environ["GH_TOKEN"]
+            # A second signer run for the SAME app version must never create
+            # another publicly visible candidate, even with a different tag.
             existing = subprocess.run(
-                ["gh", "release", "view", tag, "--repo", PUBLIC_REPO, "--json", "assets",
-                 "--jq", ".assets[].name"],
+                ["gh", "api", "repos/" + PUBLIC_REPO + "/releases?per_page=100"],
                 capture_output=True, text=True, env=release_env, timeout=25,
             )
-            if existing.returncode == 0:
+            if existing.returncode != 0:
+                raise GuardError("staging_release_registry_unavailable")
+            try:
+                history = json.loads(existing.stdout)
+                if not isinstance(history, list):
+                    raise ValueError("not a release list")
+            except ValueError as exc:
+                raise GuardError("staging_release_registry_unavailable") from exc
+            if any(str(item.get("tag_name", "")).startswith(
+                    "staged-apk-v" + req["versionName"] + "-signrun-"
+                ) for item in history if isinstance(item, dict)):
+                raise GuardError("version_already_has_public_staging_release")
+            # Double-check the exact tag, including release drafts excluded
+            # from unauthenticated lists. Never replace existing assets.
+            exact = subprocess.run(
+                ["gh", "release", "view", tag, "--repo", PUBLIC_REPO, "--json", "assets"],
+                capture_output=True, text=True, env=release_env, timeout=25,
+            )
+            if exact.returncode == 0:
                 raise GuardError("staging_release_already_exists_manual_reconciliation_required")
             notes = ("PUBLIC PRE-RELEASE STAGING ONLY; NOT FORMAL APP RELEASE. "
                      f"Version {req['versionName']} ({req['versionCode']}); "
