@@ -25,7 +25,7 @@ class ForegroundWatchTests(unittest.TestCase):
         timer = FakeClock()
         get = Mock(side_effect=[gh_run("queued", None),
                                 gh_run("in_progress", None), gh_run()])
-        result = observe(row(), get, sleep=timer.sleep, now=timer.now,
+        result = observe(row(), get, pause=timer.sleep, now=timer.now,
                          interval=15, deadline_seconds=60)
         self.assertEqual(result, "completed_success")
         self.assertEqual(get.call_count, 3)
@@ -34,7 +34,7 @@ class ForegroundWatchTests(unittest.TestCase):
     def test_failed_run_exits_without_restart(self):
         timer = FakeClock()
         get = Mock(return_value=gh_run("completed", "failure"))
-        result = observe(row(), get, sleep=timer.sleep, now=timer.now,
+        result = observe(row(), get, pause=timer.sleep, now=timer.now,
                          interval=15, deadline_seconds=60)
         self.assertEqual(result, "completed_failure")
         get.assert_called_once()
@@ -43,7 +43,7 @@ class ForegroundWatchTests(unittest.TestCase):
         for conclusion in ("cancelled", "timed_out", "action_required"):
             timer = FakeClock()
             result = observe(row(), lambda _: gh_run("completed", conclusion),
-                             sleep=timer.sleep, now=timer.now,
+                             pause=timer.sleep, now=timer.now,
                              interval=15, deadline_seconds=60)
             self.assertEqual(result, "completed_failure")
 
@@ -52,14 +52,14 @@ class ForegroundWatchTests(unittest.TestCase):
         bad["path"] = ".github/workflows/run-us.yml@main"
         timer = FakeClock()
         with self.assertRaisesRegex(PilotGuard, "run_status_unavailable|identity"):
-            observe(row(), lambda _: bad, sleep=timer.sleep, now=timer.now,
+            observe(row(), lambda _: bad, pause=timer.sleep, now=timer.now,
                     interval=15, deadline_seconds=60)
 
     def test_api_outage_stops_no_dispatch(self):
         timer = FakeClock()
         def fail(_): raise OSError("token never printed")
         with self.assertRaisesRegex(PilotGuard, "run_status_unavailable"):
-            observe(row(), fail, sleep=timer.sleep, now=timer.now,
+            observe(row(), fail, pause=timer.sleep, now=timer.now,
                     interval=15, deadline_seconds=60)
         self.assertEqual(timer.value, 30)
 
@@ -67,7 +67,7 @@ class ForegroundWatchTests(unittest.TestCase):
         timer = FakeClock()
         with self.assertRaisesRegex(PilotGuard, "monitor_deadline"):
             observe(row(), lambda _: gh_run("queued", None),
-                    sleep=timer.sleep, now=timer.now,
+                    pause=timer.sleep, now=timer.now,
                     interval=15, deadline_seconds=60)
         self.assertEqual(timer.value, 60)
 
