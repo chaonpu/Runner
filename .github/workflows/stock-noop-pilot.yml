@@ -30,7 +30,8 @@ jobs:
           clean: true
       - name: Validate idempotent pilot safety before requesting any write
         run: |
-          python3 -m unittest -v tests.test_pilot_registry tests.test_pilot_monitor tests.test_canary_dispatch
+          python3 -m unittest discover -s tests -p 'test_pilot_*.py' -v
+          python3 -m unittest discover -s tests -p 'test_canary_dispatch.py' -v
       - name: Reserve date before issuing no-op cross-repository dispatch
         env:
           GH_TOKEN: ${{ github.token }}
