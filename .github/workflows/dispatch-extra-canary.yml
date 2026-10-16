@@ -2,6 +2,13 @@ name: Verify signer and release workflow dispatch scopes (no-op)
 
 on:
   workflow_dispatch:
+    inputs:
+      target:
+        description: "Which no-op permission canary to test"
+        required: true
+        default: publish
+        type: choice
+        options: [publish, signer, both]
 
 permissions:
   contents: read
@@ -23,10 +30,12 @@ jobs:
       - name: Verify only no-op canary dispatches permitted
         run: python3 -m unittest discover -s tests -p 'test_*.py' -q
       - name: Verify private signer repository write scope without signing
+        if: inputs.target == 'signer' || inputs.target == 'both'
         env:
           CHAONPU_ACTIONS_READ_TOKEN: ${{ secrets.CHAONPU_ACTIONS_READ_TOKEN }}
         run: python3 -m scheduler.canary_dispatch --target signer
       - name: Verify public release repository write scope without publishing
+        if: inputs.target == 'publish' || inputs.target == 'both'
         env:
           CHAONPU_ACTIONS_READ_TOKEN: ${{ secrets.CHAONPU_ACTIONS_READ_TOKEN }}
         run: python3 -m scheduler.canary_dispatch --target publish
