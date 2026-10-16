@@ -26,7 +26,7 @@ def fake_get(config, token):
 def fake_audit(config, registry, task, date, *, env, clock):
     return {
         "status": "locked_read_only", "businessDate": "2026-10-16",
-        "dateMode": "auto_market_clock_candidate",
+        "dateMode": "auto_official_schedule_candidate",
         "exchangeSessionVerified": False,
         "marketTimezone": "Asia/Shanghai" if task == "stock_a" else "America/New_York",
         "registeredTaskStatus": "not_registered", "routeRecommendation": "deferred",
