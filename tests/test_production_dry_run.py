@@ -1,5 +1,6 @@
 """No-side-effect production workflow safety gate tests."""
 import copy
+from datetime import datetime, timezone
 import json
 from pathlib import Path
 import unittest
@@ -64,10 +65,63 @@ class ProductionDryRunTests(unittest.TestCase):
 
     def test_legal_dates_only(self):
         for invalid in ("2026-02-30", "2026-10-1", "2026-13-04",
-                        "today", "", "../2026-10-19"):
+                        "today", "../2026-10-19"):
             with self.subTest(invalid=invalid):
                 with self.assertRaisesRegex(RegistryGuard, "date_invalid"):
                     check(CONFIG, STATE, "stock_a", invalid, preflight_fn=fake_route)
+
+    def test_auto_date_uses_market_timezone_on_beijing_saturday(self):
+        # 2026-10-17 06:00 Shanghai is 2026-10-16 18:00 New York.
+        utc_clock = datetime(2026, 10, 16, 22, tzinfo=timezone.utc)
+        for task, zone in (
+            ("stock_a", "Asia/Shanghai"),
+            ("stock_us", "America/New_York"),
+        ):
+            with self.subTest(task=task):
+                result = check(CONFIG, STATE, task, "", clock=utc_clock,
+                               preflight_fn=fake_route)
+                self.assertEqual(result["businessDate"], "2026-10-16")
+                self.assertEqual(result["taskId"], task + ":2026-10-16")
+                self.assertEqual(result["dateMode"], "auto_market_clock_candidate")
+                self.assertEqual(result["marketTimezone"], zone)
+                self.assertFalse(result["exchangeSessionVerified"])
+                self.assertFalse(result["dispatchAuthorized"])
+
+    def test_auto_before_market_close_uses_previous_weekday(self):
+        before_china_close = datetime(2026, 10, 19, 6, tzinfo=timezone.utc)
+        after_china_close = datetime(2026, 10, 19, 8, tzinfo=timezone.utc)
+        first = check(CONFIG, STATE, "stock_a", "", clock=before_china_close,
+                      preflight_fn=fake_route)
+        second = check(CONFIG, STATE, "stock_a", "", clock=after_china_close,
+                       preflight_fn=fake_route)
+        self.assertEqual(first["businessDate"], "2026-10-16")
+        self.assertEqual(second["businessDate"], "2026-10-19")
+
+    def test_us_dst_transition_changes_nominal_close_utc(self):
+        # America/New_York uses EST in January and EDT in October.
+        january_preclose = datetime(2026, 1, 5, 20, 30, tzinfo=timezone.utc)
+        january_postclose = datetime(2026, 1, 5, 21, 30, tzinfo=timezone.utc)
+        october_postclose = datetime(2026, 10, 19, 20, 30, tzinfo=timezone.utc)
+        self.assertEqual(check(CONFIG, STATE, "stock_us", "", clock=january_preclose,
+                               preflight_fn=fake_route)["businessDate"], "2026-01-02")
+        self.assertEqual(check(CONFIG, STATE, "stock_us", "", clock=january_postclose,
+                               preflight_fn=fake_route)["businessDate"], "2026-01-05")
+        self.assertEqual(check(CONFIG, STATE, "stock_us", "", clock=october_postclose,
+                               preflight_fn=fake_route)["businessDate"], "2026-10-19")
+
+    def test_manual_date_retains_override_and_disables_auto(self):
+        actual_clock = datetime(2026, 10, 16, 22, tzinfo=timezone.utc)
+        result = check(CONFIG, STATE, "stock_us", "2026-10-15",
+                       clock=actual_clock, preflight_fn=fake_route)
+        self.assertEqual(result["businessDate"], "2026-10-15")
+        self.assertEqual(result["dateMode"], "manual_override")
+        self.assertFalse(result["exchangeSessionVerified"])
+        self.assertFalse(result["dispatchAuthorized"])
+
+    def test_naive_datetime_is_not_trusted(self):
+        with self.assertRaisesRegex(RegistryGuard, "date_invalid"):
+            check(CONFIG, STATE, "stock_us", "",
+                  clock=datetime(2026, 10, 17, 4, 30), preflight_fn=fake_route)
 
     def test_good_a_and_us_both_return_unconditionally_no_dispatch(self):
         for task in ("stock_a", "stock_us"):
