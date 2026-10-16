@@ -1,0 +1,43 @@
+name: Cross-repository Actions dispatch permissions canary
+
+on:
+  # Temporary launch to verify the two EXISTING repository Actions tokens.
+  # This event will be removed after the first verified run.
+  push:
+    branches: [main]
+    paths: [".github/workflows/dispatch-canary.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: runner-cross-repo-noop-canary
+  cancel-in-progress: false
+
+jobs:
+  check:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - name: Checkout fixed public coordinator main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: false
+          clean: true
+      - name: Verify strict canary API surface
+        run: python3 -m unittest discover -s tests -p 'test_*.py' -q
+      - name: Verify chaonpu token can dispatch no-op Stock workflow
+        env:
+          CHAONPU_ACTIONS_READ_TOKEN: ${{ secrets.CHAONPU_ACTIONS_READ_TOKEN }}
+        run: python3 -m scheduler.canary_dispatch --target stock
+      - name: Verify Test token can dispatch no-op Test workflow
+        env:
+          TEST_ACTIONS_READ_TOKEN: ${{ secrets.TEST_ACTIONS_READ_TOKEN }}
+        run: python3 -m scheduler.canary_dispatch --target test
+      - name: Confirm production tasks remain unmodified
+        run: |
+          echo 'Only runner-dispatch-canary.yml was invoked in two private repositories.'
+          echo 'No strategy, ledger, APK signing or release executed.'
