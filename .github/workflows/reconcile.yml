@@ -34,3 +34,24 @@ jobs:
         run: python3 -m scheduler.pilot_monitor
       - name: Confirm no automatic retry or release until full handoff validation
         run: echo 'Monitor only. No dispatch, cancellation, compensation, ledger write or publication.'
+  finalize-noop-stock-pilot:
+    name: Persist verified no-op pilot completion (no business dispatch)
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout trusted public coordinator only
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: false
+          clean: true
+      - name: Test strict no-op completion policy before write
+        run: python3 -m unittest discover -s tests -p 'test_pilot_finalize.py' -v
+      - name: Verify exact Stock no-op workflow and atomically record completed status
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CHAONPU_ACTIONS_READ_TOKEN: ${{ secrets.CHAONPU_ACTIONS_READ_TOKEN }}
+        run: python3 -m scheduler.pilot_finalize
