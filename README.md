@@ -11,7 +11,7 @@
 
 ## 当前状态
 
-**目前已部署：云端只读预检 + 5 分钟云端只读任务复核。** `scheduler.yml` 支持手动按需预检；`reconcile.yml` 按 5 分钟间隔复核 `state/tasks.json` 中已登记的任务（当前为空）。二者均不派发、不取消、不写入账本、不发布 APK。业务仓库的原生产定时源尚未迁移，避免双触发。
+**目前已部署：云端按需预检 + 调度启动后同一 Job 前台监控。** Stock 的无操作试验通过 `stock-noop-pilot.yml`：先登记并派发确定 Run ID，随后每约 30 秒查询状态；目标任务结束后写回 `completed_success` 或 `completed_failure` 并停止监控 Job。**已移除独立五分钟 `schedule`。** `reconcile.yml` 仅保留手动异常恢复入口，正常运行不使用。正式策略自动派发仍关闭，避免重复生产计算。
 
 当前凭据与权限边界：
 
@@ -27,7 +27,7 @@
 
 - [云端按需预检（手动）](https://github.com/chaonpu/Runner/actions/workflows/scheduler.yml)
 - [Stock 持久化防重派发演练（手动，仅无操作 canary）](https://github.com/chaonpu/Runner/actions/workflows/stock-noop-pilot.yml)
-- [云端待执行任务复核（每 5 分钟）](https://github.com/chaonpu/Runner/actions/workflows/reconcile.yml)
+- [手动异常恢复核对（非定时）](https://github.com/chaonpu/Runner/actions/workflows/reconcile.yml)
 - [经批准签名 APK 公开暂存（手动，Pre-release）](https://github.com/chaonpu/Runner/actions/workflows/stage-android-apk.yml)
 - [安全单元测试](https://github.com/chaonpu/Runner/actions/workflows/validate.yml)
 - [完整部署状态与授权要求](docs/deployment.md)
@@ -42,7 +42,7 @@
 
 ## 私有 Stock 防重复派发演练
 
-`.github/workflows/stock-noop-pilot.yml` **只允许 `chaonpu` 从 `main` 手动启动**。填写测试日期（YYYY-MM-DD），先将 `pilot:stock:日期` 原子登记到公开的 `state/pilot_runs.json`，然后仅派发私有 `chaonpu/Stock/.github/workflows/runner-dispatch-canary.yml`（无源码检出、无策略、无 database 操作、无邮件）。返回的实际 Run ID 继续写入同一登记文件；每 5 分钟的 `reconcile.yml` 通过已有只读令牌查询其实际状态，**不自动重试或执行策略**。
+`.github/workflows/stock-noop-pilot.yml` **只允许 `chaonpu` 从 `main` 手动启动**。填写测试日期（YYYY-MM-DD），先将 `pilot:stock:日期` 原子登记到公开的 `state/pilot_runs.json`，然后仅派发私有 `chaonpu/Stock/.github/workflows/runner-dispatch-canary.yml`（无源码检出、无策略、无 database 操作、无邮件）。返回的实际 Run ID 继续写入同一登记文件，然后**同一调度 Job**通过只读 Actions API 前台监控，任务结束时确认目标 Run 并写回成功／失败状态，随后停止。若 Job 中断、断网或超时，原任务保留待核对状态，允许再次手动选择 `mode=monitor_only` 只监控旧 Run，绝不重新派发。
 
 同一日期的再次请求会停止，不会盲目重复派发；写入响应未知时需人工检查登记表和运行页面。测试日期只是公开演练标签，**不是交易日期计算结果**。
 
