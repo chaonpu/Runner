@@ -138,6 +138,13 @@ class ProductionStoreTests(unittest.TestCase):
         with self.assertRaisesRegex(RegistryGuard, "one_task"):
             verify_change(config(), original, mixed, RUN)
 
+    def test_root_metadata_is_immutable_during_single_task_write(self):
+        original = empty()
+        after = reserved()
+        after["description"] = "unexpected changed description"
+        with self.assertRaisesRegex(RegistryGuard, "registry_root_metadata_immutable"):
+            verify_change(config(), original, after, RUN)
+
     def test_no_unauthorized_timestamp_or_identity_changes(self):
         original = reserved()
         after = copy.deepcopy(original)
