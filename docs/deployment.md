@@ -140,3 +140,19 @@ Release tag `staged-apk-v<version>-signrun-<runId>`，`--prerelease`；现有相
 
 私有 [Windows 验收说明](https://github.com/chaonpu/Stock/blob/main/docs/windows-runner-validation.md) 记录了后续实际数据源验证、连接失败恢复与任务幂等门禁。诊断流程已改为仅手动触发，不额外安排重复运行。
 
+
+## 2026-10-17：Stock 无操作调度的持久化验收基础已部署
+
+使用现有 `CHAONPU_ACTIONS_READ_TOKEN`（可派发私有仓库，但仍不包含公开正式发布仓库）及 `Runner` 自身 `GITHUB_TOKEN: contents:write`：
+
+1. 手动 `Runner/.github/workflows/stock-noop-pilot.yml` 输入 YYYY-MM-DD 测试日期；
+2. 在 `Runner/state/pilot_runs.json` 中先写入不可自动覆盖的 `pilot:stock:YYYY-MM-DD` 保留记录，GitHub Contents API 使用原文件 SHA 做条件提交；
+3. 仅派发 `chaonpu/Stock/runner-dispatch-canary.yml` 无操作测试工作流；
+4. 有明确返回时再补全实际 `workflow_run_id`；204、网络超时、权限异常或写入冲突均保守记录或保留原始预约，**不会自动重新派发**；
+5. `reconcile.yml` 继续每五分钟读取 `state/pilot_runs.json` 的可追踪 Run ID，并使用私有只读 API 验证目标仓库与工作流的 `queued/running/success/failure` 状态；即使 Success 也只标记“测试完成”，**绝不视为策略或账本有效**。
+
+云端测试 Run [38960499365](https://github.com/chaonpu/Runner/actions/runs/38960499365) 成功：**55 项测试通过**，覆盖先登记后派发、相同日期拒绝重复、HTTP 响应未知不自动重试、错误目标隔离、实际 Run ID 的只读核查。
+
+**仍待首次手动实测整个先预约→无操作派发→保存 ID 流程**：GitHub 连接当前可以更新仓库代码和查询 Action，但未提供可用的通用 `workflow_dispatch` 调用，因此不声称这次新增的手动 pilot 已真正执行过。必须由拥有者在 Runner Actions 页面手动启动一次后检查其真实日志和 `state/pilot_runs.json` 是否成功写入。
+
+以上**不是** A/US 策略的生产调度上线；`dispatchEnabled=false`、各业务 `enabledForDispatch=false` 未改。Stock Windows 只完成真实依赖与离线回归，暂不自动执行会写入 database 的完整策略。
