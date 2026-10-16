@@ -11,7 +11,7 @@
 
 ## 当前状态
 
-**阶段 1：只读云端调度基座。** 公开仓库中的 Scheduler 默认为 `dry-run`，不调用工作流派发、取消、代码写入或 APK 发布 API。新旧业务工作流的定时触发尚未迁移，避免在未确认去重之前重复派发。
+**目前已部署：云端只读预检 + 5 分钟云端只读任务复核。** `scheduler.yml` 支持手动按需预检；`reconcile.yml` 按 5 分钟间隔复核 `state/tasks.json` 中已登记的任务（当前为空）。二者均不派发、不取消、不写入账本、不发布 APK。业务仓库的原生产定时源尚未迁移，避免双触发。
 
 初始凭据名称：
 
@@ -22,3 +22,12 @@
 组织 `ZIWUXILV` 的 Billing/Runner 访问需要单独授权。任何未配置或权限不足都记录 `unknown`，不使用另一所有者的额度冒充。
 
 目标阶段：安全完成 Stock 单任务演练后，再逐项迁移 database、Test、Android 私有签名与公开正式发布；所有切换都需明确定义输出验证和幂等机制。详见 `docs/deployment.md`。
+
+## 使用入口
+
+- [云端按需预检（手动）](https://github.com/chaonpu/Runner/actions/workflows/scheduler.yml)
+- [云端待执行任务复核（每 5 分钟）](https://github.com/chaonpu/Runner/actions/workflows/reconcile.yml)
+- [安全单元测试](https://github.com/chaonpu/Runner/actions/workflows/validate.yml)
+- [完整部署状态与授权要求](docs/deployment.md)
+
+**正式派发尚未启用**：还需三所有者的独立 Actions:write 凭据、ZIWUXILV 的只读权限和业务工作流中的任务标识、核验与幂等适配。
