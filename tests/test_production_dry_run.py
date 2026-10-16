@@ -82,7 +82,7 @@ class ProductionDryRunTests(unittest.TestCase):
                                preflight_fn=fake_route)
                 self.assertEqual(result["businessDate"], "2026-10-16")
                 self.assertEqual(result["taskId"], task + ":2026-10-16")
-                self.assertEqual(result["dateMode"], "auto_market_clock_candidate")
+                self.assertEqual(result["dateMode"], "auto_official_schedule_candidate")
                 self.assertEqual(result["marketTimezone"], zone)
                 self.assertFalse(result["exchangeSessionVerified"])
                 self.assertFalse(result["dispatchAuthorized"])
@@ -108,6 +108,26 @@ class ProductionDryRunTests(unittest.TestCase):
                                preflight_fn=fake_route)["businessDate"], "2026-01-05")
         self.assertEqual(check(CONFIG, STATE, "stock_us", "", clock=october_postclose,
                                preflight_fn=fake_route)["businessDate"], "2026-10-19")
+
+    def test_exchange_holiday_manual_audit_never_approves(self):
+        result = check(CONFIG, STATE, "stock_a", "2026-10-01",
+                       clock=datetime(2026, 10, 18, 22, tzinfo=timezone.utc),
+                       preflight_fn=fake_route)
+        self.assertEqual(result["calendarStatus"], "exchange_scheduled_closed")
+        self.assertFalse(result["publishedScheduleMatched"])
+        self.assertFalse(result["scheduledSessionClosed"])
+        self.assertFalse(result["marketDataReady"])
+        self.assertFalse(result["dispatchAuthorized"])
+
+    def test_unsupported_calendar_year_holds_before_any_remote_preflight(self):
+        preflight_fn = Mock()
+        result = check(CONFIG, STATE, "stock_us", "",
+                       clock=datetime(2027, 1, 5, 23, tzinfo=timezone.utc),
+                       preflight_fn=preflight_fn)
+        self.assertEqual(result["status"], "hold_calendar_coverage_unavailable")
+        self.assertFalse(result["dispatchAuthorized"])
+        self.assertFalse(result["marketDataReady"])
+        preflight_fn.assert_not_called()
 
     def test_manual_date_retains_override_and_disables_auto(self):
         actual_clock = datetime(2026, 10, 16, 22, tzinfo=timezone.utc)
