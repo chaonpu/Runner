@@ -1,11 +1,6 @@
 name: Cross-repository Actions dispatch permissions canary
 
 on:
-  # Temporary launch to verify the two EXISTING repository Actions tokens.
-  # This event will be removed after the first verified run.
-  push:
-    branches: [main]
-    paths: [".github/workflows/dispatch-canary.yml"]
   workflow_dispatch:
 
 permissions:
