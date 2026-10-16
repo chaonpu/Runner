@@ -12,7 +12,6 @@ on:
           - stock_us
           - stock_etf
           - android
-          - database_sync
           - apk_publish
       business_date:
         description: "YYYY-MM-DD, required for Stock tasks"
@@ -61,9 +60,6 @@ jobs:
           CHAONPU_ACTIONS_READ_TOKEN: ${{ secrets.CHAONPU_ACTIONS_READ_TOKEN }}
           TEST_RUNNER_READ_TOKEN: ${{ secrets.TEST_RUNNER_READ_TOKEN }}
           RUNNER_READ_TOKEN: ${{ secrets.RUNNER_READ_TOKEN }}
-          ZIWUXILV_BILLING_READ_TOKEN: ${{ secrets.ZIWUXILV_BILLING_READ_TOKEN }}
-          ZIWUXILV_ACTIONS_READ_TOKEN: ${{ secrets.ZIWUXILV_ACTIONS_READ_TOKEN }}
-          ZIWUXILV_RUNNER_READ_TOKEN: ${{ secrets.ZIWUXILV_RUNNER_READ_TOKEN }}
         run: |
           python3 -m scheduler.preflight --task "$TASK" --business-date "$BUSINESS_DATE" --source-sha "$SOURCE_SHA" --source-version "$SOURCE_VERSION"
       - name: Confirm no sensitive or side-effect actions
