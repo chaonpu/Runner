@@ -1,0 +1,27 @@
+name: One-time cloud reconciliation activation smoke
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/trigger-reconcile-once.yml"
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  dispatch-one:
+    if: github.ref == 'refs/heads/main' && github.actor == 'chaonpu'
+    name: Trigger read-only monitoring plus safe no-op pilot completion
+    runs-on: ubuntu-24.04
+    timeout-minutes: 4
+    steps:
+      - name: Launch only the allowlisted Runner reconciliation workflow
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh workflow run reconcile.yml --repo chaonpu/Runner --ref main
+          echo 'One safe same-repository workflow_dispatch initiated.'
+          echo 'No Stock strategy, database write, or APK workflow dispatched.'
