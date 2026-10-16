@@ -156,3 +156,14 @@ Release tag `staged-apk-v<version>-signrun-<runId>`，`--prerelease`；现有相
 **仍待首次手动实测整个先预约→无操作派发→保存 ID 流程**：GitHub 连接当前可以更新仓库代码和查询 Action，但未提供可用的通用 `workflow_dispatch` 调用，因此不声称这次新增的手动 pilot 已真正执行过。必须由拥有者在 Runner Actions 页面手动启动一次后检查其真实日志和 `state/pilot_runs.json` 是否成功写入。
 
 以上**不是** A/US 策略的生产调度上线；`dispatchEnabled=false`、各业务 `enabledForDispatch=false` 未改。Stock Windows 只完成真实依赖与离线回归，暂不自动执行会写入 database 的完整策略。
+
+## 2026-10-17：Stock 无操作跨仓库调度及完成回写真实闭环
+
+用户手动发起 `Runner` [Run 38961235915](https://github.com/chaonpu/Runner/actions/runs/38961235915)，其向私有 `Stock` 派发的 [Run 38961249562](https://github.com/chaonpu/Stock/actions/runs/38961249562) 已真实 **Success**。公开 `state/pilot_runs.json` 保存了任务 `pilot:stock:2026-10-17`、两侧准确 Run ID 和唯一 canary 标识。
+
+在已通过 **64 项安全测试**后，为现有五分钟 `reconcile.yml` 增加了一个独立的、仅能修改无操作 pilot 状态的 Job，使用 `Runner` 自身 Contents write 和已存在的私有 Actions read Token。只有核实目标是 `chaonpu/Stock`、`runner-dispatch-canary.yml`、`workflow_dispatch`、`main`，且 Run ID 对应的结果为 `completed/success`，才能将公开登记状态经 GitHub SHA 条件更新为 `completed_success`。未成功、API 故障、权限缺失和并发冲突均拒绝自动推进；不调用正式策略、数据库和 APK 发布工作流。
+
+通过一次临时同仓库触发，真实运行 [reconcile #38961955707](https://github.com/chaonpu/Runner/actions/runs/38961955707)，两个 Job 全部 Success。完成状态写入日志显示 `updated=1`、`dispatches=0`；最终状态文件实际为 `completed_success`，`runId=38961249562`。这证明**云端按需复核 + 状态回写**正常。测试用临时工作流 `trigger-reconcile-once.yml` 已删除。
+
+**注意：上面的复核 Run 为 `workflow_dispatch`，而非五分钟 `schedule` 事件。** 查询近期 Runner Action 历史时，未看到 `schedule` 触发的运行。因此五分钟 cron 的实际送达和定时持续性**尚未验收**，不能把配置存在或手动运行成功表述为定时机制已稳定运行。正式策略的自动调度仍全部关闭。
+
