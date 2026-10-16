@@ -13,7 +13,9 @@
 
 **目前已部署：云端按需预检 + 调度启动后同一 Job 前台监控。** Stock 的无操作试验通过 `stock-noop-pilot.yml`：先登记并派发确定 Run ID，随后每约 30 秒查询状态；目标任务结束后写回 `completed_success` 或 `completed_failure` 并停止监控 Job。**已移除独立五分钟 `schedule`。** `reconcile.yml` 仅保留手动异常恢复入口，正常运行不使用。正式策略自动派发仍关闭，避免重复生产计算。
 
-本轮安全加固（2026-10-17）：新增 `tests/test_workflow_contract.py`，确保七个工作流仅安全测试可由代码提交触发，其他均为手动入口、无 `schedule`/cron；任何 `.github/workflows/**` 变更都会运行安全测试。最新 [Run #38966526812](https://github.com/chaonpu/Runner/actions/runs/38966526812) **80 项测试全部通过**。这不等于全新 canary 派发→监控→自动回写的真实闭环已验收；仍需下一次独立手动无操作演练。
+本轮安全加固（2026-10-17）：新增 `tests/test_workflow_contract.py`，确保七个工作流仅安全测试可由代码提交触发，其他均为手动入口、无 `schedule`/cron；任何 `.github/workflows/**` 变更都会运行安全测试。最新 [Run #38966526812](https://github.com/chaonpu/Runner/actions/runs/38966526812) **80 项测试全部通过**。这不等于全新 canary 派发→监控→自动回写的真实闭环已验收；全新无操作演练已通过，下一步应验收私有业务副作用核查（不直接放开生产调度）。
+
+**最新进展（2026-10-17）**：新的一次 Stock 无操作端到端演练 [Runner #38967023305](https://github.com/chaonpu/Runner/actions/runs/38967023305) → [Stock #38967039826](https://github.com/chaonpu/Stock/actions/runs/38967039826) 已验证“预约→派发→同一 Job 前台监控→自动完成回写→退出”。`state/pilot_runs.json` 现有 2026-10-17 和 2026-10-18 两个已完成无操作登记。新增 `scheduler/production_registry.py` 的生产任务唯一标识及状态保护纯函数，`scheduler.preflight` 已开始**只读**核查 `state/tasks.json` 重复任务；[最新安全测试 #38967876419](https://github.com/chaonpu/Runner/actions/runs/38967876419) **95 项通过**。但生产任务注册写入、私有账本入账核验、可靠额度判断、正式派发与自动补算**仍未接通**；所有生产开关保持关闭。
 
 当前凭据与权限边界：
 
