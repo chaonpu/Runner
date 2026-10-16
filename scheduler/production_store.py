@@ -72,7 +72,13 @@ def decode_record(record: dict, config: dict) -> tuple[dict, str]:
             or not SHA.fullmatch(record["sha"])):
         raise RegistryGuard("registry_content_metadata_invalid")
     try:
-        raw = base64.b64decode(record["content"], validate=True)
+        encoded = record["content"]
+        if not isinstance(encoded, str) or len(encoded) > 2_000_000:
+            raise RegistryGuard("registry_content_invalid")
+        # The GitHub Contents API wraps base64 at line boundaries. Reject
+        # non-alphabet characters other than the API's CR/LF formatting.
+        raw = base64.b64decode(encoded.replace("\\n", "").replace("\\r", ""),
+                               validate=True)
         state = json.loads(raw.decode("utf-8"))
     except (KeyError, ValueError, TypeError, UnicodeError) as exc:
         raise RegistryGuard("registry_content_invalid") from exc
