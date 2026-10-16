@@ -1,0 +1,46 @@
+name: Stock no-op durable dispatch pilot (NO strategy)
+
+on:
+  workflow_dispatch:
+    inputs:
+      business_date:
+        description: "Pilot identity (YYYY-MM-DD). One no-op canary per date; NEVER runs strategy."
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: runner-stock-noop-pilot-registry
+  cancel-in-progress: false
+
+jobs:
+  dispatch-one-canary:
+    name: Reserve, dispatch ONLY Stock no-op canary, record exact Run ID
+    if: github.ref == 'refs/heads/main' && github.actor == 'chaonpu'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 7
+    steps:
+      - name: Checkout trusted public coordinator only
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: false
+          clean: true
+      - name: Validate idempotent pilot safety before requesting any write
+        run: |
+          python3 -m unittest -v tests.test_pilot_registry tests.test_pilot_monitor tests.test_canary_dispatch
+      - name: Reserve date before issuing no-op cross-repository dispatch
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CHAONPU_ACTIONS_READ_TOKEN: ${{ secrets.CHAONPU_ACTIONS_READ_TOKEN }}
+          PILOT_DATE: ${{ inputs.business_date }}
+        run: |
+          set -euo pipefail
+          python3 -m scheduler.pilot_registry --date "$PILOT_DATE"
+      - name: Confirm deliberately limited scope
+        run: |
+          echo 'Only Stock/runner-dispatch-canary.yml may have been dispatched.'
+          echo 'Pilot date and Run ID stored in public state/pilot_runs.json.'
+          echo 'No strategy, email, database checkout/push or APK release.'
