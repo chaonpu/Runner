@@ -20,7 +20,7 @@ def true_run(status="completed",conclusion="success"):
 def real_env():
     return {"GITHUB_REPOSITORY":"chaonpu/Runner",
             "GITHUB_REF":"refs/heads/main",
-            "GITHUB_EVENT_NAME":"schedule",
+            "GITHUB_EVENT_NAME":"workflow_dispatch",
             "GH_TOKEN":"public-noop-token",
             "CHAONPU_ACTIONS_READ_TOKEN":"private-noop-token"}
 
@@ -43,6 +43,18 @@ class VerifyNoopFinalizeTests(unittest.TestCase):
             output,done=plan_completion(registry(),lambda _:true_run(state,result),"now")
             self.assertFalse(done)
             self.assertEqual(output["tasks"][0]["status"],"dispatched")
+
+    def test_failed_noop_run_is_recorded_as_failure_never_success(self):
+        output, done = plan_completion(registry(), lambda _: true_run("completed", "failure"), "now")
+        self.assertEqual(done, ["pilot:stock:2026-10-17"])
+        self.assertEqual(output["tasks"][0]["status"], "completed_failure")
+
+    def test_disconnected_record_can_recover_once_run_is_finished(self):
+        entry = registry()
+        entry["tasks"][0]["status"] = "reconciliation_required"
+        output, done = plan_completion(entry, lambda _: true_run(), "now")
+        self.assertEqual(done, ["pilot:stock:2026-10-17"])
+        self.assertEqual(output["tasks"][0]["status"], "completed_success")
 
     def test_already_finalized_not_changed(self):
         output,done=plan_completion(registry("completed_success"),
