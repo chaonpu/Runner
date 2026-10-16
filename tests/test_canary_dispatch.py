@@ -16,7 +16,7 @@ class Response:
 
 class DispatchPermissionTests(unittest.TestCase):
     def test_exact_targets_only(self):
-        for target in ("stock", "test"):
+        for target in ("stock", "test", "signer", "publish"):
             repo, body, key = payload(target, "123456789")
             self.assertIn("actions", key.lower())
             self.assertEqual(body["ref"], "main")
@@ -26,6 +26,16 @@ class DispatchPermissionTests(unittest.TestCase):
             payload("database", "123456789")
         with self.assertRaises(ValueError):
             payload("stock", "arbitrary-name")
+
+    def test_same_chaonpu_token_is_scoped_to_three_noop_workflows(self):
+        for target, suffix in (("stock", "Stock"),
+                               ("signer", "ziwuxilv-android"),
+                               ("publish", "ziwuxilv")):
+            repo, body, secret = payload(target, "123456789")
+            self.assertEqual(repo, "chaonpu/" + suffix)
+            self.assertEqual(secret, "CHAONPU_ACTIONS_READ_TOKEN")
+            self.assertEqual(body["inputs"]["dispatch_id"],
+                             "runner-canary-123456789-" + target)
 
     def test_no_post_without_secret(self):
         def blocked(*a, **kw):
