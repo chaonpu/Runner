@@ -66,9 +66,16 @@ def _time(value: object) -> None:
 
 
 def validate(config: dict, state: dict) -> dict:
-    if (not isinstance(state, dict) or set(state) != {"schema", "tasks"}
+    if (not isinstance(state, dict)
+            or not {"schema", "tasks"}.issubset(state)
+            or not set(state).issubset({"schema", "tasks", "description"})
             or state["schema"] != 1 or not isinstance(state["tasks"], list)):
         raise RegistryGuard("registry_schema_invalid")
+    if "description" in state and (
+        not isinstance(state["description"], str)
+        or len(state["description"]) > 240
+    ):
+        raise RegistryGuard("registry_description_invalid")
     if not isinstance(config.get("tasks"), dict):
         raise RegistryGuard("missing_task_allowlist")
     keys, runs = set(), set()
