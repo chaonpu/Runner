@@ -1,4 +1,23 @@
 # 统一调度中心部署与迁移计划（2026-10-17）
+## 2026-10-17 跨仓库真实权限与 Windows Stock 验收
+
+仅对固定的 `runner-dispatch-canary.yml` 发起过 `workflow_dispatch`；这些测试 workflow 不检出私有代码、数据库和签名密钥：
+
+| 目标 | 调度 Run / 目标 Run | 结果 |
+|---|---|---|
+| `chaonpu/Stock` | `38948088743` → `38948101845` | Success |
+| `anwpustudent-lab/Test` | `38948088743` → `38948104668` | Success |
+| `chaonpu/ziwuxilv-android` | `38950285244` → `38950299547` | Success |
+| `chaonpu/ziwuxilv` | `38950285244` | HTTP 403，尚未授予可用范围 |
+
+因此 `TEST_ACTIONS_READ_TOKEN` 对 Test、`CHAONPU_ACTIONS_READ_TOKEN` 对 Stock 和签名仓库已实测具有工作流派发能力。**不要把这一结果扩大成 CHAONPU 令牌已覆盖所有仓库。** 公开发布仓库的令牌资源范围需由用户检查：Fine-grained PAT 选定 `chaonpu/ziwuxilv` 和 Repository Actions:write。403 也可能来自额外仓库政策，修改之前应核对 Token 的允许仓库列表。
+
+公共调度仓库的权限测试 workflow 已调为 **manual-only**，避免错误重试。真实 A/US 策略、APK 签名和正式发布未被此次派发实验运行。
+
+Stock Windows 的工作流 `stock-windows-capability.yml`：Run `38948966616` 已证明 Node 22、npm、Python 3.14、Git 及 108GB 工作盘可用；Run `38949149394` 成功检出私有 Stock、完成契约检查并通过 **18 个只读 Node 账本单元测试**。Windows 上 Python 3.13 的 `setup-python` 系统工具缓存安装会因权限问题失败，暂使用已有 Python 3.14；完整策略的 Python 包和 Windows 移植仍未验收。GitHub Checkout 的网络偶发失败已在*仅诊断工作流*中增加超时和一次 HTTP/1.1 重试，可能仍受网络影响。诊断工作流现已恢复为仅手动触发。
+
+A 股与美股正式工作流新增*可选* `task_id` 输入校验（`stock_a:YYYY-MM-DD`、`stock_us:YYYY-MM-DD`），不改变策略或账本运算，也**不表示已实现业务幂等**；所有正式派发开关仍为 `false`。
+
 ## 2026-10-17 实测进度
 
 - GitHub hosted `Runner scheduler safety tests`：Run `38946066842`，21 项路由与业务副作用安全测试通过。
