@@ -1,5 +1,14 @@
 # 统一调度中心部署与迁移计划（2026-10-17）
 
+## 2026-10-17 最新验收：全新 Stock 无操作闭环已通过，正式任务防重基础已接入预检
+
+- [Runner 调度 Run 38967023305](https://github.com/chaonpu/Runner/actions/runs/38967023305) 于 2026-10-17 北京时间 05:06 启动，先预约 `pilot:stock:2026-10-18`，再派发私有 [Stock Run 38967039826](https://github.com/chaonpu/Stock/actions/runs/38967039826)。
+- 同一调度 Job 的预约、派发、前台监控、完成回写和退出步骤均为 Success。公开 `state/pilot_runs.json` 的新任务为 `completed_success`，此前 `pilot:stock:2026-10-17` 保留。新任务已成功验证全部无业务副作用闭环。
+- 新增纯函数 `scheduler/production_registry.py`：严格验证 A/US/ETF 的日期任务 ID 与 Android SHA、阻止重复预约、将目标 Run ID 仅绑定一次、核验目标仓库/工作流/分支/事件/Run Attempt。失败或身份不可信时拒绝自动重派。
+- 新增 `tests/test_production_registry.py`，并在只读 `scheduler.preflight` 中检查 `state/tasks.json` 的已有任务：未完成/不可信记录为 hold，已可信标记 `verified` 的任务跳过。
+- **新生产任务模块当前仅为无副作用的状态契约**：没有持久化 CAS 写入接口、没有正式跨仓库 dispatch、没有 database 账本/快照核验接口，也没有自动补偿。不能将模拟 `verified` 测试误解为真实账本验证。
+- `config/repositories.json` 的全局和逐任务正式派发开关仍全部关闭；Stock 的 Windows 生产路径未验收，APK 发布审批保持独立。以上全部改动均未运行真实策略、未写入 database、未发送策略邮件、未构建或发布 APK。
+
 ## 当前有效设计：调度即监控，完成即退出（取代全部定时巡检）
 
 本节是**当前实施规则**；下文关于“五分钟定时复核”的文字只是迁移历史，不再代表当前配置。
@@ -10,7 +19,7 @@
 - `stock-noop-pilot.yml` 的 `mode=monitor_only` 仅供有必要时**手动**恢复原 Run 的监控，绝不重新执行业务；`reconcile.yml` 也已改成只有 `workflow_dispatch` 的手动异常核对入口，不会自行启动。
 - 原调度 Job 的收尾步骤现在使用 `scheduler.pilot_finalize --date <本次测试日期>`，只处理本次任务，不顺带修改其他日期的状态。
 - [Runner 安全测试 #38965688218](https://github.com/chaonpu/Runner/actions/runs/38965688218)：**76 项通过**，含失败/取消/超时、断网、误匹配 Run、按日期精确完成、避免重复派发。历史成功 Stock Run `38961249562` 已通过只读实时轮询验证（[Run 38963736129](https://github.com/chaonpu/Runner/actions/runs/38963736129)）。
-- **仍未完成的验收**：修订后的“派发、等待新任务结束、自动写回、同一 Job 退出”尚未以**全新**无操作任务进行端到端实跑。目前此路径在单元测试和历史 Run 只读查询中已验证；不能把这等同于正式策略上线。
+- **最新验收更正**：全新无操作任务的派发、等待、回写、退出已在 Run `38967023305` 通过；这**不等于**正式策略、数据库入账、APK 发布流程已上线。
 - **正式 A 股／美股及 APK 调度开关仍为关闭**。不要把无操作 canary 运行 Success 视作实际策略、数据同步或 APK 发布成功。
 
 
