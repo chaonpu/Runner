@@ -11,7 +11,7 @@
 
 ## 当前状态
 
-**安全验收新入口（2026-10-17）**：新增 [production-dispatch.yml](.github/workflows/production-dispatch.yml)，当前**仅人工 workflow_dispatch + contents:read**，支持 A股、美股指定交易日的只读登记和额度/Runner 预检。Python 入口 `scheduler.production_dry_run` 从公开 GitHub Contents API GET 当前 `state/tasks.json`，发现异常直接 hold，即使预检推荐 cloud 也永远输出 `dispatchAuthorized=false`、`registryWriteAuthorized=false`、`databaseWriteAuthorized=false`、`automaticRetryAuthorized=false`。没有任何跨仓库派发、状态写入、账本同步或定时触发。GitHub Base64 换行兼容已修复。[RUNNER 测试 #38973465844](https://github.com/chaonpu/Runner/actions/runs/38973465844) **116 项通过**。该入口**尚未真实手动执行**，不能把单元测试视为在线预检结果。
+**安全验收新入口（2026-10-17）**：新增 [production-dispatch.yml](.github/workflows/production-dispatch.yml)，当前**仅人工 workflow_dispatch + contents:read**，支持 A股、美股**不填日期即可执行只读预检**。默认使用实际运行时刻推算市场时区下最近已完成的周一至周五收盘日：A股为北京时间 15:00，美股为纽约时间 16:00（自动适配夏令时）；周末和盘中回退到前一工作日。需要审计历史时仍可手工填写日期。**这只是日期候选，不包含交易所节假日/提前收盘核实，不能作为真实派发许可**。Python 入口 `scheduler.production_dry_run` 从公开 GitHub Contents API GET 当前 `state/tasks.json`，发现异常直接 hold，即使预检推荐 cloud 也永远输出 `dispatchAuthorized=false`、`registryWriteAuthorized=false`、`databaseWriteAuthorized=false`、`automaticRetryAuthorized=false`。没有任何跨仓库派发、状态写入、账本同步或定时触发。GitHub Base64 换行兼容已修复。[RUNNER 测试 #38974308079](https://github.com/chaonpu/Runner/actions/runs/38974308079) **121 项通过**。该入口**尚未真实手动执行**，不能把单元测试视为在线预检结果。
 
 **目前已部署：云端按需预检 + 调度启动后同一 Job 前台监控。** Stock 的无操作试验通过 `stock-noop-pilot.yml`：先登记并派发确定 Run ID，随后每约 30 秒查询状态；目标任务结束后写回 `completed_success` 或 `completed_failure` 并停止监控 Job。**已移除独立五分钟 `schedule`。** `reconcile.yml` 仅保留手动异常恢复入口，正常运行不使用。正式策略自动派发仍关闭，避免重复生产计算。
 
