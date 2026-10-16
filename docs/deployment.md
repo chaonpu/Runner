@@ -9,28 +9,32 @@
 
 目前 `state/tasks.json` 的 `tasks` 数组为空，因此 5 分钟复核只会验证当前队列，**没有实际任务被派发**。真正的 `dispatched/running/verified` 登记、冲突检测与恢复提交机制需要 `Runner` 自身任务登记写入及目标仓库的 Actions 写入授权完成后才能启用。
 
-### 下一步所需权限（均为最小权限，令牌绝不存储在 Git）
+### 跨仓库 Actions 派发权限已经实际验证（2026-10-17）
 
-当前只有六个只读 Secret。对每个跨账户业务 Owner 还需要 **Actions:write** 的单独授权：
+用户确认已有的 `TEST_ACTIONS_READ_TOKEN` 和 `CHAONPU_ACTIONS_READ_TOKEN` **本身具备 Actions:write**，无需新建 `*_WRITE_TOKEN`。虽然 Secret 名称含 `READ`，实际权限来自令牌的 GitHub 权限设置，必须将它们按**可写敏感凭据**保护。
 
-- `TEST_ACTIONS_WRITE_TOKEN`：由 `anwpustudent-lab` 所有，唯一选中 `Test`。
-- `CHAONPU_ACTIONS_WRITE_TOKEN`：由 `chaonpu` 所有，只选中要调度的 `Stock`、`ziwuxilv-android`、`ziwuxilv`。
-- `ZIWUXILV_ACTIONS_WRITE_TOKEN`：`ZIWUXILV` 组织授权，只选中 `database`；该组织可能需要管理员审批。
+从公开调度中心真实派发了两个**无业务副作用**的 canary：
 
-还需要单独的 `ZIWUXILV_BILLING_READ_TOKEN`、`ZIWUXILV_ACTIONS_READ_TOKEN` 和 `ZIWUXILV_RUNNER_READ_TOKEN`（只在这些接口确实必要时授权；组织 Runner 是 `Self-hosted runners:read`，仓库 Runner 是 `Administration:read`）。**不要将这些令牌值发在聊天里。**
+- Stock：`chaonpu/Stock` Run `38948101845`，成功；
+- Test：`anwpustudent-lab/Test` Run `38948104668`，成功；
+- 发起端：`chaonpu/Runner` Run `38948088743`，API 均返回真实 Run ID。
 
-即便拥有 Actions:write，仍需完成每种任务的输入校验、账本去重、产物验收和可信额度/预算判定，不能直接打开全部自动派发。
+两次私有运行只验证任务 ID 与 Windows Runner，不下载源码、不访问策略数据、不签名、不发布。公开端权限测试 `.github/workflows/dispatch-canary.yml` 已改为**手动触发**，避免重复。
+
+`ZIWUXILV/database` 目前**没有需要中心触发的工作流**，不要求额外令牌，也已从 `config/repositories.json` 可派发任务列表移除；仍是 Stock 的私有数据依赖。后续只有在实际需要组织 workflow_dispatch 时才单独评估授权。
+
+实际策略派发仍保持关闭：各业务工作流必须先增加任务 ID、幂等去重、Windows 执行适配、产物验收与可信额度判断，再允许云端调度器调用。
 
 
 ## 实际部署
 
 - [x] 公开 `chaonpu/Runner` 初始化，保留通用调度代码，**不保存任何私有源码**。
-- [x] 已映射五个业务仓库以及 **三个相互独立的计费所有者**：`anwpustudent-lab`、`chaonpu`、`ZIWUXILV`。
+- [x] 映射五仓库依赖，但中心目前只调度 `anwpustudent-lab` / `chaonpu` 下的工作流，`ZIWUXILV` 暂不需要令牌。
 - [x] 仅手动运行的云端 preflight 工作流 `.github/workflows/scheduler.yml`。
 - [x] Cloud Ubuntu 的纯路由单元测试与实盘只读接口测试。
 - [x] 利用截图所示的六个 Repository Secrets 读取个人 Billing Usage、Actions 运行、Windows Runner 状态；没有真实派发。
-- [ ] 组织 `ZIWUXILV` 的 Billing Usage、Runner/Actions 只读权限。
-- [ ] 各所有者的跨仓库 Actions:write 凭据与授权试验。
+- [x] 确认 ZIWUXILV 目前无需工作流，已撤销额外令牌需求。
+- [x] 两个现有 Actions 令牌已完成 Stock 与 Test 的真实跨仓库 no-op 派发试验。
 - [ ] 将 Stock A/US/ETF 工作流改为可核实任务标识、按交易日去重，并适配 Windows 本地版本。
 - [ ] 正式业务入口与完成核验串联：Stock→database、Test→签名→公开发布。
 - [ ] 原仓库的外部计划/原定时来源核实并分批切换，防止双触发；不要直接停止目前生产策略。
