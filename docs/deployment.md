@@ -1,5 +1,13 @@
 # 统一调度中心部署与迁移计划（2026-10-17）
 
+## 2026-10-17 Windows A/US 正式策略主机运行条件验收（无任何业务副作用）
+
+- 私有 Stock 新增 [环境验收工具](https://github.com/chaonpu/Stock/blob/main/windows_strategy_environment_audit.py) 与手动工作流 `windows-environment-audit.yml`。第一次 [Run #38978705490](https://github.com/chaonpu/Stock/actions/runs/38978705490) 检出私有 Stock 时 `github.com:443` 连接连续超时而失败，未进入 Python/Node 依赖验收；这属于之前已见的**间歇性 Git HTTP 连接问题**，不能归咎于策略代码。
+- 为不依赖私有源码检出，新建仅手动的 `windows-host-prereq.yml`：不读取业务源码或 database，不使用密钥，不执行任何股票行情 HTTP GET，只验证公开域名 TLS、Windows 程序、隔离临时 Python venv 与六项策略依赖（临时安装后自动清理）。[Run #38979028378](https://github.com/chaonpu/Stock/actions/runs/38979028378) 成功：Python 3.14.8、Git 2.56.0、全部六项依赖安装成功（约 41 秒），九个公开域名 TLS 握手成功；初始 PATH 未配置 Node/Bash。
+- 按正式工作流原样增加 **Git Bash 路径初始化**和 **`actions/setup-node@v7` 设置 Node 22** 再验收。[Run #38979221960](https://github.com/chaonpu/Stock/actions/runs/38979221960) 以 **success** 完成：Git Bash 5.3.15、Node 22.23.3、Python 3.14.8、Git 2.56.0；全部六项依赖在临时 venv 再次安装成功（约 34 秒），九域名 TLS 成功。说明主机和生产初始化工具链满足当前合成安装要求。
+- 上述两个 no-checkout 工作流不代表真正供应商行情字段/API 可用，不证明 Windows Python 3.14 与云端 Python 3.13 的选股结果一致，不证明持仓/账本 Git 事务完整，也不能覆盖**私有 GitHub 检出时断时续**的故障。两条工作流的一次性 push 触发已经移除，只保留人工 `workflow_dispatch`，未新增定时巡检或策略派发。
+- 下一步应优先验证 Windows 到 `github.com` 的私有 Git HTTPS 稳定性，以及 Stock 正式业务程序在 Windows 隔离环境下的**只读/模拟计算**条件；任何真实 database 推送、邮件、自动补算、APK 发布仍被禁止。正式生产任务的所有派发开关保持关闭。
+
 ## 2026-10-17 Stock RUNNER 标记任务的发布前行情结果校验（Windows 合成验收已通过）
 
 - 私有 Stock 新增 `private_postrun_source_gate.py`：仅对显式包含 `task_id` 的未来协调任务，在运行器产生 **Run ID 对应开始标记**后，读取本次生成的 A股 / 美股正式结果。校验文件更新时间晚于本次标记、实际生成时刻、`as_of` 与任务日期一致、顶层正式状态、核心行情完整日期/覆盖/缺失/收盘条件、A股概念与流通市值及证券状态覆盖、美股行情失败和挂牌目录状态。失败直接阻止 `database_ledger_sync.py`、账本投影和私有 Git 提交，且不输出持仓/报价详情。
