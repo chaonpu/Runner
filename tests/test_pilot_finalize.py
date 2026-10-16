@@ -98,6 +98,25 @@ class VerifyNoopFinalizeTests(unittest.TestCase):
         self.assertEqual(saves[0][0],"a"*40)
         self.assertEqual(saves[0][2]["tasks"][0]["status"],"completed_success")
 
+    def test_date_scoped_finalization_does_not_touch_other_task(self):
+        from scheduler.pilot_registry import reserve
+        state = registry()
+        state = reserve(state, '2026-10-18', 38961235916, 'now')
+        state['tasks'][1]['runId'] = 38961249563
+        state['tasks'][1]['status'] = 'dispatched'
+        paths = []
+        def getter(path):
+            paths.append(path)
+            return true_run()
+        result, done = plan_completion(state, getter, 'now', only_date='2026-10-17')
+        self.assertEqual(done, ['pilot:stock:2026-10-17'])
+        self.assertEqual(len(paths), 1)
+        self.assertEqual(result['tasks'][1]['status'], 'dispatched')
+
+    def test_invalid_date_rejected_before_status_check(self):
+        with self.assertRaises(PilotGuard):
+            plan_completion(registry(), lambda _: self.fail('queried'),
+                            'now', only_date='2026-02-30')
     def test_untrusted_context_rejected_before_read(self):
         for attr,value in (("GITHUB_REPOSITORY","chaonpu/ziwuxilv"),
                            ("GITHUB_REF","refs/pull/1/merge"),
