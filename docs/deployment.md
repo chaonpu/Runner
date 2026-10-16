@@ -1,5 +1,12 @@
 # 统一调度中心部署与迁移计划（2026-10-17）
 
+## 2026-10-17 业务任务单次执行与 Windows 本地 Git 并发事务验证
+
+- 私有 Stock 已分别修改 `run-a-share.yml` / `run-us.yml`：只在收到协调任务 `task_id` 时，策略运行次数由旧 3 次降为**仅 1 次**，避免业务已经产生部分副作用后还重试。原有**无协调标记**的 A/US 工作流仍为 3 次旧机制。Windows 仅在业务前对 Stock/DB 两个仓库进行最多 3 次检出，二者不可混同；任何失败不能自动再次派发业务或自动推进旧账本。
+- [Stock Windows 本地 Git 事务验收 #38983133101](https://github.com/chaonpu/Stock/actions/runs/38983133101) 已 **Success**，在该机器的完全临时本地 Git 裸 remote 对 A_SHARE、US 分别模拟：合成账本与回执同提交，第一次本地推送成功，第二个并发客户端的 non-fast-forward 推送被拒，重复回执可被识别。公开/私有 GitHub 远端未写入，不访问真实 database，不执行策略或发邮件。额外通过当前 GitHub API 精确提交核对两套正式 A/US workflow 的单次业务执行/旧式重试逻辑，记录为 `coordinated_at_most_once_strategy_contract_passed`。
+- 扩展 Stock 原有的 Windows 安全检出测试，以便在实际 private checkout 成功之后运行 Python `database_ledger_sync/publish_latest` 模拟单测及四套 Node 贡献/回补计算单测。验收工作流不启动策略、不获取业务密钥、不检出 database。新一轮 [Stock #38983291254](https://github.com/chaonpu/Stock/actions/runs/38983291254) 必须以最终日志为准；源码检出失败时只保留网络阻断结论，不假称账本程序通过。
+- 本地 Git 的非快进拒绝只能证明标准 Git 提交和并发机制，**不能证明真实 GitHub database push 成功**，也不能解决“远端已经提交但本地因断线没有收到成功响应”的不确定性。正式自动补偿仍需只读远端回执识别、原始 RUNNER/Stock Run 来源、业务日期及正确事务的独立验证。继续不启用 `dispatchEnabled`、任何 `enabledForDispatch` 和生产任务写入。
+
 ## 2026-10-17 已实现 Windows 两私有仓库的有限检出恢复，生产派发继续关闭
 
 - 根因状态：`ziwuxilv-stock-win` 到 `github.com:443` 的 Git HTTPS 连接**偶发超时/重置**，虽可通过 GitHub API、短请求及某些完整检出，仍不应当成网络已根治。Stock 完整 `checkout@v7` 两批成功率为 **3/3、0/3**，说明可靠性不足。
