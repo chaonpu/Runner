@@ -9,6 +9,15 @@
 - **新生产任务模块当前仅为无副作用的状态契约**：没有持久化 CAS 写入接口、没有正式跨仓库 dispatch、没有 database 账本/快照核验接口，也没有自动补偿。不能将模拟 `verified` 测试误解为真实账本验证。
 - `config/repositories.json` 的全局和逐任务正式派发开关仍全部关闭；Stock 的 Windows 生产路径未验收，APK 发布审批保持独立。以上全部改动均未运行真实策略、未写入 database、未发送策略邮件、未构建或发布 APK。
 
+## 2026-10-17 第一阶段实施：生产登记存储 + 私有入账只读核验（未启用正式派发）
+
+- 公开 `Runner/scheduler/production_store.py` 新增 `state/tasks.json` 的 GitHub Contents GET/PUT 存储层：每次 PUT 使用读取到的 blob SHA，拒绝无可信 `workflow_dispatch` 上下文、非拥有者、私自改写其他任务与根元数据、重复登记、Run ID 替换、虚假 `verified` 状态。网络异常/写入结果未知**不自动重试**。调用它的**正式生产调度 Job 尚不存在**，因此没有真正生产任务被写入。
+- 公开状态管理 `production_registry.py` 和只读预检 `preflight.py` 维持此前约束。条件提交是一层并发保护，后续接入仍须按任务设置 `concurrency` 并检查现有正式策略与原定时来源，不能单凭 SHA 完成跨仓库原子事务。
+- 私有 `chaonpu/Stock/private_effect_probe.py` 新增 `latest.json`、快照索引链、快照字节、独立市场账本、不可变归档及其哈希关联的只读检查；`.github/workflows/private-effect-probe.yml` 仅供 `chaonpu` 从 main 手动运行，并通过原有 `secrets.database` 在 Stock 私有环境中读取。不会推送 database 或输出私有持仓。
+- `private_effect_probe.py` 的结果**绝不构成一次运行的来源证明**，只可报告数据一致而来源未知；没有可信 `task_id` / Run ID / 数据库版本写入回执之前，即使账本日期相符，仍保持 `businessVerified=false`、`safeToRetry=false`。需先在私有侧建立可审计、与实际 Git 提交绑定的运行回执，才可接入 `verified` 状态。
+- 公开 RUNNER [安全测试 #38969991137](https://github.com/chaonpu/Runner/actions/runs/38969991137) **106 项通过**。Stock 的合成核验作业 [#38969769464](https://github.com/chaonpu/Stock/actions/runs/38969769464) 和 [#38969885219](https://github.com/chaonpu/Stock/actions/runs/38969885219) 在分配 Runner 前失败（无步骤、runner_id=0），测试代码尚未由 GitHub Actions 成功执行。已经移除 Stock 新核验工作流的自动 push 测试触发，暂仅手动按需运行，以避免额度不可用时重复失败。
+- **当前仍为完全安全锁定**：`dispatchEnabled=false`、全部 `enabledForDispatch=false`、生产队列为空、不改现有 A/US 策略/邮件/账本/APK/旧定时，仍无五分钟轮询。
+
 ## 当前有效设计：调度即监控，完成即退出（取代全部定时巡检）
 
 本节是**当前实施规则**；下文关于“五分钟定时复核”的文字只是迁移历史，不再代表当前配置。
