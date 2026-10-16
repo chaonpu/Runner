@@ -13,9 +13,9 @@
 
 **目前已部署：云端按需预检 + 调度启动后同一 Job 前台监控。** Stock 的无操作试验通过 `stock-noop-pilot.yml`：先登记并派发确定 Run ID，随后每约 30 秒查询状态；目标任务结束后写回 `completed_success` 或 `completed_failure` 并停止监控 Job。**已移除独立五分钟 `schedule`。** `reconcile.yml` 仅保留手动异常恢复入口，正常运行不使用。正式策略自动派发仍关闭，避免重复生产计算。
 
-本轮安全加固（2026-10-17）：新增 `tests/test_workflow_contract.py`，确保七个工作流仅安全测试可由代码提交触发，其他均为手动入口、无 `schedule`/cron；任何 `.github/workflows/**` 变更都会运行安全测试。最新 [Run #38966526812](https://github.com/chaonpu/Runner/actions/runs/38966526812) **80 项测试全部通过**。这不等于全新 canary 派发→监控→自动回写的真实闭环已验收；全新无操作演练已通过，下一步应验收私有业务副作用核查（不直接放开生产调度）。
+**最新验收（2026-10-17）**：Stock 无业务测试 [Runner #38967023305](https://github.com/chaonpu/Runner/actions/runs/38967023305) → [Stock #38967039826](https://github.com/chaonpu/Stock/actions/runs/38967039826)，已走通登记、唯一派发、同一 Job 持续监控、自动结果回写及退出；两笔公开 canary 登记均为 `completed_success`。原五分钟 cron 已删除，所有七个 Runner 工作流由安全测试防止重引入定时触发。公开生产任务 CAS 状态存储、只读预检和防重门禁已实现，但**正式生产调度未启用**。[RUNNER 安全测试 #38969991137](https://github.com/chaonpu/Runner/actions/runs/38969991137) **106 项通过**。
 
-**最新进展（2026-10-17）**：新的一次 Stock 无操作端到端演练 [Runner #38967023305](https://github.com/chaonpu/Runner/actions/runs/38967023305) → [Stock #38967039826](https://github.com/chaonpu/Stock/actions/runs/38967039826) 已验证“预约→派发→同一 Job 前台监控→自动完成回写→退出”。`state/pilot_runs.json` 现有 2026-10-17 和 2026-10-18 两个已完成无操作登记。新增 `scheduler/production_registry.py` 的生产任务唯一标识及状态保护纯函数，`scheduler.preflight` 已开始**只读**核查 `state/tasks.json` 重复任务；[最新安全测试 #38967876419](https://github.com/chaonpu/Runner/actions/runs/38967876419) **95 项通过**。但生产任务注册写入、私有账本入账核验、可靠额度判断、正式派发与自动补算**仍未接通**；所有生产开关保持关闭。
+**私有执行回执（2026-10-17）**：`chaonpu/Stock` 的 A/US 发布步骤已经加入**显式 task_id 才启用**的同一数据库提交回执。无新市场版本则不会伪造回执，普通不带 task_id 的旧策略不改变。私有核验检查源 Run、数据库 Git 历史、回执、快照/账本及最新版本哈希。[Windows 合成测试 #38972033613](https://github.com/chaonpu/Stock/actions/runs/38972033613) **47 项通过**。但 GitHub REST 可能不返回工作流原始输入，且尚未核对公开 Runner 登记，所以验证器明确保持 `coordinatorVerified=false`、`businessVerified=false`、`safeToRetry=false`。私有核验工作流仍为手动执行，**不得把模拟成功视为真实生产入账或允许自动补算**。详见 [部署计划](docs/deployment.md)。
 
 当前凭据与权限边界：
 
