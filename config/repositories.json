@@ -1,0 +1,97 @@
+{
+  "version": 1,
+  "dispatchEnabled": false,
+  "description": "Public allowlist: identifiers only. No private source or data.",
+  "accounts": {
+    "anwpustudent-lab": {
+      "kind": "user",
+      "billingSecret": "TEST_BILLING_READ_TOKEN",
+      "actionsSecret": "TEST_ACTIONS_READ_TOKEN",
+      "runnerSecret": "TEST_RUNNER_READ_TOKEN"
+    },
+    "chaonpu": {
+      "kind": "user",
+      "billingSecret": "CHAONPU_BILLING_READ_TOKEN",
+      "actionsSecret": "CHAONPU_ACTIONS_READ_TOKEN",
+      "runnerSecret": "RUNNER_READ_TOKEN"
+    },
+    "ZIWUXILV": {
+      "kind": "organization",
+      "billingSecret": "ZIWUXILV_BILLING_READ_TOKEN",
+      "actionsSecret": "ZIWUXILV_ACTIONS_READ_TOKEN",
+      "runnerSecret": "ZIWUXILV_RUNNER_READ_TOKEN"
+    }
+  },
+  "tasks": {
+    "stock_a": {
+      "kind": "strategy",
+      "repo": "chaonpu/Stock",
+      "cloudWorkflow": "run-a-share.yml",
+      "windowsWorkflow": null,
+      "runnerName": "ziwuxilv-stock-win",
+      "estimatedMinutes": 120,
+      "reserveMinutes": 200,
+      "idempotencyScope": "trade-date",
+      "enabledForDispatch": false
+    },
+    "stock_us": {
+      "kind": "strategy",
+      "repo": "chaonpu/Stock",
+      "cloudWorkflow": "run-us.yml",
+      "windowsWorkflow": null,
+      "runnerName": "ziwuxilv-stock-win",
+      "estimatedMinutes": 180,
+      "reserveMinutes": 200,
+      "idempotencyScope": "trade-date",
+      "enabledForDispatch": false
+    },
+    "stock_etf": {
+      "kind": "strategy",
+      "repo": "chaonpu/Stock",
+      "cloudWorkflow": "run-etf.yml",
+      "windowsWorkflow": null,
+      "runnerName": "ziwuxilv-stock-win",
+      "estimatedMinutes": 90,
+      "reserveMinutes": 200,
+      "idempotencyScope": "date",
+      "enabledForDispatch": false
+    },
+    "android": {
+      "kind": "android",
+      "repo": "anwpustudent-lab/Test",
+      "cloudWorkflow": "android.yml",
+      "windowsWorkflow": "test-self-hosted.yml",
+      "runnerName": "ziwuxilv-test-win",
+      "signingRepo": "chaonpu/ziwuxilv-android",
+      "signingCloudWorkflow": "android.yml",
+      "signingWindowsWorkflow": "windows-signing-verified-handoff.yml",
+      "signingRunnerName": "ziwuxilv-sign-win",
+      "estimatedMinutes": 80,
+      "reserveMinutes": 200,
+      "idempotencyScope": "source-sha",
+      "enabledForDispatch": false
+    },
+    "database_sync": {
+      "kind": "data",
+      "repo": "ZIWUXILV/database",
+      "cloudWorkflow": null,
+      "windowsWorkflow": null,
+      "runnerName": null,
+      "estimatedMinutes": 30,
+      "reserveMinutes": 100,
+      "idempotencyScope": "source-version",
+      "enabledForDispatch": false
+    },
+    "apk_publish": {
+      "kind": "publish",
+      "repo": "chaonpu/ziwuxilv",
+      "cloudWorkflow": "publish-android-release.yml",
+      "windowsWorkflow": null,
+      "runnerName": null,
+      "estimatedMinutes": 15,
+      "reserveMinutes": 100,
+      "idempotencyScope": "version",
+      "enabledForDispatch": false
+    }
+  }
+}
