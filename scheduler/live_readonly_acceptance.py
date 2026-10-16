@@ -50,7 +50,7 @@ def accept(env: dict, *, at: datetime | None = None,
     for task in ("stock_a", "stock_us"):
         out = audit(config, registry, task, "", env=env, clock=instant)
         if (out.get("status") != "locked_read_only"
-                or out.get("dateMode") != "auto_market_clock_candidate"
+                or out.get("dateMode") != "auto_official_schedule_candidate"
                 or out.get("exchangeSessionVerified") is not False
                 or any(out.get(key) is not False for key in (
                     "dispatchAuthorized",
