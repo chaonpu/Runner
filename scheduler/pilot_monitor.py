@@ -1,4 +1,4 @@
-"""Read-only 5-minute reconciliation for persisted Stock no-op pilot runs.
+"""Read-only status inspection for registered Stock no-op runs; no periodic scheduling.
 
 Never rewrites Git, never reissues a pilot, never calls strategy workflows.
 A successful no-op run is a coordinator test, NOT a verified strategy/ledger.
