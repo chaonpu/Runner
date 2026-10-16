@@ -62,9 +62,9 @@ class ProductionRegistryTests(unittest.TestCase):
     def test_registry_now_empty_and_production_disabled(self):
         cfg = configuration()
         state = json.loads((ROOT / "state/tasks.json").read_text(encoding="utf-8"))
-        # Existing task registry has a public-safe description field; normalize
-        # to the strict lifecycle schema without mutating the checked-in file.
+        # Preserve the current on-disk schema, including its public-safe description.
         self.assertEqual(state.get("tasks"), [])
+        self.assertIs(validate(cfg, state), state)
         self.assertEqual(len(validate(cfg, blank())["tasks"]), 0)
         with self.assertRaisesRegex(RegistryGuard, "production_dispatch_disabled"):
             reserve(cfg, blank(), "stock_a", route="cloud", coordinator_run_id=1,
