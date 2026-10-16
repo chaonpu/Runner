@@ -114,6 +114,7 @@ class ProductionDryRunTests(unittest.TestCase):
                        clock=datetime(2026, 10, 18, 22, tzinfo=timezone.utc),
                        preflight_fn=fake_route)
         self.assertEqual(result["calendarStatus"], "exchange_scheduled_closed")
+        self.assertEqual(result["routeRecommendation"], "hold")
         self.assertFalse(result["publishedScheduleMatched"])
         self.assertFalse(result["scheduledSessionClosed"])
         self.assertFalse(result["marketDataReady"])
@@ -128,6 +129,14 @@ class ProductionDryRunTests(unittest.TestCase):
         self.assertFalse(result["dispatchAuthorized"])
         self.assertFalse(result["marketDataReady"])
         preflight_fn.assert_not_called()
+
+    def test_preclose_date_suppresses_possible_cloud_route(self):
+        before = datetime(2026, 10, 19, 6, tzinfo=timezone.utc)
+        result = check(CONFIG, STATE, "stock_a", "2026-10-19",
+                       clock=before, preflight_fn=fake_route)
+        self.assertEqual(result["calendarStatus"], "published_session_not_yet_closed")
+        self.assertEqual(result["routeRecommendation"], "hold")
+        self.assertFalse(result["dispatchAuthorized"])
 
     def test_manual_date_retains_override_and_disables_auto(self):
         actual_clock = datetime(2026, 10, 16, 22, tzinfo=timezone.utc)
@@ -146,7 +155,11 @@ class ProductionDryRunTests(unittest.TestCase):
     def test_good_a_and_us_both_return_unconditionally_no_dispatch(self):
         for task in ("stock_a", "stock_us"):
             with self.subTest(task=task):
-                result = check(CONFIG, STATE, task, DAY, preflight_fn=fake_route)
+                result = check(
+                    CONFIG, STATE, task, DAY,
+                    clock=datetime(2026, 10, 19, 23, tzinfo=timezone.utc),
+                    preflight_fn=fake_route
+                )
                 self.assertEqual(result["taskId"], task + ":" + DAY)
                 self.assertEqual(result["status"], "locked_read_only")
                 self.assertEqual(result["routeRecommendation"], "cloud")
