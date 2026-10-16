@@ -1,4 +1,4 @@
-"""Read-only 5-minute reconciliation of public-safe task registry.
+"""Read-only exceptional/manual reconciliation of public-safe task registry.
 
 Never retries/cancels workflows; never treats completed/success as a verified
 ledger or a published APK. No private repository contents or artifacts fetched.
