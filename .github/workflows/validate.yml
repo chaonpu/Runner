@@ -7,8 +7,7 @@ on:
       - "scheduler/**"
       - "config/**"
       - "tests/**"
-      - ".github/workflows/validate.yml"
-      - ".github/workflows/scheduler.yml"
+      - ".github/workflows/**"
   workflow_dispatch:
 
 permissions:
