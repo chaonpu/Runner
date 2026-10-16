@@ -1,5 +1,19 @@
 # 统一调度中心部署与迁移计划（2026-10-17）
 
+## 当前有效设计：调度即监控，完成即退出（取代全部定时巡检）
+
+本节是**当前实施规则**；下文关于“五分钟定时复核”的文字只是迁移历史，不再代表当前配置。
+
+- 已逐一检查 `Runner/.github/workflows/` 的全部七个工作流：**无任何 `schedule`/cron 触发器**。
+- 正常路径：手动启动 `stock-noop-pilot.yml` → 原子登记测试日期 → 唯一 `workflow_dispatch` 派发私有 Stock 无业务 canary → 保存返回的准确 Run ID → **同一个 GitHub-hosted Ubuntu Job** 每约 30 秒 GET 该 Run 的实际状态 → 完成后先核验目标仓库、工作流、事件、分支、Run ID、结论，再原子写回 `completed_success` 或 `completed_failure`，**随后退出，没有常驻后台轮询器**。
+- 监控最长约 50 分钟，Job 上限 60 分钟。GitHub API 连续失败、任务长时间排队、Runner 离线、状态或身份不可信时停止并保留同一 Run 的登记，**不重派、不重算、不修改正式账本**。
+- `stock-noop-pilot.yml` 的 `mode=monitor_only` 仅供有必要时**手动**恢复原 Run 的监控，绝不重新执行业务；`reconcile.yml` 也已改成只有 `workflow_dispatch` 的手动异常核对入口，不会自行启动。
+- 原调度 Job 的收尾步骤现在使用 `scheduler.pilot_finalize --date <本次测试日期>`，只处理本次任务，不顺带修改其他日期的状态。
+- [Runner 安全测试 #38965688218](https://github.com/chaonpu/Runner/actions/runs/38965688218)：**76 项通过**，含失败/取消/超时、断网、误匹配 Run、按日期精确完成、避免重复派发。历史成功 Stock Run `38961249562` 已通过只读实时轮询验证（[Run 38963736129](https://github.com/chaonpu/Runner/actions/runs/38963736129)）。
+- **仍未完成的验收**：修订后的“派发、等待新任务结束、自动写回、同一 Job 退出”尚未以**全新**无操作任务进行端到端实跑。目前此路径在单元测试和历史 Run 只读查询中已验证；不能把这等同于正式策略上线。
+- **正式 A 股／美股及 APK 调度开关仍为关闭**。不要把无操作 canary 运行 Success 视作实际策略、数据同步或 APK 发布成功。
+
+
 ## 最新生效方案：按需前台监控，不设置任何周期性复核
 
 **以本节为准；下方旧验收日志保留历史记录，涉及“每五分钟 cron”的做法均已废弃。**
