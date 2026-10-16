@@ -58,12 +58,15 @@ jobs:
           set -euo pipefail
           python3 -m scheduler.foreground_watch --date "$PILOT_DATE"
 
-      - name: Atomically record confirmed result before this workflow exits
+      - name: Atomically record only this date's confirmed result before exit
         if: always() && steps.watch.outcome != 'skipped'
         env:
           GH_TOKEN: ${{ github.token }}
           CHAONPU_ACTIONS_READ_TOKEN: ${{ secrets.CHAONPU_ACTIONS_READ_TOKEN }}
-        run: python3 -m scheduler.pilot_finalize
+          PILOT_DATE: ${{ inputs.business_date }}
+        run: |
+          set -euo pipefail
+          python3 -m scheduler.pilot_finalize --date "$PILOT_DATE"
 
       - name: Confirm no background watcher or business operation remains
         if: success()
