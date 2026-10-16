@@ -1,0 +1,33 @@
+name: Reconcile dispatched tasks (cloud, monitor only)
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: runner-task-reconcile
+  cancel-in-progress: false
+
+jobs:
+  reconcile:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: false
+          clean: true
+      - name: Check task registry and run status without any changes
+        env:
+          TEST_ACTIONS_READ_TOKEN: ${{ secrets.TEST_ACTIONS_READ_TOKEN }}
+          CHAONPU_ACTIONS_READ_TOKEN: ${{ secrets.CHAONPU_ACTIONS_READ_TOKEN }}
+          ZIWUXILV_ACTIONS_READ_TOKEN: ${{ secrets.ZIWUXILV_ACTIONS_READ_TOKEN }}
+        run: python3 -m scheduler.monitor
+      - name: Confirm no automatic retry or release until full handoff validation
+        run: echo 'Monitor only. No dispatch, cancellation, compensation, ledger write or publication.'
