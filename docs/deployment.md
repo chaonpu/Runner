@@ -1,5 +1,12 @@
 # 统一调度中心部署与迁移计划（2026-10-17）
 
+## 2026-10-17 第一次线上只读 API 联通验收成功（一次性）
+
+- [RUNNER #38974929403](https://github.com/chaonpu/Runner/actions/runs/38974929403) 利用已有 `validate.yml` 安全测试执行了一次**真实 GitHub REST Contents 读取**。新增的一次性 `scheduler.live_readonly_acceptance` 验证了线上 `state/tasks.json` 的结构和原始 SHA、两个市场的自动日期、既有运行状态查询及只读路由判断，未访问私有仓库内容、未更新任务文件、未派发任务。
+- 实际日志：`live_registry_read_only_confirmed`、`registryApiRead=true`、`taskCount=0`；A股、美股日期候选均 `2026-10-16`，已登记任务均 `not_registered`，路由均 `deferred`，`dispatchAuthorized=false`；未能证明剩余额度或 Windows 正式策略兼容性，因此不使用云端或本地生产执行路径。
+- 公开安全单测 **125/125 通过**。成功核验后**已从 `validate.yml` 移除临时线上验收步骤**，因此以后代码提交不会自动做实时路由巡检；仍无 5 分钟 schedule、无后台 watcher。保留 `scheduler/live_readonly_acceptance.py` 作为可复现的受限只读诊断程序，不授权生产操作。
+- 当前 GitHub 连接没有直接启动 `workflow_dispatch` 的能力；本次并**非手动执行 `production-dispatch.yml` 本身**，不能混淆其真实运行验收。即便日后手动成功运行，该入口仍固定拒绝写入、派发、自动补算。下一步优先验证权威交易日历、可核验余额/Runner 执行环境和正式业务副作用，再考虑放行任何一项生产操作。
+
 ## 2026-10-17 日期输入改进：默认市场时钟自动候选
 
 - [production-dispatch.yml](../.github/workflows/production-dispatch.yml) 的 `business_date` 已从**必填**改为**可选空值**。正常人工发起无需填写，`scheduler.market_clock.resolve_date` 使用 GitHub Runner 当前 UTC 时间与官方时区数据库转换成 `Asia/Shanghai` / `America/New_York`，依当地市场名义收盘时间（A股 15:00；美股 16:00，NY夏令时自动处理）计算最近已结束的工作日候选。周末和盘中则回退到上一个工作日。
