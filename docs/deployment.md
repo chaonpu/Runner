@@ -1,5 +1,15 @@
 # 统一调度中心部署与迁移计划（2026-10-17）
 
+## 2026-10-17 Windows GitHub 连接诊断：公开/私有 Git 引用和对象传输均通过
+
+- 之前的 `actions/checkout` 偶尔出现 `github.com:443` 连接超时；经过 Node 22、Git Bash、Python3.14 等 Windows 工具链与依赖验收后，进一步将普通 TLS/端口检查和真正 Git 协议测试分开，防止把 TLS 握手成功当作私有 Git 检出成功。
+- [公开 Git 只读诊断 #38979632392](https://github.com/chaonpu/Stock/actions/runs/38979632392)：Windows 上针对**公开** `chaonpu/Runner.git` 做 3 次默认 `git ls-remote` 和 3 次强制 HTTP/1.1 `git ls-remote`，**6/6 成功**（约 1.05–1.7 秒）。DNS 本次解析 IPv4 记录、未解析 IPv6，主机未检测到 HTTP(S)/ALL_PROXY 环境变量。只查询公开 Git 引用，没有私有数据。
+- [私有 Git 只读诊断 #38979880648](https://github.com/chaonpu/Stock/actions/runs/38979880648)：在 Stock 私有 Actions 内以 Job 自带的短期 `GITHUB_TOKEN`、最小 `contents:read` 权限，仅访问私有 `chaonpu/Stock.git` 的 Git **HEAD 引用**；默认与 HTTP/1.1 各 3 次，总共 **6/6 通过**，单次约 1.06–1.23 秒。引用内容及凭据没有写入日志，也没有执行私有源码检出。
+- [私有浅层 Git 对象诊断 #38980011136](https://github.com/chaonpu/Stock/actions/runs/38980011136)：先做另外 6 次私有引用查询（**6/6 通过**），然后在 Windows `RUNNER_TEMP` 以**临时裸仓库**分别运行默认和 HTTP/1.1 的 `git fetch --depth=1 --no-tags`，结果 **2/2 通过**，分别约 **8.69 秒 / 10.70 秒**。该步骤下载私有 Git 对象，但仅保存在同一私有 Windows Runner 的临时目录，**不创建源码工作树，不展示文件或提交 SHA，不复制到公开 RUNNER**，目录随诊断结束删除。
+- 上述只证明这些单次诊断**当时**都成功，不能据此宣布网络抖动根治。既往 [Windows 环境检出失败 #38978705490](https://github.com/chaonpu/Stock/actions/runs/38978705490) 的连续三次 `github.com:443` 超时仍是事实；采样未显示强制 HTTP/1.1 优于默认协议，**暂不修改正式策略 Git 网络配置**，也不启用额外定时重试。
+- 仅人工诊断入口：私有 `chaonpu/Stock/.github/workflows/windows-host-prereq.yml`（公开 Git/主机依赖）、`private-git-transport-audit.yml`（私有 Git 引用、临时裸仓库浅层抓取）、`windows-environment-audit.yml`（带源码检出的工具链全验收）。三条工作流均已经移除临时 `push` 触发，无定时触发；工具不读取生产 database、不执行策略、不发送邮件。
+- **安全限制保持**：生产登记与派发仍关闭。仅当未来专门的 Windows 策略测试完成源码检出、Git Bash/Node 初始化、受控计算、行情字段核验以及带 RUNNER 来源回执的私有 database 校验后，才考虑引入正式执行和自动补偿。不得以本轮 Git 引用/浅层抓取成功冒充生产策略端到端成功。
+
 ## 2026-10-17 Windows A/US 正式策略主机运行条件验收（无任何业务副作用）
 
 - 私有 Stock 新增 [环境验收工具](https://github.com/chaonpu/Stock/blob/main/windows_strategy_environment_audit.py) 与手动工作流 `windows-environment-audit.yml`。第一次 [Run #38978705490](https://github.com/chaonpu/Stock/actions/runs/38978705490) 检出私有 Stock 时 `github.com:443` 连接连续超时而失败，未进入 Python/Node 依赖验收；这属于之前已见的**间歇性 Git HTTP 连接问题**，不能归咎于策略代码。
