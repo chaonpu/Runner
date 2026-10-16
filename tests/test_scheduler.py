@@ -63,10 +63,12 @@ class RouteTests(unittest.TestCase):
         runners[task["signingRepo"]]["busy"] = True
         self.assertEqual(decide("android", task, {}, runners).route, "deferred")
 
-    def test_database_is_dependency_not_executable_task(self):
+    def test_database_and_public_release_are_not_dispatchable_tasks(self):
         self.assertNotIn("ZIWUXILV", CONFIG["accounts"])
         self.assertNotIn("database_sync", CONFIG["tasks"])
-        self.assertEqual(decide("apk_publish", CONFIG["tasks"]["apk_publish"], {}, {}).route, "hold")
+        self.assertNotIn("apk_publish", CONFIG["tasks"])
+        self.assertTrue(all(task["repo"] != "chaonpu/ziwuxilv"
+                            for task in CONFIG["tasks"].values()))
 
     def test_task_id_generation(self):
         self.assertEqual(request_id("stock_us", CONFIG["tasks"]["stock_us"],
