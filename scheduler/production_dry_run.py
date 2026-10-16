@@ -93,6 +93,17 @@ def check(config: dict, registry: dict, task: str, business_date: str = "",
     recommended = report.get("recommendation", {})
     if not isinstance(recommended, dict):
         raise RegistryGuard("unexpected_route_result")
+    calendar_closed = (
+        published["publishedScheduleMatched"] is not True
+        or published["scheduledSessionClosed"] is not True
+    )
+    # Even in read-only mode, never expose an actionable cloud/windows
+    # recommendation for a holiday, pre-close date, or unverified session.
+    display_route = "hold" if calendar_closed else recommended.get("route", "hold")
+    display_reason = (
+        published["calendarStatus"] if calendar_closed
+        else recommended.get("reason", "not_ready")
+    )
     return {
         "status": "locked_read_only",
         "taskId": report["taskId"],
@@ -107,8 +118,8 @@ def check(config: dict, registry: dict, task: str, business_date: str = "",
         "exchangeSessionVerified": False,
         "marketDataReady": False,
         "registeredTaskStatus": state.get("status", "unavailable"),
-        "routeRecommendation": recommended.get("route", "hold"),
-        "routeReason": recommended.get("reason", "not_ready"),
+        "routeRecommendation": display_route,
+        "routeReason": display_reason,
         "dispatchAuthorized": False,
         "registryWriteAuthorized": False,
         "databaseWriteAuthorized": False,
