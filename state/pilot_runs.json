@@ -1,5 +1,16 @@
 {
-  "schema": 1,
   "description": "Public-safe idempotent no-op Stock dispatch pilot state; never strategy results or holdings",
-  "tasks": []
+  "schema": 1,
+  "tasks": [
+    {
+      "canary": "runner-canary-38961235915-stock",
+      "coordinatorRunId": 38961235915,
+      "createdAt": "2026-10-16T20:18:09.259842+00:00",
+      "id": "pilot:stock:2026-10-17",
+      "repo": "chaonpu/Stock",
+      "status": "reserved",
+      "updatedAt": "2026-10-16T20:18:09.259842+00:00",
+      "workflow": "runner-dispatch-canary.yml"
+    }
+  ]
 }
