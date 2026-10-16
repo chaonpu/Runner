@@ -20,8 +20,8 @@
       "id": "pilot:stock:2026-10-18",
       "repo": "chaonpu/Stock",
       "runId": 38967039826,
-      "status": "dispatched",
-      "updatedAt": "2026-10-16T21:06:32.307956+00:00",
+      "status": "completed_success",
+      "updatedAt": "2026-10-16T21:07:04.533494+00:00",
       "workflow": "runner-dispatch-canary.yml"
     }
   ]
