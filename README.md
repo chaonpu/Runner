@@ -13,6 +13,8 @@
 
 **目前已部署：云端按需预检 + 调度启动后同一 Job 前台监控。** Stock 的无操作试验通过 `stock-noop-pilot.yml`：先登记并派发确定 Run ID，随后每约 30 秒查询状态；目标任务结束后写回 `completed_success` 或 `completed_failure` 并停止监控 Job。**已移除独立五分钟 `schedule`。** `reconcile.yml` 仅保留手动异常恢复入口，正常运行不使用。正式策略自动派发仍关闭，避免重复生产计算。
 
+本轮安全加固（2026-10-17）：新增 `tests/test_workflow_contract.py`，确保七个工作流仅安全测试可由代码提交触发，其他均为手动入口、无 `schedule`/cron；任何 `.github/workflows/**` 变更都会运行安全测试。最新 [Run #38966526812](https://github.com/chaonpu/Runner/actions/runs/38966526812) **80 项测试全部通过**。这不等于全新 canary 派发→监控→自动回写的真实闭环已验收；仍需下一次独立手动无操作演练。
+
 当前凭据与权限边界：
 
 - `TEST_ACTIONS_READ_TOKEN`：Test 私有仓库 Actions 读写；`CHAONPU_ACTIONS_READ_TOKEN`：仅 Stock 与 ziwu 签名私有仓库 Actions 读写。两者虽然名称含 READ，但已验证具有私有仓库的 `workflow_dispatch` 写入能力。**不授权公开 `chaonpu/ziwuxilv`**。
