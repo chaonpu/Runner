@@ -1,5 +1,13 @@
 # 统一调度中心部署与迁移计划（2026-10-17）
 
+## 2026-10-17 日期输入改进：默认市场时钟自动候选
+
+- [production-dispatch.yml](../.github/workflows/production-dispatch.yml) 的 `business_date` 已从**必填**改为**可选空值**。正常人工发起无需填写，`scheduler.market_clock.resolve_date` 使用 GitHub Runner 当前 UTC 时间与官方时区数据库转换成 `Asia/Shanghai` / `America/New_York`，依当地市场名义收盘时间（A股 15:00；美股 16:00，NY夏令时自动处理）计算最近已结束的工作日候选。周末和盘中则回退到上一个工作日。
+- 手动填写 `YYYY-MM-DD` 仍允许作为**只读异常复核覆盖**，不是策略补算或派发权限。输出 `dateMode`、`marketTimezone`、`marketLocalClock`、`businessDate` 和 `exchangeSessionVerified=false`；因为仅凭周一至周五不足以确认交易所节假日、临时休市、提前收盘或账本实际数据，日期仅为安全检查候选。真实派发前必须引入**权威交易日历 + 交易所休市时刻 + 数据就绪证据**的单独验证，不得直接使用当前日期或此候选放行策略。
+- 同时修复生产入口 Workflow 的六个环境变量 GitHub 表达式前多余的反斜杠，确保 `GH_TOKEN`、任务及日期输入被正常传递。`scheduler.production_dry_run` 仍强制生产开关为 false，绝无 dispatch/PUT。
+- [RUNNER 安全测试 #38974308079](https://github.com/chaonpu/Runner/actions/runs/38974308079) **121 项通过**，包含北京时间周末、A股收盘前、纽约标准/夏令时、手工覆盖和失败闭锁。
+- Stock `private_coordinator_link.py` 在 RUNNER 输入 `business_date` 为空时保留跨 Run ID 只读比对，但**不会**把 UI 没提供的有效日期当成已独立验证；`taskInputsIndependentlyVerified=false`、`businessVerified=false`、`safeToRetry=false`。跨仓完整生产核验仍未建立。
+
 ## 2026-10-17 新入口：正式调度仅开放只读安全验收
 
 - 已创建 `.github/workflows/production-dispatch.yml`（仅 `workflow_dispatch`、管理员 `chaonpu`、`main`；全 Job `permissions: contents:read`）。当前仅允许 A股、美股业务日期的**只读安全门**，没有真实 `dispatch`、无登记表 PUT、无 database 写入、无 APK 发布、无定时任务。
