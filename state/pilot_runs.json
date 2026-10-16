@@ -8,8 +8,9 @@
       "createdAt": "2026-10-16T20:18:09.259842+00:00",
       "id": "pilot:stock:2026-10-17",
       "repo": "chaonpu/Stock",
-      "status": "reserved",
-      "updatedAt": "2026-10-16T20:18:09.259842+00:00",
+      "runId": 38961249562,
+      "status": "dispatched",
+      "updatedAt": "2026-10-16T20:18:11.272970+00:00",
       "workflow": "runner-dispatch-canary.yml"
     }
   ]
