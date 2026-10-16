@@ -1,10 +1,6 @@
 name: Verify signer and release workflow dispatch scopes (no-op)
 
 on:
-  # One-time main-branch smoke trigger; will be removed after verified success.
-  push:
-    branches: [main]
-    paths: [".github/workflows/dispatch-extra-canary.yml"]
   workflow_dispatch:
 
 permissions:
