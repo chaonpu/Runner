@@ -1,0 +1,5 @@
+{
+  "schema": 1,
+  "description": "Public-safe task metadata only. No source code, positions, customer details or secrets.",
+  "tasks": []
+}
