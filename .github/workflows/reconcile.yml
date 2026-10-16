@@ -4,11 +4,6 @@ on:
   schedule:
     - cron: "*/5 * * * *"
   workflow_dispatch:
-  # Temporary non-privileged smoke trigger; removed after proving hosted execution.
-  push:
-    branches: [main]
-    paths:
-      - ".github/workflows/reconcile.yml"
 
 permissions:
   contents: read
