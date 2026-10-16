@@ -1,7 +1,7 @@
 {
   "version": 1,
   "dispatchEnabled": false,
-  "description": "Public allowlist: Test, Stock, Android signer and public APK; ZIWUXILV/database is a downstream data dependency, not an executable workflow",
+  "description": "Public coordinator allowlists only private build/strategy workflow targets; public APK release is separate, repository-owned, and never dispatched with a private-repo token.",
   "accounts": {
     "anwpustudent-lab": {
       "kind": "user",
@@ -63,17 +63,6 @@
       "estimatedMinutes": 80,
       "reserveMinutes": 200,
       "idempotencyScope": "source-sha",
-      "enabledForDispatch": false
-    },
-    "apk_publish": {
-      "kind": "publish",
-      "repo": "chaonpu/ziwuxilv",
-      "cloudWorkflow": "publish-android-release.yml",
-      "windowsWorkflow": null,
-      "runnerName": null,
-      "estimatedMinutes": 15,
-      "reserveMinutes": 100,
-      "idempotencyScope": "version",
       "enabledForDispatch": false
     }
   }
