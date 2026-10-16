@@ -13,15 +13,15 @@
 
 **目前已部署：云端只读预检 + 5 分钟云端只读任务复核。** `scheduler.yml` 支持手动按需预检；`reconcile.yml` 按 5 分钟间隔复核 `state/tasks.json` 中已登记的任务（当前为空）。二者均不派发、不取消、不写入账本、不发布 APK。业务仓库的原生产定时源尚未迁移，避免双触发。
 
-初始凭据名称：
+当前凭据与权限边界：
 
-- `TEST_ACTIONS_READ_TOKEN`、`CHAONPU_ACTIONS_READ_TOKEN`：仅用于 Actions 运行状态读取。
+- `TEST_ACTIONS_READ_TOKEN`：Test 私有仓库 Actions 读写；`CHAONPU_ACTIONS_READ_TOKEN`：仅 Stock 与 ziwu 签名私有仓库 Actions 读写。两者虽然名称含 READ，但已验证具有私有仓库的 `workflow_dispatch` 写入能力。**不授权公开 `chaonpu/ziwuxilv`**。
 - `TEST_BILLING_READ_TOKEN`、`CHAONPU_BILLING_READ_TOKEN`：仅用于对应个人账户 Billing Usage GET。
 - `TEST_RUNNER_READ_TOKEN`、`RUNNER_READ_TOKEN`：仅用于目标仓库的 Runner 状态 GET。
 
 `ZIWUXILV/database` 当前仅参与 Stock 的私有数据依赖，不由调度中心派发工作流，因此不要求该组织的 Billing、Actions 或 Runner 令牌。
 
-目标阶段：安全完成 Stock 单任务演练后，再逐项迁移 database、Test、Android 私有签名与公开正式发布；所有切换都需明确定义输出验证和幂等机制。详见 `docs/deployment.md`。
+目标阶段：安全完成 Stock 单任务演练后，再逐项串联 Test、Android 私有签名。公开正式版由 `chaonpu/ziwuxilv` 自己的 `publish-android-release.yml` 负责发布，在私有签名产物经核验后通过独立发布请求触发，**不使用 Runner 的私有仓库令牌跨仓库派发公开发布工作流**。详见 `docs/deployment.md`。
 
 ## 使用入口
 
