@@ -35,11 +35,11 @@ def event_keys(yaml_text):
 class WorkflowContractTests(unittest.TestCase):
     def test_only_validation_has_push_all_others_manual_only(self):
         files = {p.name: p for p in WORKFLOWS.glob("*.yml")}
-        self.assertEqual(set(files), MANUAL_ONLY | {VALIDATE, "production-launch.yml"})
+        self.assertEqual(set(files), MANUAL_ONLY | {VALIDATE, "production-launch.yml", "android-production-launch.yml"})
         for name, path in files.items():
             with self.subTest(workflow=name):
                 actual = event_keys(path.read_text(encoding="utf-8"))
-                wanted = {"workflow_dispatch", "push"} if name == VALIDATE else {"push"} if name == "production-launch.yml" else {"workflow_dispatch"}
+                wanted = {"workflow_dispatch", "push"} if name == VALIDATE else {"push"} if name in ("production-launch.yml", "android-production-launch.yml") else {"workflow_dispatch"}
                 self.assertEqual(actual, wanted, "No scheduled, PR, or other automatic task trigger")
 
     def test_production_workflow_has_explicit_single_task_execution_and_cleanup(self):
@@ -66,6 +66,16 @@ class WorkflowContractTests(unittest.TestCase):
         self.assertIn("ref: ${{ github.sha }}", src)
         self.assertIn("scheduler.production_bootstrap", src)
         self.assertNotRegex(src, r"(?m)^\s*(schedule|cron):")
+
+    def test_android_bootstrap_is_single_reviewed_file_push(self):
+        src=(WORKFLOWS / "android-production-launch.yml").read_text(encoding="utf-8")
+        self.assertIn('paths: ["config/android-launch-request.json"]', src)
+        self.assertIn("github.actor == 'chaonpu'", src)
+        self.assertIn("ref: " + "$" + "{{ github.sha }}", src)
+        self.assertIn("scheduler.android_launch_request", src)
+        self.assertNotRegex(src, r"(?m)^\\s*(schedule|cron):")
+        self.assertNotIn("ziwuxilv/contents", src)
+        self.assertNotIn("publish-android-release.yml", src)
 
     def test_pilot_dispatch_watch_finalize_remain_same_job(self):
         src = (WORKFLOWS / "stock-noop-pilot.yml").read_text(encoding="utf-8")
