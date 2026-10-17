@@ -48,8 +48,16 @@
 - 本轮 Windows 同机签名 Runner 经真实测试可**只读复用 Test Runner 的官方公开上传组件缓存**，每次重新验证固定 Git Blob 哈希及长度；不复制签名密钥，也不公开源码。
 - Android 构建启动和签名恢复两个一次性申请文件均为 `enabled=false`；未生成任何公开 Release，也未修改正式版更新清单。
 
-## 当前限制
+## 云端额度优先与 Windows 安全回退（路由阶段）
 
-- 本次仅新增**Windows 精确 Test → Windows 私有签名**生产执行路径；云端 `Test/android.yml` 与签名仓库旧云端工作流的数据契约不同，尚不具备与这条不可变 handoff 直接互换的生产证明。即使云端额度可用，也不绕过上述校验。云端优先/Windows 自动切换需单独补齐一个接受云端已验证 handoff 的私有签名工作流及回归后再开放。
+- 新增 Test 私有 `android-cloud-verified.yml`，**仅 `workflow_dispatch`**、GitHub 标准 `ubuntu-24.04`、`contents: read`。按照已验收的 Test 口径运行版本检查、单元测试、Release Lint、Debug APK、Unsigned Release 和通知权限检查，私有产物为 `cloud-test-verified`（3 天有效），字段与已有 Windows `windows-test-verified` 一致。
+- 私有 Windows 签名工作流只认可精确 `main`、原始 `workflow_dispatch`、首次尝试且成功的 Test Run；根据 GitHub 原始 `path` 将受信任 Windows 路由绑定 `windows-test-verified`，将受信任云端路由绑定 `cloud-test-verified`。**不接受由调用者自由提供 Artifact 名称**，更不允许未验证源码直接签名。
+- RUNNER `scheduler/android_route.py` 在正式派发前从 Test 所属账号读取当月 GitHub Actions 用量摘要及明细，只有“私有 Linux 标准 Runner 的历史用量可以可靠归属、公开仓库标准托管用量已排除、SKU 不存在未知倍率、当前剩余分钟**估算值** ≥ 标准云端构建超时 100 + 保留 200 + 报告滞后保护 400 = **700 分钟**”时才候选云端。低于门槛、权限不足、用量结构不完整或历史报告异常一律使用已验证的 Windows 构建。
+- **GitHub 用量 API 不提供精确实时可用免费分钟证明**；`hostedQuotaGuaranteed=false`。该机制优先避免误用付费额度，不能保证云端 Job 启动后不会遇到 GitHub 平台的账单限制。云端 Job 一旦实际派发，不因普通编译失败或网络错误自动再派 Windows；需核验原 Run 后人工处理，防止双跑和多余消耗。
+- 每次新源码只保留一个 `state/android-production.json` 条目，提前固化 `route`（`hosted` / `windows`），后续恢复继续检查原 SHA、工作流、Run ID、对应 Runner/Artifact。签名仍运行在**私有 Windows 签名 Runner**，不会上传 keystore。
+- 2026-10-17 `Runner/validate.yml` [Run 39045824212](https://github.com/chaonpu/Runner/actions/runs/39045824212) 269 项安全测试通过，在线只读报告 `route=windows`、`routeReason=remaining_estimate_below_conservative_threshold`、两个 Windows Runner 在线且无活跃的相关工作流。
+- **只完成云端契约和调度逻辑的静态/离线验收**；未在账号当前额度低于保护门槛时强行派发收费风险的私有 Ubuntu 编译任务。因此云端 Test → Windows 签名分支尚需在有足够免费额度时完成一次真实端到端验收，不能混同已经验证的 Windows → Windows 生产链。
+
+## 当前限制
 - 公开工作流能否实际派发取决于 RUNNER Secrets：`TEST_ACTIONS_READ_TOKEN`、`CHAONPU_ACTIONS_READ_TOKEN` 需 Actions 写与运行只读；`TEST_RUNNER_READ_TOKEN`、`RUNNER_READ_TOKEN` 已在实时只读预检中确认可分别读取两个 Windows Runner 的状态。可选 `TEST_SOURCE_READ_TOKEN` 只需精确限定私有 Test 仓库 `Contents: Read`，用于自动读取 `main` SHA；不配置时手动指定 SHA 即可保持源码权限隔离。某个必要权限缺失会保守停止。
 - 本次 Windows 私有链已通过真实 Run 和 Artifact 验收；若后续换机器、更新工具或接入云端路径，仍需重新验证。共享缓存仅在两台自托管 Runner 运行于同一 Windows 主机时适用，缺失或不匹配时会安全停止或走官方 API 并完整校验。
