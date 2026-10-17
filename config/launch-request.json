@@ -1,6 +1,6 @@
 {
   "enabled": true,
-  "requestId": "controlled-stock-us-20261017-native-catchup-5-stable-read-head",
+  "requestId": "controlled-stock-us-20261017-native-catchup-6-native-replay-path",
   "task": "stock_us",
   "businessDate": "",
   "publicationMode": "theoretical_catchup"
