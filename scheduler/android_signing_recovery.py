@@ -70,8 +70,12 @@ def verify_no_signing_started(response):
     if job.get("conclusion") != "failure" or not isinstance(job.get("steps"), list):
         raise Hold("old_signer_result_not_failure")
     steps = {s.get("name"): s.get("conclusion") for s in job["steps"] if isinstance(s, dict)}
-    if steps.get(PREFLIGHT) != "failure":
-        raise Hold("old_signer_not_preflight_failure")
+    allowed_early_failures = {
+        PREFLIGHT,
+        "Test official GitHub API uploader integrity and interrupted transfer recovery",
+    }
+    if not any(steps.get(name) == "failure" for name in allowed_early_failures):
+        raise Hold("old_signer_not_pre_key_material_failure")
     if any(steps.get(name) != "skipped" for name in FORBIDDEN_STARTED):
         raise Hold("old_signer_could_have_accessed_keys")
 
