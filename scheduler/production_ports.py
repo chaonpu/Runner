@@ -17,7 +17,8 @@ import re
 import urllib.request
 
 from scheduler.exchange_schedule import evaluate
-from scheduler.production_evidence import inspect
+from scheduler.production_evidence import inspect, WORKFLOWS as READY_WINDOWS, CLOUD_WORKFLOWS
+from scheduler.policies import hosted_capacity
 from scheduler.production_registry import RegistryGuard, validate, observe_run
 from scheduler.production_session import context, dispatch_inputs, readiness, WORKFLOWS, SHA, RUN_ID
 from scheduler.production_store import save as registry_save, verify_change
@@ -141,7 +142,12 @@ class ReadOnlyPorts:
         attempts = [self.active("chaonpu/Stock", wf, account, self.env) for wf in WORKFLOWS.values()]
         active = "no_active_run" if all(x.get("status") == "no_active_run" for x in attempts) else (
             "active" if any(x.get("status") == "active" for x in attempts) else "unknown")
-        evidence = inspect(self.private_reader(), task, day, self.clock(), spec.get("publicationMode", "formal"))
+        # Require evidence from the route actually chosen for this account.
+        # A prior green Windows run cannot stand in for a new cloud preflight.
+        capacity = hosted_capacity(billing, spec, now=self.clock())
+        workflow = CLOUD_WORKFLOWS[task] if capacity == "available" else READY_WINDOWS[task]
+        evidence = inspect(self.private_reader(), task, day, self.clock(),
+                           spec.get("publicationMode", "formal"), expected_workflow=workflow)
         source = evidence["sourceSha"]
         closed = calendar["calendarCoverageCurrent"] and calendar["scheduledSessionClosed"]
         report = {"taskId": task + ":" + day, "sourceSha": source,
