@@ -48,7 +48,9 @@ jobs:
         run: |
           set -euo pipefail
           python3 -m scheduler.production_dry_run --task "$TASK" --business-date "$BUSINESS_DATE"
+          python3 -m scheduler.production_ports --task "$TASK" --business-date "$BUSINESS_DATE"
       - name: Confirm no business side effects
         run: |
           echo 'READ ONLY: no private checkout, no dispatch, no state commit, no database changes.'
           echo 'No five-minute schedule, no background watcher; workflow exits here.'
+

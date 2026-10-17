@@ -1,8 +1,9 @@
-"""Unwired Stock coordinator core, exercised with in-memory ports only.
+"""Unwired Stock coordinator core, exercised with in-memory ports.
 
 There is intentionally no CLI, HTTP client, credential lookup or default port.
-No workflow imports this module. Live dispatch/readiness adapters and private
-effect finalization remain unimplemented; production configuration stays OFF.
+No workflow calls start/observe. Restricted production_ports adapters exist
+but their writer is unwired. Private readiness production and effect
+finalization remain incomplete; production configuration stays OFF.
 
 Future trusted ports must provide load(), save(), audit(), dispatch(), run().
 Each uncertain effect aborts without retry. A durable reservation survives an
@@ -137,8 +138,8 @@ def dispatch_inputs(run, key, owner, route):
 def start(ports, task, business_date, env, *, clock=lambda: datetime.now(timezone.utc)):
     """Reserve -> confirm -> re-audit -> one dispatch -> bind -> confirm.
 
-    Ports have NO shipped implementation. Never invoke against a real system
-    until the separate readiness/dispatch adapters have been reviewed/enabled.
+    Production adapters remain unwired. Never invoke against a real system
+    until the private readiness producer and production enablement are ready.
     """
     owner = context(env)
     need(task in WORKFLOWS and isinstance(business_date, str), "session_task_invalid")

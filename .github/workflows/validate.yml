@@ -37,7 +37,18 @@ jobs:
           TEST_BILLING_READ_TOKEN: ${{ secrets.TEST_BILLING_READ_TOKEN }}
           TEST_RUNNER_READ_TOKEN: ${{ secrets.TEST_RUNNER_READ_TOKEN }}
         run: python3 -m scheduler.runtime_status
-      - name: Enforce public repository secrets boundary
+      - name: One-time live read-only production adapter acceptance
+        # Removed after verification; no private contents, artifacts or logs.
+        if: github.actor == 'chaonpu'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CHAONPU_ACTIONS_READ_TOKEN: ${{ secrets.CHAONPU_ACTIONS_READ_TOKEN }}
+          CHAONPU_BILLING_READ_TOKEN: ${{ secrets.CHAONPU_BILLING_READ_TOKEN }}
+          RUNNER_READ_TOKEN: ${{ secrets.RUNNER_READ_TOKEN }}
+        run: |
+          python3 -m scheduler.production_ports --task stock_a
+          python3 -m scheduler.production_ports --task stock_us
+      - name: Enforce public repository secrets boundary (original)
         run: |
           python3 - <<'PY'
           from pathlib import Path
@@ -52,3 +63,4 @@ jobs:
           assert not re.search(r'gh[pousr]_[a-zA-Z0-9]{20,}', config)
           print('Public source and token exposure guardrails passed.')
           PY
+
