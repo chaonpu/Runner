@@ -112,7 +112,8 @@ class RouteTests(unittest.TestCase):
         self.assertEqual((runner["status"], runner["read"]), ("unknown", "secret_missing"))
 
     def test_public_preflight_never_dispatches(self):
-        result = preflight(CONFIG, "stock_us", business_date="2026-10-16", env={})
+        result = preflight(CONFIG, "stock_us", business_date="2026-10-16", env={},
+                           registry_state={"schema":1,"tasks":[]})
         self.assertEqual(result["taskId"], "stock_us:2026-10-16")
         self.assertFalse(result["execution"]["dispatchAuthorized"])
         self.assertEqual(result["recommendation"]["route"], "hold")
@@ -152,3 +153,4 @@ class RouteTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+

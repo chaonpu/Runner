@@ -14,7 +14,8 @@ from scheduler.policies import request_id
 
 FIELDS = frozenset({
     "id", "task", "repo", "workflow", "route", "status", "coordinatorRunId",
-    "runId", "createdAt", "updatedAt", "sourceSha", "publicationMode"
+    "runId", "createdAt", "updatedAt", "sourceSha", "publicationMode",
+    "completionMode", "completionRunId", "completionSourceSha"
 })
 STATES = frozenset({
     "reserved", "dispatched", "running", "awaiting_effect_verification",
@@ -90,6 +91,16 @@ def validate(config: dict, state: dict) -> dict:
             raise RegistryGuard("registered_source_invalid")
         if entry.get("publicationMode", "formal") not in ("formal", "theoretical_catchup"):
             raise RegistryGuard("publication_mode_invalid")
+        recovery = {"completionMode", "completionRunId", "completionSourceSha"}
+        if recovery.intersection(entry):
+            if not (recovery.issubset(entry) and entry.get("status") == "verified"
+                    and entry.get("task") == "stock_us"
+                    and entry.get("publicationMode") == "theoretical_catchup"
+                    and entry["completionMode"] == "recovered_original_commit"
+                    and type(entry["completionRunId"]) is int and entry["completionRunId"] > 0
+                    and entry["completionRunId"] != entry.get("runId")
+                    and re.fullmatch(r"[a-f0-9]{40}", str(entry["completionSourceSha"]))):
+                raise RegistryGuard("recovery_completion_metadata_invalid")
         _identity(task_name, spec, entry.get("id"))
         key = entry["id"]
         if key in keys:

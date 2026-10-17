@@ -17,7 +17,7 @@ from scheduler.production_registry import RegistryGuard, validate
 API = "https://api.github.com"
 CONTENTS_PATH = "/repos/chaonpu/Runner/contents/state/tasks.json"
 SHA = re.compile(r"^[0-9a-f]{40}$")
-PROTECTED = ("id", "task", "repo", "workflow", "route", "coordinatorRunId", "createdAt", "sourceSha", "publicationMode")
+PROTECTED = ("id", "task", "repo", "workflow", "route", "coordinatorRunId", "createdAt", "sourceSha", "publicationMode", "completionMode", "completionRunId", "completionSourceSha")
 ALLOWED = {
     "reserved": {"dispatched", "hold"},
     "dispatched": {"running", "awaiting_effect_verification", "hold"},

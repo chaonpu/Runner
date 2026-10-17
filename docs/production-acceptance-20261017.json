@@ -1,0 +1,38 @@
+{
+  "completionMode": "recovered_original_commit",
+  "completionRunId": 39031059755,
+  "completionSourceSha": "430516ba95b2c873e877580aebaf35b1dba492c9",
+  "formalReportVerified": false,
+  "independentChecks": {
+    "historicalNavPrefix": true,
+    "launchRequestDisabled": true,
+    "noActiveLease": true,
+    "oneTimeRecoveryPushTriggerRemoved": true,
+    "originalReceiptAndMarketEffectInSameCommit": true,
+    "originalSourceAndRunBindings": true,
+    "otherMarketUnchanged": true,
+    "parentCommitAndIndexChain": true,
+    "permitsClosed": true,
+    "priorImmutableLedgerArchiveUnchanged": true,
+    "rawSnapshotAndLedgerHashes": true,
+    "sameOriginalDatabaseCommit": true,
+    "settledInputsSynchronized": true,
+    "settledTradeFacts": true
+  },
+  "originalCoordinatorRunId": 39028948173,
+  "originalCoordinatorSucceeded": false,
+  "originalRunId": 39029549179,
+  "originalRunSucceeded": false,
+  "originalSourceSha": "504f49dc90417102662f9ee615a2cad6d4cfe07f",
+  "publicationMode": "theoretical_catchup",
+  "readinessRunId": 39028962932,
+  "recoveryRunSucceeded": true,
+  "schemaVersion": 1,
+  "strategyRecomputed": false,
+  "taskId": "stock_us:2026-10-16",
+  "tests": {
+    "privateLocal": 146,
+    "publicLocal": 243,
+    "windowsReadiness": 138
+  }
+}

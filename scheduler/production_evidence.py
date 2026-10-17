@@ -1,6 +1,6 @@
 """Actions-only private readiness metadata; no Contents/status permission.
 
-The dedicated private producers are not installed yet. Absence is HOLD.
+Dedicated private producers must emit exact run-bound evidence. Absence is HOLD.
 No private code, artifacts, ledger, holdings or logs are requested.
 """
 from datetime import date, datetime, timezone
@@ -33,7 +33,7 @@ def timestamp(value):
 def inspect(reader, task, day, now, publication_mode="formal"):
     """Require newest original readiness Run, exact dated job and final step.
 
-    The future producer must independently check live session completion,
+    The private producer must independently check live session completion,
     complete quotes and complete selection inputs for this exact day/source.
     Returned SHA is a fresh SOURCE CANDIDATE, not a claim of current main.
     Actual production Run SHA must match before binding/private admission.

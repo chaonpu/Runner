@@ -1,5 +1,5 @@
 {
-  "enabled": true,
+  "enabled": false,
   "requestId": "controlled-stock-us-20261017-native-catchup-9-audited-prebusiness-recovery",
   "task": "stock_us",
   "businessDate": "",

@@ -1,3 +1,5 @@
+> 历史阶段记录：本文描述首次只读接线验收。后续私有就绪生产器、执行入口及回执完成路径已经部署；当前行为见[单任务运行说明](production-execution.md)，真实运行结论见最新验收记录。
+
 # 受限线上适配器与实时证据门（2026-10-17）
 
 本轮在隔离协调核心之外增加真实 GitHub API 适配器，实际命令入口只构造 `ReadOnlyPorts`。`ProductionPorts` 的状态写入和派发方法，以及 `production_watch.watch()` 的前台循环，都没有接入生产工作流。总开关、任务开关、Stock Windows 白名单保持关闭。
@@ -40,3 +42,4 @@ API 协议参考：[GitHub workflow runs](https://docs.github.com/en/rest/action
 本地完整回归 **232 项通过**，新增 31 项，包括 API 路径约束、只读入口不能构造写适配器、Git blob 校验、失效证据、源提交变化、跨市场活跃任务、接受预约后响应丢失、派发超时、旧预约不能重发和前台监控截止。
 
 线上只读验收 [CI #39010081814](https://github.com/chaonpu/Runner/actions/runs/39010081814) 成功，232 项测试通过。使用现有 Actions 令牌读取真实私有 Run 及 Job 元数据成功；两个市场均自动解析为 2026-10-16，无活跃业务运行、登记 0，生产开关关闭。专用私有准备工作流尚未安装，两者均返回 `hold_private_readiness_workflow_missing_or_not_visible`；真实就绪证明未生成，未启动策略。临时 CI 验收步骤随后移除，人工只读入口保留。生产登记、正式数据库、私有策略工作流及邮件未因本轮更新而执行或改变。详细固定字段见 [验收记录](production-live-ports-20261017.json)。
+
