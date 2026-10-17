@@ -60,7 +60,7 @@ jobs:
           args=(--source-sha "$SOURCE_SHA")
           if [[ "$EXECUTE" == 'true' ]]; then args+=(--execute); fi
           if [[ "$RESUME" == 'true' ]]; then args+=(--resume); fi
-          python3 -m scheduler.android_production "${args[@]}"
+          python3 -m scheduler.android_production "${args[@]}" 2>&1 | tee "$RUNNER_TEMP/entry-result.jsonl"
       - name: Explain next manual step
         if: always()
         shell: bash
@@ -75,3 +75,13 @@ jobs:
             echo '构建/签名未完成，不允许进入正式发布。' >> "$GITHUB_STEP_SUMMARY"
             echo '查看上方结构化 failureClass 与 state/android-production.json 的 lastFailure；网络故障已经在同一私有运行内限次重试，不会自动改用旧源码。' >> "$GITHUB_STEP_SUMMARY"
           fi
+
+      - name: Show authoritative entry outcome (not GitHub green alone)
+        if: always()
+        env:
+          JOB_RESULT: ${{ job.status }}
+          ENTRY_PREVIEW: ${{ inputs.execute != true }}
+        run: |
+          python3 -m scheduler.entry_result --entry android_build \
+            --result "$JOB_RESULT" --preview "$ENTRY_PREVIEW" \
+            --log "$RUNNER_TEMP/entry-result.jsonl"
