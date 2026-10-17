@@ -42,7 +42,7 @@ RUNNER 仅保留以下 **4 个手动工作流**，均从 Actions → 选择工�
 3. 打开 [ziwuxilv 正式发布入口](https://github.com/chaonpu/ziwuxilv/actions/workflows/publish-android-release.yml)，点 **Run workflow**，分支 `main`，将 JSON **完整内容**粘贴进 `publish_request`，再运行。
 4. 等该发布任务成功后，回 RUNNER 用相同输入、`mode=verify`、`execute=true` 核验。结果必须为 `published=true`，才表示清单和公开下载的 APK 哈希已核验成功。
 
-**可选的一键发布：** 在 RUNNER 配置 `ZIWUXILV_ACTIONS_WRITE_TOKEN`，仅授权公开仓库 `chaonpu/ziwuxilv` 的 **Actions: Read and write**。然后选择 `mode=publish`、勾选 `execute`。此方式派发发布仓库自身工作流，由该仓库自己的 `GITHUB_TOKEN` 写 Release 和更新清单。原有私有仓库令牌不扩权。缺少专用令牌时会在公开签名包之前停止，并提示使用 `prepare`。
+**一键发布：** 复用 RUNNER 现有 Secret `CHAONPU_ACTIONS_READ_TOKEN`，无需新增 `ZIWUXILV_ACTIONS_WRITE_TOKEN`。该令牌需在保留原有私有仓库授权的同时，包含公开仓库 `chaonpu/ziwuxilv`，并具备该仓库 **Actions: Read and write**。选择 `mode=publish`、勾选 `execute` 即可。此方式派发发布仓库自身工作流，由该仓库自己的 `GITHUB_TOKEN` 写 Release 和更新清单；跨仓库令牌不需要新增 Contents 写权限。未配置现有 Secret 时会在公开签名包之前停止，并提示使用 `prepare`。
 
 发布会校验真实包名、版本、原生产证书、SHA-256、准确 Test/签名 Run，以及正式下载地址。`prepare` 成功只代表**请求已准备**。同版本重复执行不会重复暂存或重复派发；发布中断后保留准确 Run ID。状态为 `staging_reserved`、`dispatch_reserved` 时先人工核对原结果，勿反复点击。正常继续已有 `publishing` 任务请新建一次手动运行，不使用旧 Run 的 Re-run。
 

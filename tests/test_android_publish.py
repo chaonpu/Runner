@@ -50,6 +50,7 @@ class Tests(unittest.TestCase):
             registry['releases'][key]=deepcopy(row)
             self.events.append(row['phase'])
         def api(*args,**kwargs):
+            self.assertEqual(args[1],'fake-chaonpu-actions')
             self.events.append('POST')
             return {} if bad_response else {'workflow_run_id':789}
         def stage(env,req):
@@ -58,7 +59,7 @@ class Tests(unittest.TestCase):
             if fail_stage: raise p.build.Hold('stage_failed')
             return PUBLISH
         env=dict(ENV)
-        if token:env['ZIWUXILV_ACTIONS_WRITE_TOKEN']='fake-release-only'
+        if token:env['CHAONPU_ACTIONS_READ_TOKEN']='fake-chaonpu-actions'
         with tempfile.TemporaryDirectory() as directory:
             old=Path.cwd()
             import os
@@ -79,9 +80,15 @@ class Tests(unittest.TestCase):
         self.assertFalse(result['published'])
         self.assertEqual(self.events,[])
 
-    def test_missing_public_token_stops_before_staging(self):
+    def test_missing_shared_actions_token_stops_before_staging(self):
         with self.assertRaisesRegex(p.build.Hold,'token_missing'):
             self.invoke(mode='publish',execute=True)
+        self.assertEqual(self.events,[])
+
+    def test_preview_uses_shared_secret_configuration_without_side_effects(self):
+        result=self.invoke(token=True)
+        self.assertTrue(result['publicDispatchCredentialConfigured'])
+        self.assertFalse(result['published'])
         self.assertEqual(self.events,[])
 
     def test_prepare_without_extra_token_is_not_publication(self):

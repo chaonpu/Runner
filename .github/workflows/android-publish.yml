@@ -46,7 +46,6 @@ jobs:
       GH_TOKEN: ${{ github.token }}
       CHAONPU_ACTIONS_READ_TOKEN: ${{ secrets.CHAONPU_ACTIONS_READ_TOKEN }}
       TEST_ACTIONS_READ_TOKEN: ${{ secrets.TEST_ACTIONS_READ_TOKEN }}
-      ZIWUXILV_ACTIONS_WRITE_TOKEN: ${{ secrets.ZIWUXILV_ACTIONS_WRITE_TOKEN }}
       SOURCE_SHA: ${{ inputs.source_sha }}
       VERSION_NAME: ${{ inputs.version_name }}
       VERSION_CODE: ${{ inputs.version_code }}

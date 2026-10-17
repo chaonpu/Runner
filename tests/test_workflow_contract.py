@@ -48,7 +48,8 @@ class WorkflowContractTests(unittest.TestCase):
         text = (WORKFLOWS/'android-publish.yml').read_text()
         self.assertIn('scheduler.android_publish', text)
         self.assertIn('options: [prepare, publish, verify]', text)
-        self.assertIn('ZIWUXILV_ACTIONS_WRITE_TOKEN', text)
+        self.assertIn('CHAONPU_ACTIONS_READ_TOKEN: ${{ secrets.CHAONPU_ACTIONS_READ_TOKEN }}', text)
+        self.assertNotIn('ZIWUXILV_ACTIONS_WRITE_TOKEN', text)
         self.assertNotIn('ANDROID_SIGNING_KEYSTORE', text)
         self.assertNotRegex(text, r'(?m)^\s+repository:')
 

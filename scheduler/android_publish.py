@@ -1,7 +1,7 @@
 """Manual signed-APK publication with durable exact-run binding.
 
-Public preparation needs no new credential. One-click dispatch additionally needs
-ZIWUXILV_ACTIONS_WRITE_TOKEN scoped only to the public release repository.
+One-click dispatch reuses CHAONPU_ACTIONS_READ_TOKEN, explicitly authorized by
+the owner for the public release repository as well as existing private tasks.
 """
 from __future__ import annotations
 import argparse
@@ -159,14 +159,14 @@ def run(env, *, source, version, code, log, mode="prepare", execute=False):
     if row:
         need(all(row.get(k) == req[k] for k in req), "version_publication_identity_conflict")
     if mode == "publish" and execute:
-        need(bool(env.get("ZIWUXILV_ACTIONS_WRITE_TOKEN")), "public_release_actions_token_missing_use_prepare")
+        need(bool(env.get("CHAONPU_ACTIONS_READ_TOKEN")), "chaonpu_actions_token_missing_use_prepare")
     if not row:
         need(mode != "verify", "no_prepared_publication_to_verify")
         need(code > public_version(), "publication_requires_newer_version")
     if not execute:
         result = {"status": "read_only", "mode": mode,
                   "registeredPhase": row.get("phase") if row else None,
-                  "publicDispatchCredentialConfigured": bool(env.get("ZIWUXILV_ACTIONS_WRITE_TOKEN")),
+                  "publicDispatchCredentialConfigured": bool(env.get("CHAONPU_ACTIONS_READ_TOKEN")),
                   "signedRunVerified": True, "published": False}
         print(json.dumps(result))
         return result
@@ -193,7 +193,7 @@ def run(env, *, source, version, code, log, mode="prepare", execute=False):
         save(env, key, next_row, row)
         row = next_row
         response = public_api("/actions/workflows/" + WORKFLOW + "/dispatches",
-            env["ZIWUXILV_ACTIONS_WRITE_TOKEN"], payload={"ref": "main", "return_run_details": True,
+            env["CHAONPU_ACTIONS_READ_TOKEN"], payload={"ref": "main", "return_run_details": True,
             "inputs": {"publish_request": json.dumps(publish_request, ensure_ascii=False)}})
         rid = response.get("workflow_run_id")
         need(type(rid) is int and rid > 0, "publication_run_id_unknown_no_repeat")
@@ -202,7 +202,7 @@ def run(env, *, source, version, code, log, mode="prepare", execute=False):
         row = next_row
     need(row["phase"] != "dispatch_reserved", "publication_dispatch_unknown_no_repeat")
     if row["phase"] == "publishing":
-        wait_public(row["publicRunId"], env.get("ZIWUXILV_ACTIONS_WRITE_TOKEN", ""))
+        wait_public(row["publicRunId"], env.get("CHAONPU_ACTIONS_READ_TOKEN", ""))
         verify_public(publish_request)
         next_row = dict(row, phase="published")
         save(env, key, next_row, row)
