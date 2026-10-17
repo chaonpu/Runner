@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "enabled": true,
-  "sourceSha": "a2fed73cb5b8ac124aedf50549f9308b50276bcb",
-  "approval": "ANDROID-PRIVATE-BUILD-a2fed73cb5b8ac124aedf50549f9308b50276bcb"
+  "enabled": false,
+  "sourceSha": "",
+  "approval": ""
 }
