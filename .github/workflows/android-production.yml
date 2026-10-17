@@ -53,6 +53,7 @@ jobs:
       - name: Offline safety regressions
         run: python3 -m unittest discover -s tests -p test_android_production.py -v
       - name: Coordinate exact Test and private signer runs
+        id: coordinate
         shell: bash
         run: |
           set -euo pipefail
@@ -62,7 +63,15 @@ jobs:
           python3 -m scheduler.android_production "${args[@]}"
       - name: Explain next manual step
         if: always()
+        shell: bash
         run: |
           echo '### APK 构建与签名' >> "$GITHUB_STEP_SUMMARY"
-          echo '本次构建与签名全部成功后，即可继续正式发布。' >> "$GITHUB_STEP_SUMMARY"
-          echo '下一步：打开「APK 正式发布」，勾选执行。版本与源码自动读取，更新说明可留空。' >> "$GITHUB_STEP_SUMMARY"
+          if [[ "${{ steps.coordinate.outcome }}" == 'success' && "$EXECUTE" == 'true' ]]; then
+            echo '源码校验、编译、签名链和受控产物验证已全部通过。' >> "$GITHUB_STEP_SUMMARY"
+            echo '可以打开「APK 正式发布」，由发布工作流再次验证私有来源和 APK 证书。' >> "$GITHUB_STEP_SUMMARY"
+          elif [[ "$EXECUTE" != 'true' ]]; then
+            echo '仅执行只读检查；未创建、编译或签名 APK，不允许发布。' >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo '构建/签名未完成，不允许进入正式发布。' >> "$GITHUB_STEP_SUMMARY"
+            echo '查看上方结构化 failureClass 与 state/android-production.json 的 lastFailure；网络故障已经在同一私有运行内限次重试，不会自动改用旧源码。' >> "$GITHUB_STEP_SUMMARY"
+          fi
