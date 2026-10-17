@@ -58,6 +58,37 @@ def manual_task_context(env, task):
          and env.get("GITHUB_REF") == "refs/heads/main", "manual_market_context_mismatch")
 
 
+def resolve_request(task, entered="", mode="auto", *, now=None):
+    """Choose the native engine's latest closed session and publication window."""
+    instant = datetime.now(timezone.utc) if now is None else now
+    schedule = evaluate(task, entered, now=instant)
+    day = schedule.get("businessDate")
+    need(isinstance(day, str) and schedule.get("calendarCoverageCurrent") is True
+         and schedule.get("scheduledSessionClosed") is True
+         and schedule.get("publishedScheduleMatched") is True, "business_date_unavailable")
+    # Native strategy inputs describe the latest session, never an arbitrary
+    # historical universe. An internal explicit override must match that day.
+    need(evaluate(task, now=instant)["businessDate"] == day,
+         "native_historical_decision_replay_unsupported")
+    local_day = instant.astimezone(ZoneInfo(schedule["marketTimezone"])).date().isoformat()
+    automatic = "formal" if local_day == day else "theoretical_catchup"
+    selected = automatic if mode == "auto" else mode
+    need(selected == automatic, "native_publication_window_not_open")
+    return {"businessDate": day, "publicationMode": selected,
+            "dateMode": schedule["dateMode"], "marketTimezone": schedule["marketTimezone"]}
+
+
+def report_plan(env, task, plan, execute):
+    print(json.dumps({"phase": "automatic_plan", "task": task, **plan,
+                      "execute": execute, "businessVerified": False}), flush=True)
+    if env.get("GITHUB_STEP_SUMMARY"):
+        label = "正式运行" if plan["publicationMode"] == "formal" else "理论补算（无正式邮件）"
+        with open(env["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as stream:
+            stream.write("### 自动选择运行日期\n\n" + task + " / " + plan["businessDate"] +
+                         " / " + label + "\n\n按市场时区与交易所日历选择最近已收盘交易日。" +
+                         ("本次执行。" if execute else "本次仅预检，不执行策略。") + "\n")
+
+
 def skip_result(env, task, day, reason, **extra):
     result = {"status": "skipped", "reason": reason, "taskId": task + ":" + day,
               "dispatches": 0, "databaseWrites": 0, "emailsSent": 0,
@@ -112,22 +143,27 @@ def main():
     p = argparse.ArgumentParser()
     p.add_argument("--task", choices=("stock_a","stock_us"),required=True)
     p.add_argument("--business-date",default="")
-    p.add_argument("--publication-mode",choices=("formal","theoretical_catchup"),default="formal")
+    p.add_argument("--publication-mode",choices=("auto","formal","theoretical_catchup"),default="auto")
     p.add_argument("--execute",action="store_true")
     a=p.parse_args()
     manual_task_context(dict(os.environ), a.task)
-    if not a.execute:
-        from scheduler.production_ports import public_report
-        ports=ReadOnlyPorts(os.environ)
-        cfg,state,_=ports.load()
-        day=evaluate(a.task,a.business_date)["businessDate"]
-        print(json.dumps(public_report(cfg,state,ports.audit(cfg,state,a.task,day)),sort_keys=True))
-        return 0
     try:
-        day=evaluate(a.task,a.business_date)["businessDate"]
-        need(isinstance(day,str),"business_date_unavailable")
+        plan=resolve_request(a.task,a.business_date,a.publication_mode)
+        report_plan(os.environ,a.task,plan,a.execute)
+        day,mode=plan["businessDate"],plan["publicationMode"]
+        if not a.execute:
+            from scheduler.production_ports import public_report
+            env=dict(os.environ,REQUEST_TASK=a.task,REQUEST_BUSINESS_DATE=day,REQUEST_PUBLICATION_MODE=mode)
+            ports=ReadOnlyPorts(env)
+            cfg,state,_=ports.load()
+            # Preview the same publication mode that execution would permit.
+            from copy import deepcopy
+            cfg=deepcopy(cfg)
+            cfg["tasks"][a.task]["publicationMode"]=mode
+            print(json.dumps({**public_report(cfg,state,ports.audit(cfg,state,a.task,day)),**plan},sort_keys=True))
+            return 0
         env=dict(os.environ,ENTERED_BUSINESS_DATE=a.business_date)
-        execute(env,a.task,day,a.publication_mode)
+        execute(env,a.task,day,mode)
         return 0
     except Exception as exc:
         code=str(exc) if isinstance(exc,RegistryGuard) else "coordinator_stopped_manual_review"
