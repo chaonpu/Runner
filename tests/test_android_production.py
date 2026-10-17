@@ -233,5 +233,34 @@ class Tests(unittest.TestCase):
                         publication.signed_request({"GH_TOKEN": "public"},
                                                    sha, "2.3.5", 118, "test log")
 
+    def test_android_signing_billing_secret_is_passed_by_workflow(self):
+        from pathlib import Path
+        workflow = Path(".github/workflows/android-production.yml").read_text(encoding="utf-8")
+        self.assertIn("CHAONPU_BILLING_READ_TOKEN: ${{ secrets.CHAONPU_BILLING_READ_TOKEN }}", workflow)
+        self.assertIn("TEST_BILLING_READ_TOKEN: ${{ secrets.TEST_BILLING_READ_TOKEN }}", workflow)
+
+    def test_signer_route_requires_verified_billing_and_ready_windows_runner(self):
+        task = {"signingRunnerName": "ziwuxilv-sign-win"}
+        account = {"billingSecret": "CHAONPU_BILLING_READ_TOKEN",
+                   "runnerSecret": "RUNNER_READ_TOKEN"}
+        with patch.object(a, "account_usage", return_value={}):
+            with patch.object(a, "hosted_capacity", return_value="unknown"):
+                with self.assertRaisesRegex(a.Hold, "signer_billing_read_token_missing"):
+                    a.choose_signer_route(task, account, {})
+                with self.assertRaisesRegex(a.Hold, "signer_allowance_unverified"):
+                    a.choose_signer_route(task, account, {"CHAONPU_BILLING_READ_TOKEN": "present"})
+        with patch.object(a, "account_usage", return_value={}):
+            with patch.object(a, "hosted_capacity", return_value="insufficient"):
+                with patch.object(a, "runner_ready", return_value=False):
+                    with self.assertRaisesRegex(a.Hold, "signer_windows_runner_not_verified"):
+                        a.choose_signer_route(task, account, {"CHAONPU_BILLING_READ_TOKEN": "present"})
+                with patch.object(a, "runner_ready", return_value=True):
+                    self.assertEqual(a.choose_signer_route(task, account, {"CHAONPU_BILLING_READ_TOKEN": "present"}),
+                                     ("windows", a.SIGN_WORKFLOW))
+            with patch.object(a, "hosted_capacity", return_value="available"):
+                with patch.object(a, "runner_ready", side_effect=AssertionError("cloud signer must not require Windows")):
+                    self.assertEqual(a.choose_signer_route(task, account, {"CHAONPU_BILLING_READ_TOKEN": "present"}),
+                                     ("cloud", a.CLOUD_SIGN_WORKFLOW))
+
 if __name__ == "__main__":
     unittest.main()
