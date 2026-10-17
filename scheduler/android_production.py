@@ -336,7 +336,9 @@ def run(env, *, execute=False, resume=False, requested_sha=""):
     else:
         # Billing reports may lag; unknown or conservative shortfall goes to
         # Windows BEFORE any hosted dispatch. Never infer exact remaining funds.
-        plan = choose_route(task, account_usage("anwpustudent-lab", test_account, env))
+        billing = (account_usage("anwpustudent-lab", test_account, env)
+                   if test_account.get("billingSecret") else {})
+        plan = choose_route(task, billing)
         route = plan["route"]
     source_workflow = workflow_for(route)
     source_artifact = artifact_for(route)
