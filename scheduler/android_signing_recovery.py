@@ -109,3 +109,68 @@ def change_state(token, source, test_id, prior_id, next_phase, new_id=None):
         raise Hold("recovery_state_write_unknown")
 
 
+
+def perform(env, source, test_id, failed_id):
+    public = env.get("GH_TOKEN", "")
+    test_token = env.get("TEST_ACTIONS_READ_TOKEN", "")
+    signer_token = env.get("CHAONPU_ACTIONS_READ_TOKEN", "")
+    document, _ = json_file(public, STATE_PATH)
+    entry = document.get("builds", {}).get(source)
+    if (not isinstance(entry, dict) or entry.get("phase") != "signer_started"
+            or entry.get("testRunId") != test_id
+            or entry.get("signingRunId") != failed_id
+            or entry.get("recoveryFromSigningRunId") is not None):
+        raise Hold("signing_retry_registered_once_only")
+
+    failed = api(signer_token, SIGNER, "/actions/runs/" + str(failed_id))
+    validate_run(failed, SIGNER, SIGN_WORKFLOW, failed_id)
+    if failed.get("status") != "completed" or failed.get("conclusion") != "failure":
+        raise Hold("old_signing_run_not_completed_failure")
+    jobs = api(signer_token, SIGNER, "/actions/runs/" + str(failed_id) + "/jobs?per_page=100")
+    verify_no_signing_started(jobs)
+
+    test = api(test_token, TEST, "/actions/runs/" + str(test_id))
+    validate_run(test, TEST, TEST_WORKFLOW, test_id, source)
+    if test.get("status") != "completed" or test.get("conclusion") != "success":
+        raise Hold("test_run_not_verified")
+    verify_artifact(test_token, TEST, test_id, "windows-test-verified")
+
+    config, _ = json_file(public, "config/repositories.json")
+    account = config["accounts"]["chaonpu"]
+    runner_name = config["tasks"]["android"]["signingRunnerName"]
+    check_idle(SIGNER, SIGN_WORKFLOW, account, env)
+    if not runner_ready(SIGNER, runner_name, account, env):
+        raise Hold("signing_runner_not_ready")
+    change_state(public, source, test_id, failed_id, "sign_retry_reserved")
+    new_id = dispatch(signer_token, SIGNER, SIGN_WORKFLOW,
+                      {"test_run_id": str(test_id), "source_commit": source})
+    change_state(public, source, test_id, failed_id, "signer_started", new_id)
+    record_public(source, "signer_started", signingRunId=new_id,
+                  previousSigningRunId=failed_id, testRunId=test_id)
+    wait_run(signer_token, SIGNER, SIGN_WORKFLOW, new_id)
+    verify_execution_runner(signer_token, SIGNER, new_id, runner_name)
+    verify_artifact(signer_token, SIGNER, new_id, "windows-signed-release")
+    put_state(public, source, "signed_verified")
+    record_public(source, "signed_verified", signingRunId=new_id,
+                  testRunId=test_id, publication="not_authorized_no_public_apk")
+
+
+def main():
+    try:
+        guard_context(os.environ)
+        values = approve(json.loads(REQUEST.read_text(encoding="utf-8")))
+        if values is None:
+            print('{"recovery":"disabled","dispatches":0}', flush=True)
+            return 0
+        perform(os.environ, *values)
+        return 0
+    except (Hold, OSError, ValueError) as exc:
+        reason = str(exc) if isinstance(exc, Hold) else "recovery_input_error"
+        print(json.dumps({"recovery": "hold", "reason": reason,
+                          "safeToRedispatch": False,
+                          "publicRelease": False}), flush=True)
+        return 2
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
