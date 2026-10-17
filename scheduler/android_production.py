@@ -254,13 +254,21 @@ def run(env, *, execute=False, resume=False, requested_sha=""):
     require(state.get("version") == 1 and isinstance(state.get("builds"), dict),
             "state_schema_invalid")
     entry = state["builds"].get(source)
-    if not execute:
-        record_public(source, "read_only", priorPhase=entry.get("phase") if entry else None,
-                      route="windows-verified-chain-only")
-        return
-
     test_account = config["accounts"]["anwpustudent-lab"]
     sign_account = config["accounts"]["chaonpu"]
+    if not execute:
+        record_public(source, "read_only", priorPhase=entry.get("phase") if entry else None,
+                      route="windows-verified-chain-only",
+                      testRunnerReady=runner_ready(TEST, task["runnerName"], test_account, env),
+                      signerRunnerReady=runner_ready(SIGNER, task["signingRunnerName"],
+                                                    sign_account, env),
+                      testWorkflowActiveStatus=existing_attempt(
+                          TEST, TEST_WORKFLOW, test_account, env).get("status"),
+                      signingWorkflowActiveStatus=existing_attempt(
+                          SIGNER, SIGN_WORKFLOW, sign_account, env).get("status"),
+                      hostedTestSignRouting="not_integrated_never_infer_quota")
+        return
+
     if resume:
         require(bool(requested_sha) and SHA.fullmatch(requested_sha),
                 "resume_requires_original_source_sha")
