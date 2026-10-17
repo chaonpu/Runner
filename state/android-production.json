@@ -70,9 +70,11 @@
     },
     "fefb9e69ba9f4069e0a651243b67fa29e6324d27": {
       "createdAt": "2026-10-17T20:53:52.760697+00:00",
-      "phase": "reserved",
+      "phase": "test_started",
       "route": "windows",
-      "sourceSha": "fefb9e69ba9f4069e0a651243b67fa29e6324d27"
+      "sourceSha": "fefb9e69ba9f4069e0a651243b67fa29e6324d27",
+      "testRunId": 39068652100,
+      "updatedAt": "2026-10-17T20:53:54.883700+00:00"
     }
   },
   "version": 1
