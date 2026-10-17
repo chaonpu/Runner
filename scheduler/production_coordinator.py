@@ -123,7 +123,8 @@ def execute(env, task, day, mode):
              "task_already_registered_no_redispatch")
         return skip_result(env, task, day, "previously_verified_task_no_redispatch",
                            priorRunVerified=True, priorRunId=registered[0].get("runId"),
-                           existingPublicationMode=registered[0].get("publicationMode", "formal"))
+                           existingPublicationMode=registered[0].get("publicationMode", "formal"),
+                           completionMode=registered[0].get("completionMode", "original_run"))
     need(config.get('dispatchEnabled') is False and 'activeLease' not in config,
          'another_production_permit_is_active')
     schedule=evaluate(task,day)
