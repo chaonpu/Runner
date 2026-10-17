@@ -232,13 +232,96 @@ def wait_run(token, repo, workflow, rid, source=None):
         item = api(token, repo, "/actions/runs/" + str(rid))
         validate_run(item, repo, workflow, rid, source)
         if item.get("status") == "completed":
-            require(item.get("conclusion") == "success",
-                    "private_build_or_sign_failed_manual_review")
+            if item.get("conclusion") != "success":
+                raise Hold(classify_failed_run(token, repo, rid))
             return
         require(item.get("status") in ("queued", "waiting", "pending", "in_progress", "requested"),
                 "unrecognized_run_state")
         time.sleep(POLL_SECONDS)
     raise Hold("run_deadline_original_id_must_be_reviewed")
+
+
+def classify_failed_run(token, repo, rid):
+    """Public step-name-only classification; never download private logs or artifacts."""
+    require(repo in (TEST, SIGNER) and type(rid) is int and rid > 0,
+            "failure_origin_invalid")
+    value = api(token, repo, "/actions/runs/" + str(rid) + "/jobs?per_page=100")
+    jobs, count = value.get("jobs"), value.get("total_count")
+    require(type(count) is int and 0 < count <= 100
+            and isinstance(jobs, list) and len(jobs) == count,
+            "failure_steps_unavailable_no_retry")
+    failures = [
+        step.get("name", "") for job in jobs
+        if job.get("conclusion") == "failure"
+        for step in job.get("steps", [])
+        if isinstance(step, dict) and step.get("conclusion") == "failure"
+        and isinstance(step.get("name"), str)
+    ]
+    # A network code is trusted only when a dedicated failing diagnosis step
+    # recorded it, not merely because actions/checkout or a download failed.
+    if any(x.startswith(("NETWORK_TRANSIENT_PREFLIGHT",
+                          "NETWORK_TRANSIENT_SOURCE_FETCH")) for x in failures):
+        return "network_retry_exhausted_same_run_no_publication"
+    if any(x.startswith("SOURCE_CHECKOUT_UNVERIFIED") for x in failures):
+        return "source_checkout_unverified_manual_review"
+    if repo == TEST:
+        if any(x.startswith("Build unsigned Release APK") for x in failures):
+            return "android_compile_failed_manual_review"
+        if any(x.startswith(("Run unit tests", "Verify release and debug",
+                             "Verify release version", "Verify Gradle wrapper")) for x in failures):
+            return "android_tests_or_lint_failed_manual_review"
+        return "android_test_or_artifact_failed_manual_review"
+    if any(x.startswith("Sign already-tested unsigned APK") for x in failures):
+        return "android_signing_failed_manual_review"
+    if any(x.startswith("Verify certificate, package") for x in failures):
+        return "android_signature_verification_failed_manual_review"
+    return "android_signer_setup_or_handoff_failed_manual_review"
+
+
+def record_failed_stage(public_token, source, stage, run_id, reason):
+    """Durably record a SAFE error code without changing the release gate."""
+    require(bool(SHA.fullmatch(source)) and stage in ("test", "signer")
+            and type(run_id) is int and run_id > 0
+            and bool(re.fullmatch(r"[a-z0-9_]{4,100}", reason)),
+            "failure_record_invalid")
+    state, blob = json_file(public_token, STATE_PATH)
+    require(state.get("version") == 1 and isinstance(state.get("builds"), dict),
+            "failure_state_invalid")
+    row = state["builds"].get(source)
+    phase = "test_started" if stage == "test" else "signer_started"
+    field = "testRunId" if stage == "test" else "signingRunId"
+    require(isinstance(row, dict) and row.get("sourceSha") == source
+            and row.get("phase") == phase and row.get(field) == run_id,
+            "failure_run_binding_mismatch")
+    row["lastFailure"] = {
+        "stage": stage, "code": reason, "runId": run_id,
+        "recordedAt": datetime.now(timezone.utc).isoformat(),
+    }
+    body = {"message": "Record safe Android stage failure category",
+            "content": base64.b64encode((
+                json.dumps(state, indent=2, sort_keys=True) + "\n"
+            ).encode()).decode(), "sha": blob, "branch": "main"}
+    saved = api(public_token, RUNNER, "/contents/" + STATE_PATH,
+                method="PUT", payload=body)
+    require(bool(saved.get("commit", {}).get("sha")), "failure_state_write_unknown")
+
+
+def wait_recorded(public_token, source, stage, private_token, repo, workflow,
+                  run_id, pinned_sha=None):
+    try:
+        wait_run(private_token, repo, workflow, run_id, pinned_sha)
+    except Hold as exc:
+        reason = str(exc)
+        written = False
+        try:
+            record_failed_stage(public_token, source, stage, run_id, reason)
+            written = True
+        except Hold:
+            pass  # Preserve original failure; no signing/publication is authorized.
+        record_public(source, stage + "_failed", runId=run_id,
+                      failureClass=reason, failureRecorded=written,
+                      publication="not_authorized")
+        raise
 
 
 def verify_execution_runner(token, repo, rid, expected):
@@ -397,7 +480,8 @@ def run(env, *, execute=False, resume=False, requested_sha=""):
     if entry["phase"] == "test_started":
         test_run = entry.get("testRunId")
         require(type(test_run) is int and test_run > 0, "unknown_test_dispatch_no_retry")
-        wait_run(test, TEST, source_workflow, test_run, source)
+        wait_recorded(pub, source, "test", test, TEST,
+                      source_workflow, test_run, source)
         if route == "hosted":
             verify_hosted_execution(test, TEST, test_run)
         else:
@@ -410,7 +494,8 @@ def run(env, *, execute=False, resume=False, requested_sha=""):
     if entry["phase"] == "test_verified":
         test_run = entry["testRunId"]
         # Never create another Test job on resume; revalidate the original run.
-        wait_run(test, TEST, source_workflow, test_run, source)
+        wait_recorded(pub, source, "test", test, TEST,
+                      source_workflow, test_run, source)
         verify_artifact(test, TEST, test_run, source_artifact)
         check_idle(SIGNER, SIGN_WORKFLOW, sign_account, env)
         require(runner_ready(SIGNER, task["signingRunnerName"], sign_account, env),
@@ -430,7 +515,8 @@ def run(env, *, execute=False, resume=False, requested_sha=""):
         sign_run = entry.get("signingRunId")
         require(type(sign_run) is int and sign_run > 0,
                 "unknown_signing_dispatch_no_retry")
-        wait_run(sign, SIGNER, SIGN_WORKFLOW, sign_run)
+        wait_recorded(pub, source, "signer", sign, SIGNER,
+                      SIGN_WORKFLOW, sign_run)
         verify_execution_runner(sign, SIGNER, sign_run, task["signingRunnerName"])
         verify_artifact(sign, SIGNER, sign_run, "windows-signed-release")
         put_state(pub, source, "signed_verified")
