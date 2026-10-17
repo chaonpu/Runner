@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-10-17T06:29:35Z",
+  "sourceCommit": "9e561e71af91135cc53ae6a27c449651cdf0227b",
+  "acceptanceRun": {
+    "id": 39010081814,
+    "url": "https://github.com/chaonpu/Runner/actions/runs/39010081814",
+    "status": "completed",
+    "conclusion": "success",
+    "testsPassed": 232
+  },
+  "scope": "read_only_adapter_acceptance",
+  "originalPrivateRunMetadataRead": true,
+  "privateJobMetadataRead": true,
+  "privateContentsPermissionAdded": false,
+  "privateStatusesPermissionAdded": false,
+  "privateEvidenceProducerInstalled": false,
+  "productionReadinessProved": false,
+  "realDispatches": 0,
+  "privateDatabaseWrites": 0,
+  "publicRegistryWrites": 0,
+  "automaticRetries": 0,
+  "tasks": [
+    {
+      "activeRunCheck": "no_active_run",
+      "automaticRetryAuthorized": false,
+      "calendarCoverageCurrent": true,
+      "databaseWriteAuthorized": false,
+      "dispatchAuthorized": false,
+      "evidenceStatus": "hold_private_readiness_workflow_missing_or_not_visible",
+      "exchangeSessionVerified": false,
+      "marketDataReady": false,
+      "mode": "live_read_only_production_ports",
+      "productionSwitchOff": true,
+      "registeredProductionTasks": 0,
+      "registryWriteAuthorized": false,
+      "scheduledSessionClosed": true,
+      "selectionInputsVerified": false,
+      "sourceCommitEvidenceRead": false,
+      "taskId": "stock_a:2026-10-16"
+    },
+    {
+      "activeRunCheck": "no_active_run",
+      "automaticRetryAuthorized": false,
+      "calendarCoverageCurrent": true,
+      "databaseWriteAuthorized": false,
+      "dispatchAuthorized": false,
+      "evidenceStatus": "hold_private_readiness_workflow_missing_or_not_visible",
+      "exchangeSessionVerified": false,
+      "marketDataReady": false,
+      "mode": "live_read_only_production_ports",
+      "productionSwitchOff": true,
+      "registeredProductionTasks": 0,
+      "registryWriteAuthorized": false,
+      "scheduledSessionClosed": true,
+      "selectionInputsVerified": false,
+      "sourceCommitEvidenceRead": false,
+      "taskId": "stock_us:2026-10-16"
+    }
+  ]
+}
