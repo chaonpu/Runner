@@ -2,11 +2,11 @@
   "builds": {
     "538b3ded770fdf7b54885ca773755fd7587ffae5": {
       "createdAt": "2026-10-17T16:49:57.822450+00:00",
-      "phase": "test_started",
+      "phase": "test_verified",
       "route": "windows",
       "sourceSha": "538b3ded770fdf7b54885ca773755fd7587ffae5",
       "testRunId": 39051122647,
-      "updatedAt": "2026-10-17T16:50:00.565553+00:00"
+      "updatedAt": "2026-10-17T16:57:38.369085+00:00"
     },
     "6c13735a6d2dbb0f432a6115b79a9ab5a3fcf4d9": {
       "createdAt": "2026-10-17T13:10:21.079228+00:00",
