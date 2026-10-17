@@ -41,6 +41,14 @@ def audit(config: dict, registry: dict, env: dict, *,
         owner = spec["repo"].split("/")[0]
         account = config["accounts"][owner]
         runner = probe_runner(spec["repo"], spec.get("runnerName"), account, env)
+        # A preexisting Actions token may have repo Administration(read) as
+        # well. Try it only as a READ-ONLY diagnostic, never as a silent
+        # production routing credential substitute.
+        alternate = None
+        if (runner.get("read") != "readable"
+                and account.get("actionsSecret") != account.get("runnerSecret")):
+            alt_spec = dict(account, runnerSecret=account["actionsSecret"])
+            alternate = probe_runner(spec["repo"], spec.get("runnerName"), alt_spec, env)
         attempt = active(spec["repo"], spec.get("cloudWorkflow"), account, env)
         registry_entries = [v for v in registry["tasks"] if v["task"] == market]
         online_verified = (
@@ -50,6 +58,9 @@ def audit(config: dict, registry: dict, env: dict, *,
         )
         stocks[market] = {
             "runnerRead": runner.get("read", "unknown"),
+            "alternateActionsTokenRunnerRead": (
+                alternate.get("read", "unknown") if alternate is not None
+                else "not_checked"),
             "windowsOnlineAndLabelsVerified": online_verified,
             "windowsWorkflowAllowlisted": isinstance(spec.get("windowsWorkflow"), str),
             "cloudWorkflow": spec.get("cloudWorkflow"),
