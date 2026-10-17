@@ -9,8 +9,10 @@
     },
     "a2fed73cb5b8ac124aedf50549f9308b50276bcb": {
       "createdAt": "2026-10-17T13:53:53.873513+00:00",
-      "phase": "reserved",
-      "sourceSha": "a2fed73cb5b8ac124aedf50549f9308b50276bcb"
+      "phase": "test_started",
+      "sourceSha": "a2fed73cb5b8ac124aedf50549f9308b50276bcb",
+      "testRunId": 39038456239,
+      "updatedAt": "2026-10-17T13:53:56.672358+00:00"
     }
   },
   "version": 1
