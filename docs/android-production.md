@@ -51,6 +51,8 @@
 ## 云端额度优先与 Windows 安全回退（路由阶段）
 
 - 新增 Test 私有 `android-cloud-verified.yml`，**仅 `workflow_dispatch`**、GitHub 标准 `ubuntu-24.04`、`contents: read`。按照已验收的 Test 口径运行版本检查、单元测试、Release Lint、Debug APK、Unsigned Release 和通知权限检查，私有产物为 `cloud-test-verified`（3 天有效），字段与已有 Windows `windows-test-verified` 一致。
+- 旧版 `Test/.github/workflows/android.yml` 和 `ziwuxilv-android/.github/workflows/android.yml` 已关闭 `push`、PR 和定时自动派发入口，仅保留手动兼容通道。避免它们绕过 RUNNER 用量预检、重复运行私有云端编译或旧版签名，亦不改变现有正式发布工作流。
+
 - 私有 Windows 签名工作流只认可精确 `main`、原始 `workflow_dispatch`、首次尝试且成功的 Test Run；根据 GitHub 原始 `path` 将受信任 Windows 路由绑定 `windows-test-verified`，将受信任云端路由绑定 `cloud-test-verified`。**不接受由调用者自由提供 Artifact 名称**，更不允许未验证源码直接签名。
 - RUNNER `scheduler/android_route.py` 在正式派发前从 Test 所属账号读取当月 GitHub Actions 用量摘要及明细，只有“私有 Linux 标准 Runner 的历史用量可以可靠归属、公开仓库标准托管用量已排除、SKU 不存在未知倍率、当前剩余分钟**估算值** ≥ 标准云端构建超时 100 + 保留 200 + 报告滞后保护 400 = **700 分钟**”时才候选云端。低于门槛、权限不足、用量结构不完整或历史报告异常一律使用已验证的 Windows 构建。
 - **GitHub 用量 API 不提供精确实时可用免费分钟证明**；`hostedQuotaGuaranteed=false`。该机制优先避免误用付费额度，不能保证云端 Job 启动后不会遇到 GitHub 平台的账单限制。云端 Job 一旦实际派发，不因普通编译失败或网络错误自动再派 Windows；需核验原 Run 后人工处理，防止双跑和多余消耗。
