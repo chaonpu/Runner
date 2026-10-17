@@ -67,6 +67,14 @@ def audit(config: dict, registry: dict, env: dict, *,
             alt_spec = dict(account, runnerSecret=account["actionsSecret"])
             alternate = probe_runner(spec["repo"], spec.get("runnerName"), alt_spec, env)
         repo_scope = billing_token_repository_access(spec["repo"], account, env)
+        # The user may mean a Secret literally called BILLING_READ_TOKEN,
+        # distinct from the account-specific CHAONPU_BILLING_READ_TOKEN.
+        # Query only repository metadata; do not ever disclose token values.
+        literal_scope = "not_applicable"
+        if owner == "chaonpu":
+            literal_spec = dict(account, billingSecret="BILLING_READ_TOKEN")
+            literal_scope = billing_token_repository_access(
+                spec["repo"], literal_spec, env)
         attempt = active(spec["repo"], spec.get("cloudWorkflow"), account, env)
         registry_entries = [v for v in registry["tasks"] if v["task"] == market]
         online_verified = (
@@ -77,6 +85,7 @@ def audit(config: dict, registry: dict, env: dict, *,
         stocks[market] = {
             "runnerRead": runner.get("read", "unknown"),
             "billingTokenCanSeePrivateRepository": repo_scope,
+            "literalBillingReadTokenCanSeePrivateRepository": literal_scope,
             "runnerCredentialUsesExistingBillingSecret": (
                 account.get("runnerSecret") == account.get("billingSecret")),
 
