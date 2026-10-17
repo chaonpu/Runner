@@ -288,6 +288,7 @@ def run(env, *, execute=False, resume=False, requested_sha=""):
             source = current_source((
                 env.get("TEST_SOURCE_READ_TOKEN", ""),
                 env.get("TEST_ACTIONS_READ_TOKEN", ""),
+                env.get("TEST_RUNNER_READ_TOKEN", ""),
                 env.get("TEST_BILLING_READ_TOKEN", "")))
             branch_verified = True
             if requested_sha:
