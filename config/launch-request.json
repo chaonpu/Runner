@@ -1,6 +1,6 @@
 {
   "enabled": true,
-  "requestId": "controlled-stock-us-20261017-native-catchup-1",
+  "requestId": "controlled-stock-us-20261017-native-catchup-2-db-route",
   "task": "stock_us",
   "businessDate": "",
   "publicationMode": "theoretical_catchup"
