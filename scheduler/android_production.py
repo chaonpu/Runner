@@ -537,9 +537,15 @@ def main():
             requested_sha=args.source_sha)
         return 0
     except Hold as exc:
-        print(json.dumps({"status": "hold", "reason": str(exc),
-                          "safeToRedispatch": False,
-                          "publication": "not_authorized"}), flush=True)
+        reason = str(exc)
+        retry_exhausted = reason == "network_retry_exhausted_same_run_no_publication"
+        print(json.dumps({
+            "status": "network_retry_exhausted" if retry_exhausted else "hold",
+            "reason": reason,
+            "retryScope": "original_run_only_no_new_dispatch",
+            "safeToRedispatch": False,
+            "publication": "not_authorized",
+        }), flush=True)
         return 2
 
 
