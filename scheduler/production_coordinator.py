@@ -8,7 +8,8 @@ from zoneinfo import ZoneInfo
 
 from scheduler.exchange_schedule import evaluate
 from scheduler.production_ports import ProductionPorts, ReadOnlyPorts, PRIVATE, need
-from scheduler.production_evidence import WORKFLOWS as READY_WORKFLOWS, inspect
+from scheduler.production_evidence import WORKFLOWS as READY_WORKFLOWS, CLOUD_WORKFLOWS, inspect
+from scheduler.policies import hosted_capacity
 from scheduler.production_lease import Lease
 from scheduler.production_registry import RegistryGuard
 from scheduler.production_session import start
@@ -21,30 +22,39 @@ def prepare(ports, cfg, task, day, mode):
     for workflow in ("run-a-share.yml", "run-us.yml"):
         need(existing_attempt("chaonpu/Stock", workflow, account, ports.env)["status"] == "no_active_run",
              "existing_business_run_or_unknown")
-    # Private readiness itself needs Windows; cloud business routing is decided
-    # separately using verified allowance after the proof is generated.
-    runner = runner_for_repo("chaonpu/Stock", spec["runnerName"], account, ports.env)
-    need(runner.get("status") == "online" and runner.get("busy") is False
-         and runner.get("labelsVerified") is True, "private_readiness_runner_unavailable")
+    # First resolve the same verified allowance policy used for business execution.
+    # Cloud readiness must never depend on a Windows runner being online.
+    billing = ports.bill("chaonpu", account, ports.env)
+    capacity = hosted_capacity(billing, spec, now=ports.clock())
+    if capacity == "available":
+        workflow, route = CLOUD_WORKFLOWS[task], "cloud"
+    elif capacity in ("insufficient", "exhausted"):
+        runner = runner_for_repo("chaonpu/Stock", spec["runnerName"], account, ports.env)
+        need(runner.get("status") == "online" and runner.get("busy") is False
+             and runner.get("labelsVerified") is True, "private_readiness_runner_unavailable")
+        workflow, route = READY_WORKFLOWS[task], "windows"
+    else:
+        raise RegistryGuard("hosted_allowance_unverified_no_readiness_dispatch")
     body = {"ref":"main","return_run_details":True,"inputs":{"business_date":day,"publication_mode":mode}}
     response = ports.requester(ports.env["CHAONPU_ACTIONS_READ_TOKEN"], "POST",
-        PRIVATE+"/actions/workflows/"+READY_WORKFLOWS[task]+"/dispatches", body)
+        PRIVATE+"/actions/workflows/"+workflow+"/dispatches", body)
     rid = response.get("workflow_run_id")
     need(type(rid) is int and rid > 0, "readiness_dispatch_unknown_do_not_repeat")
-    print(json.dumps({"phase":"private_readiness_started","runId":rid,"taskId":task+":"+day}),flush=True)
+    print(json.dumps({"phase":"private_readiness_started","runId":rid,"taskId":task+":"+day,"route":route}),flush=True)
     deadline = time.monotonic()+14400
     while time.monotonic() < deadline:
         run = ports.run("chaonpu/Stock",rid)
         need(run.get("event") == "workflow_dispatch" and run.get("head_branch") == "main"
              and run.get("run_attempt") == 1
-             and run.get("path","").split("@")[0] == ".github/workflows/"+READY_WORKFLOWS[task],
+             and run.get("path","").split("@")[0] == ".github/workflows/"+workflow,
              "readiness_run_origin_mismatch")
         if run.get("status") == "completed":
             need(run.get("conclusion") == "success", "private_readiness_failed")
-            proof = inspect(ports.private_reader(),task,day,datetime.now(timezone.utc),mode,expected_run_id=rid)
+            proof = inspect(ports.private_reader(),task,day,datetime.now(timezone.utc),mode,
+                            expected_run_id=rid,expected_workflow=workflow)
             need((proof["marketDataReady"] is True or proof.get("alreadyCurrent") is True)
                  and proof["sourceSha"] == run["head_sha"], "fresh_private_readiness_not_verified")
-            return {**proof, "readinessRunId": rid}
+            return {**proof, "readinessRunId": rid, "readinessRoute": route}
         time.sleep(30)
     raise RegistryGuard("private_readiness_deadline")
 
