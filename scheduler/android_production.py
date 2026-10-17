@@ -252,8 +252,8 @@ def classify_failed_run(token, repo, rid):
             "failure_steps_unavailable_no_retry")
     failures = [
         step.get("name", "") for job in jobs
-        if job.get("conclusion") == "failure"
-        for step in job.get("steps", [])
+        if isinstance(job, dict) and job.get("conclusion") == "failure"
+        for step in (job.get("steps") or [])
         if isinstance(step, dict) and step.get("conclusion") == "failure"
         and isinstance(step.get("name"), str)
     ]
