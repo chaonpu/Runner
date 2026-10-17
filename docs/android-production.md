@@ -6,7 +6,8 @@
 
 - 默认 `execute=false`：读取 Test/main 精确 SHA 和当前登记，不执行私有派发。
 - `execute=true`：仅 `chaonpu` 可启动。需 Test 与签名两个独立 Windows Runner 在线且空闲，相关私有工作流无其他活跃运行。
-- `source_sha` 留空：首次执行以 Test/main 当前提交为来源；若填写，必须等于首次执行时的 Test/main。
+- `source_sha` 留空：仅当既有凭据可读取 Test/main SHA 时自动选择当前提交。目前 Test Actions/Runner/Billing 令牌在该端点仍缺少 `Contents: Read`，只读预检会报告 `manualSourceShaRequired=true`；**不能在 SHA 为空时执行生产构建**。
+- `source_sha` 填写完整 40 位 SHA：当源分支 SHA 无法读取时，以人工确认的 SHA 建立唯一预约；在派发后必须校验 GitHub 返回的**原始 Test Run 的 `head_sha` 等于人工指定值**，且 Run 属于 main 的指定工作流。否则立即停止，不进入签名。可从私有 [Test/main](https://github.com/anwpustudent-lab/Test/commits/main) 复制当前最新 SHA（提交可能随时间变化）。
 - `resume=true`：必须提供登记的原始 `source_sha`，仅继续核验原始 Test Run 或原始签名 Run，不重新发送已派发的 Test。若已在 POST 后发生未确认的网络错误或尚未登记 Run ID，必须人工核对，不能自动重派。
 - 同一源码 SHA 的构建身份只保留一项公开状态登记；已签名成功的 SHA 不自动重复构建。
 
@@ -35,8 +36,14 @@
 
 本入口完成后只获得**私有签名成功**，并不等于正式 APK 已发布。若要公开暂存，另行使用 [签名 APK 独立审批暂存](https://github.com/chaonpu/Runner/actions/workflows/stage-android-apk.yml)，按其要求提供来源 SHA、Test Run ID、签名 Run ID、版本及人工审批短语。正式发布继续使用 `chaonpu/ziwuxilv` 自有发布保护流程，必须经过现有版本递增与更新清单校验。未经审批，绝不自动发布。
 
+## 本轮实际验收状态
+
+- 2026-10-17 [公开安全 CI](https://github.com/chaonpu/Runner/actions/workflows/validate.yml) 252 项测试通过。
+- 公开 Runner 只读检测显示 Test 与签名 Runner 均 `online`、闲置，两个私有工作流均 `no_active_run`；原始 Test SHA 在公有协调器的令牌下不可读，因此需人工指定 SHA 或增加仅 Test Contents:Read 的可选凭据。
+- **尚未执行此新入口的真实 Android 私有构建+签名生产 Run**，不可将现有历史签名成功误写为此次接入的完整端到端验收。
+
 ## 当前限制
 
 - 本次仅新增**Windows 精确 Test → Windows 私有签名**生产执行路径；云端 `Test/android.yml` 与签名仓库旧云端工作流的数据契约不同，尚不具备与这条不可变 handoff 直接互换的生产证明。即使云端额度可用，也不绕过上述校验。云端优先/Windows 自动切换需单独补齐一个接受云端已验证 handoff 的私有签名工作流及回归后再开放。
-- 公开工作流能否实际派发取决于 RUNNER Secrets：`TEST_ACTIONS_READ_TOKEN`、`CHAONPU_ACTIONS_READ_TOKEN` 需 Actions 写与运行只读；`TEST_BILLING_READ_TOKEN` 需 Test Runner 状态读取权限。某个权限缺失会保守停止。
+- 公开工作流能否实际派发取决于 RUNNER Secrets：`TEST_ACTIONS_READ_TOKEN`、`CHAONPU_ACTIONS_READ_TOKEN` 需 Actions 写与运行只读；`TEST_RUNNER_READ_TOKEN`、`RUNNER_READ_TOKEN` 已在实时只读预检中确认可分别读取两个 Windows Runner 的状态。可选 `TEST_SOURCE_READ_TOKEN` 只需精确限定私有 Test 仓库 `Contents: Read`，用于自动读取 `main` SHA；不配置时手动指定 SHA 即可保持源码权限隔离。某个必要权限缺失会保守停止。
 - 实际构建是否成功必须由**本入口真实运行**、两个原始私有 Run 及签名 Artifact 证明；公开 CI 回归通过不能替代跨仓库端到端验收。
