@@ -9,12 +9,29 @@ import json
 import os
 from pathlib import Path
 
-from scheduler.probes import account_usage, existing_attempt, runner_for_repo
+from scheduler.probes import account_usage, existing_attempt, runner_for_repo, GitHubReadOnly, safe_error
 from scheduler.production_registry import validate
 
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG = ROOT / "config" / "repositories.json"
 STATE = ROOT / "state" / "tasks.json"
+
+
+def billing_token_repository_access(repo: str, account: dict, env: dict,
+                                    *, reader_factory=GitHubReadOnly) -> str:
+    """Only test whether Billing token can see this repository (GET, no code)."""
+    token = env.get(account.get("billingSecret", ""), "")
+    if not token:
+        return "secret_missing"
+    try:
+        record = reader_factory(token).get(f"/repos/{repo}")
+        if record.get("full_name") != repo:
+            return "invalid_response"
+        return "readable"
+    except (ValueError, KeyError, TypeError, OSError,
+            TimeoutError) as exc:
+        return safe_error(exc)
+
 
 
 def audit(config: dict, registry: dict, env: dict, *,
@@ -49,6 +66,7 @@ def audit(config: dict, registry: dict, env: dict, *,
                 and account.get("actionsSecret") != account.get("runnerSecret")):
             alt_spec = dict(account, runnerSecret=account["actionsSecret"])
             alternate = probe_runner(spec["repo"], spec.get("runnerName"), alt_spec, env)
+        repo_scope = billing_token_repository_access(spec["repo"], account, env)
         attempt = active(spec["repo"], spec.get("cloudWorkflow"), account, env)
         registry_entries = [v for v in registry["tasks"] if v["task"] == market]
         online_verified = (
@@ -58,6 +76,10 @@ def audit(config: dict, registry: dict, env: dict, *,
         )
         stocks[market] = {
             "runnerRead": runner.get("read", "unknown"),
+            "billingTokenCanSeePrivateRepository": repo_scope,
+            "runnerCredentialUsesExistingBillingSecret": (
+                account.get("runnerSecret") == account.get("billingSecret")),
+
             "alternateActionsTokenRunnerRead": (
                 alternate.get("read", "unknown") if alternate is not None
                 else "not_checked"),
