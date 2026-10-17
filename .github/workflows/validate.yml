@@ -48,6 +48,19 @@ jobs:
         run: |
           python3 -m scheduler.production_ports --task stock_a
           python3 -m scheduler.production_ports --task stock_us
+          python3 - <<'PY'
+          import json, os
+          from scheduler.production_ports import ReadOnlyPorts
+          ports = ReadOnlyPorts(os.environ)
+          run = ports.run('chaonpu/Stock', 39008535752)
+          assert run['event'] == 'push' and run['status'] == 'completed' and run['conclusion'] == 'success'
+          assert run['head_sha'] == '0831e5542f3b26567336fc6daa20486a12acab79'
+          assert run['path'].split('@')[0] == '.github/workflows/windows-git-transport-validation.yml'
+          jobs = ports.private_reader().get('/repos/chaonpu/Stock/actions/runs/39008535752/jobs?filter=latest&per_page=100')
+          assert type(jobs.get('total_count')) is int and jobs['total_count'] > 0 and jobs.get('jobs')
+          assert all(j.get('run_id') == 39008535752 for j in jobs['jobs'])
+          print(json.dumps({'originalRunMetadataRead': True, 'privateJobMetadataRead': True, 'productionReadinessProved': False, 'realDispatches': 0}))
+          PY
       - name: Enforce public repository secrets boundary (original)
         run: |
           python3 - <<'PY'

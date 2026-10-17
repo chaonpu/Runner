@@ -33,7 +33,7 @@ class Backend:
         self.config["tasks"]["stock_us"].update(enabledForDispatch=True, windowsWorkflow="run-us.yml")
         self.state = {"schema": 1, "tasks": []}
         self.calls, self.private_paths = [], []
-        self.evidence, self.evidence_run = fixtures()
+        self.evidence, self.evidence_jobs = fixtures()
         self.target = {"id": TARGET, "repository": {"full_name": "chaonpu/Stock"},
             "path": ".github/workflows/run-us.yml", "event": "workflow_dispatch",
             "head_branch": "main", "head_sha": SOURCE, "run_attempt": 1,
@@ -66,12 +66,10 @@ class Backend:
         class Reader:
             def get(self, path):
                 backend.private_paths.append(path)
-                if path == PRIVATE + "/branches/main":
-                    backend.source_reads += 1
-                    sha = "d" * 40 if backend.source_changed and backend.source_reads > 1 else SOURCE
-                    return {"commit": {"sha": sha}}
-                if path == PRIVATE + f"/commits/{SOURCE}/status?per_page=100": return deepcopy(backend.evidence)
-                if path == PRIVATE + f"/actions/runs/{EVIDENCE_RUN}": return deepcopy(backend.evidence_run)
+                if path == PRIVATE + "/actions/workflows/production-readiness-us.yml/runs?event=workflow_dispatch&branch=main&per_page=1":
+                    return deepcopy(backend.evidence)
+                if path == PRIVATE + f"/actions/runs/{EVIDENCE_RUN}/jobs?filter=latest&per_page=100":
+                    return deepcopy(backend.evidence_jobs)
                 if path == PRIVATE + f"/actions/runs/{TARGET}": return deepcopy(backend.target)
                 raise AssertionError("unexpected private metadata request")
         return Reader()
@@ -105,7 +103,7 @@ class PortsTests(unittest.TestCase):
         self.assertEqual(result["status"], "awaiting_effect_verification")
         self.assertFalse(result["businessVerified"])
         self.assertEqual((len(self.effects("PUT")), len(self.effects("POST"))), (3, 1))
-        self.assertTrue(all(not any(x in p for x in ("/contents/", "/artifacts", "/logs", "/git/"))
+        self.assertTrue(all(p.startswith(PRIVATE + "/actions/") and not any(x in p for x in ("/contents/", "/artifacts", "/logs", "/git/"))
                             for p in self.backend.private_paths))
 
     def test_read_only_adapter_cannot_mutate_even_when_configuration_enabled(self):
@@ -123,7 +121,7 @@ class PortsTests(unittest.TestCase):
         self.assertEqual(self.effects("PUT") + self.effects("POST"), [])
 
     def test_missing_private_readiness_is_hold_despite_online_runner(self):
-        self.backend.evidence.update(statuses=[], total_count=0)
+        self.backend.evidence.update(workflow_runs=[], total_count=0)
         with self.assertRaises(RegistryGuard): self.begin(self.ports())
         self.assertEqual(self.effects("PUT") + self.effects("POST"), [])
 
@@ -135,13 +133,12 @@ class PortsTests(unittest.TestCase):
             with self.assertRaises(RegistryGuard): self.begin(ports)
             self.assertEqual(self.effects("PUT") + self.effects("POST"), [])
 
-    def test_source_head_change_during_evidence_read_invalidates_readiness(self):
-        self.backend.source_changed = True
-        ports = self.ports(ReadOnlyPorts)
-        cfg, state, _ = ports.load()
-        audit = ports.audit(cfg, state, "stock_us", DAY)
-        self.assertEqual(audit["evidenceStatus"], "hold_source_changed_during_audit")
-        self.assertFalse(audit["marketDataReady"])
+    def test_changed_production_source_is_not_bound_before_private_admission(self):
+        self.backend.target["head_sha"] = "d" * 40
+        with self.assertRaises(RegistryGuard): self.begin(self.ports())
+        self.assertEqual(len(self.effects("POST")), 1)
+        self.assertEqual(self.backend.state["tasks"][0]["status"], "reserved")
+        self.assertNotIn("runId", self.backend.state["tasks"][0])
 
     def test_accepted_reservation_put_with_lost_response_never_arms(self):
         self.backend.put_lost = True
@@ -201,7 +198,7 @@ class PortsTests(unittest.TestCase):
         audit = ports.audit(cfg, state, "stock_us", DAY)
         audit["private_payload"] = "secret-token-private-code"
         result = public_report(cfg, state, audit)
-        self.assertEqual(result["sourceMetadataRead"], "permission_denied")
+        self.assertEqual(result["evidenceStatus"], "hold_evidence_permission_denied")
         self.assertFalse(result["dispatchAuthorized"])
         self.assertNotIn("secret-token-private-code", json.dumps(result))
 

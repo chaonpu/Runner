@@ -7,13 +7,15 @@
 | 组件 | 已实现行为 | 当前线上接线 |
 | --- | --- | --- |
 | `production_ports.ReadOnlyPorts` | 固定公开仓库的配置/登记读取；私有源码提交身份、运行状态、Runner、账户预算及专用准备状态元数据读取 | `production-dispatch.yml` 仅人工、只读调用 |
-| `production_evidence.inspect` | 按任务日期、源码、实际原 Run 和 300 秒时效验证专用私有准备状态 | 只读调用；私有状态生产器尚未安装，缺失即暂停 |
+| `production_evidence.inspect` | 仅用 Actions 元数据，按任务日期、来源 Run、就绪 Job/步骤和 300 秒时效核实证据及候选源码 | 只读调用；私有证据生产器尚未安装，缺失即暂停 |
 | `production_ports.ProductionPorts` | 固定任务登记路径 CAS；限定 A/US 两个私有工作流的单次 POST；禁止任意仓库/工作流/重跑/取消 | 未接线；只用模拟 HTTP 测试 |
 | `production_watch.watch` | 同一前台调用观察原 Run；默认每 30 秒，4 小时截止，可设上限 5.5 小时；任务结束或不确定响应时停止 | 未接线；只用模拟时钟测试 |
 
 公开中心不会请求私有仓库 Contents、源码、Git 树、产物或日志。公开输出使用固定字段，保留就绪/暂停、日期、读取状态和生产关闭状态；不会复制远程响应的任意字段、私有策略输出、持仓、账本或错误正文。
 
-公开配置和登记从同一个固定 main 提交读取，并检查 Base64 内容的 Git blob SHA。源码 main 只读取分支元数据，准备状态读取前后复查提交身份。A/US 共用私有发布锁，因此任一业务工作流活跃或状态不可核实都会挡住新的生产任务。
+公开配置和登记从同一个固定 main 提交读取，并检查 Base64 内容的 Git blob SHA。私有证据路径仅请求 Actions API，不要求私有 Contents 或 Commit statuses 权限。A/US 共用私有发布锁，因此任一业务工作流活跃或状态不可核实都会挡住新的生产任务。
+
+准备 Run 的 `head_sha` 是已经验证来源的候选源码，不声称它仍是当前 main。正式派发后，必须先确认实际 Run 的源码与候选完全一致，才能写入 Run 绑定；私有准入在业务开始前等待这个准确绑定。因此 main 在准备后变化会留下未绑定预约并暂停，不能执行错误源码。这里不会通过扩大私有 Contents 读取权限来获取当前 main。
 
 ## 单次派发约束
 
@@ -25,13 +27,13 @@
 
 ## 私有实时证据协议
 
-接收器只接受当前源码上的专用提交状态 `runner/production-readiness/stock_a` 或 `runner/production-readiness/stock_us`。状态描述固定为 `v1:任务:YYYY-MM-DD:原RunID:ready`，目标链接必须是对应私有 Run。
+接收器只接受私有 Stock 对应市场最新的专用准备 Run：`.github/workflows/production-readiness-a.yml` 或 `production-readiness-us.yml`，限定管理员手动启动、main、首次尝试且成功结束。最新运行失败或未结束时，不回退到更旧的成功证据。
 
-该 Run 必须属于私有 Stock 的 `.github/workflows/production-readiness.yml`，管理员手动启动、main、首次尝试、准确源码并成功结束。状态必须在该 Run 内产生，且创建时间距本次检查不超过 300 秒；更新时间不能延长旧证据寿命。已知输入冲突、同上下文重复状态、过期、未来时间、失败状态或查询异常均暂停。旧诊断、行情样本、完整隔离计算、离线账本回放均不能冒充此专用证明。
+该 Run 必须有唯一成功的 `readiness-v1:任务:YYYY-MM-DD` Job，及唯一成功的 `Attest live readiness` 步骤；步骤结束时间为证据时间，距检查不超过 300 秒，必须落在原 Run / Job 的真实时间范围内。Run 更新时间不能延长旧步骤证据的寿命。已知输入冲突、缺失/重复 Job、任务日期不符、过期、未来时间、失败或查询异常均暂停。旧诊断、行情样本、完整隔离计算、离线账本回放均不能冒充此专用证明。
 
-**该私有证据生产器尚未安装。** 后续需要在私有环境独立核实实际交易会话已结束、完整实时行情输入、完整选股输入，全部与任务日期和源码一致，才能发布 `ready`。本次没有用日历候选、七项行情样本或历史验收来填充这些事实。专用状态查询不可用或为空时只读入口会明确显示暂停。
+**该私有证据生产器尚未安装。** 后续需要在私有环境独立核实实际交易会话已结束、完整实时行情输入、完整选股输入，全部与任务日期和源码一致，才能完成就绪证明步骤。本次没有用日历候选、七项行情样本或历史验收来填充这些事实。专用准备工作流不存在、不可见或没有证据时，入口明确暂停。
 
-API 协议参考：[GitHub commit statuses](https://docs.github.com/en/rest/commits/statuses)。读取私有分支身份和提交状态仍受现有令牌权限约束；权限不足会报告不可核实并暂停，不会自动扩大令牌权限。
+API 协议参考：[GitHub workflow runs](https://docs.github.com/en/rest/actions/workflow-runs) 与 [workflow jobs](https://docs.github.com/en/rest/actions/workflow-jobs)。第一轮线上只读验收确认现有 Actions 令牌不能读取私有分支元数据，因此最终协议改为仅使用 Actions 权限；未修改任何令牌权限。
 
 ## 本轮验证
 

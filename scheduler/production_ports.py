@@ -17,11 +17,11 @@ import re
 import urllib.request
 
 from scheduler.exchange_schedule import evaluate
-from scheduler.production_evidence import inspect, hold
+from scheduler.production_evidence import inspect
 from scheduler.production_registry import RegistryGuard, validate, observe_run
 from scheduler.production_session import context, dispatch_inputs, readiness, WORKFLOWS, SHA, RUN_ID
 from scheduler.production_store import save as registry_save, verify_change
-from scheduler.probes import GitHubReadOnly, account_usage, runner_for_repo, existing_attempt, safe_error
+from scheduler.probes import GitHubReadOnly, account_usage, runner_for_repo, existing_attempt
 
 PUBLIC = "/repos/chaonpu/Runner"
 PRIVATE = "/repos/chaonpu/Stock"
@@ -140,21 +140,10 @@ class ReadOnlyPorts:
         attempts = [self.active("chaonpu/Stock", wf, account, self.env) for wf in WORKFLOWS.values()]
         active = "no_active_run" if all(x.get("status") == "no_active_run" for x in attempts) else (
             "active" if any(x.get("status") == "active" for x in attempts) else "unknown")
-        evidence, source, source_read = hold("hold_source_metadata_unavailable"), "", "unknown"
-        try:
-            reader = self.private_reader()
-            source = reader.get(PRIVATE + "/branches/main").get("commit", {}).get("sha", "")
-            need(bool(SHA.fullmatch(str(source))), "ports_source_head_invalid")
-            source_read = "readable"
-            evidence = inspect(reader, task, day, source, self.clock())
-            current = reader.get(PRIVATE + "/branches/main").get("commit", {}).get("sha")
-            if current != source:
-                evidence = hold("hold_source_changed_during_audit")
-        except (OSError, ValueError, KeyError, TypeError, AttributeError) as exc:
-            source_read = safe_error(exc)
-            evidence = hold("hold_source_metadata_unavailable")
+        evidence = inspect(self.private_reader(), task, day, self.clock())
+        source = evidence["sourceSha"]
         closed = calendar["calendarCoverageCurrent"] and calendar["scheduledSessionClosed"]
-        report = {"taskId": task + ":" + day, "sourceSha": source, "sourceMetadataRead": source_read,
+        report = {"taskId": task + ":" + day, "sourceSha": source,
             "observedAt": evidence["observedAt"], "activeRunCheck": active,
             "calendarCoverageCurrent": calendar["calendarCoverageCurrent"],
             "scheduledSessionClosed": calendar["scheduledSessionClosed"],
@@ -251,8 +240,8 @@ class ProductionPorts(ReadOnlyPorts):
 def public_report(config, state, audit):
     """Fixed output shape; never copy remote response fields into public logs."""
     return {"mode": "live_read_only_production_ports", "taskId": audit["taskId"],
-        "registeredProductionTasks": len(state["tasks"]), "sourceHeadRead": bool(SHA.fullmatch(audit["sourceSha"])),
-        "sourceMetadataRead": audit["sourceMetadataRead"],
+        "registeredProductionTasks": len(state["tasks"]),
+        "sourceCommitEvidenceRead": bool(SHA.fullmatch(audit["sourceSha"])),
         "activeRunCheck": audit["activeRunCheck"], "calendarCoverageCurrent": audit["calendarCoverageCurrent"],
         "scheduledSessionClosed": audit["scheduledSessionClosed"], "evidenceStatus": audit["evidenceStatus"],
         "exchangeSessionVerified": audit["exchangeSessionVerified"], "marketDataReady": audit["marketDataReady"],
