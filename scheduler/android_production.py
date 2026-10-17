@@ -274,13 +274,28 @@ def run(env, *, execute=False, resume=False, requested_sha=""):
     if resume:
         require(bool(requested_sha) and SHA.fullmatch(requested_sha),
                 "resume_requires_original_source_sha")
-    source = requested_sha if resume else current_source((
-        env.get("TEST_SOURCE_READ_TOKEN", ""),
-        env.get("TEST_ACTIONS_READ_TOKEN", ""),
-        env.get("TEST_BILLING_READ_TOKEN", "")))
-    require(bool(SHA.fullmatch(source)), "invalid_source_sha")
-    if requested_sha and not resume:
-        require(source == requested_sha, "requested_sha_not_current_test_main")
+    branch_verified = False
+    source = requested_sha if resume else ""
+    if not resume:
+        try:
+            source = current_source((
+                env.get("TEST_SOURCE_READ_TOKEN", ""),
+                env.get("TEST_ACTIONS_READ_TOKEN", ""),
+                env.get("TEST_BILLING_READ_TOKEN", "")))
+            branch_verified = True
+            if requested_sha:
+                require(source == requested_sha, "requested_sha_not_current_test_main")
+        except Hold as exc:
+            if str(exc) != "test_main_contents_read_permission_missing":
+                raise
+            # An operator-supplied SHA is a reservation key, NOT verified source.
+            # The subsequent exact Test workflow_dispatch Run's head_sha must
+            # prove it was truly main at dispatch time, before signing begins.
+            source = requested_sha
+            if execute and not source:
+                raise Hold("source_sha_required_without_contents_read") from None
+    if source:
+        require(isinstance(source, str) and bool(SHA.fullmatch(source)), "invalid_source_sha")
     state, _ = json_file(pub, STATE_PATH)
     require(state.get("version") == 1 and isinstance(state.get("builds"), dict),
             "state_schema_invalid")
@@ -288,7 +303,10 @@ def run(env, *, execute=False, resume=False, requested_sha=""):
     test_account = config["accounts"]["anwpustudent-lab"]
     sign_account = config["accounts"]["chaonpu"]
     if not execute:
-        record_public(source, "read_only", priorPhase=entry.get("phase") if entry else None,
+        record_public(source or None, "read_only",
+                      priorPhase=entry.get("phase") if entry else None,
+                      branchShaVerified=branch_verified,
+                      manualSourceShaRequired=not bool(source),
                       route="windows-verified-chain-only",
                       testRunnerReady=runner_ready(TEST, task["runnerName"], test_account, env),
                       signerRunnerReady=runner_ready(SIGNER, task["signingRunnerName"],
