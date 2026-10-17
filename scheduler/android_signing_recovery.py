@@ -88,11 +88,17 @@ def change_state(token, source, test_id, prior_id, next_phase, new_id=None):
             or entry.get("testRunId") != test_id):
         raise Hold("recovery_state_not_bound_to_original_test")
     if next_phase == "sign_retry_reserved":
-        if (entry.get("phase") != "signer_started"
+        prior_history = entry.get("signingRecoveryHistory")
+        if prior_history is None:
+            prior_history = ([entry["recoveryFromSigningRunId"]]
+                             if entry.get("recoveryFromSigningRunId") else [])
+        if (not isinstance(prior_history, list) or len(prior_history) >= 2
+                or entry.get("phase") != "signer_started"
                 or entry.get("signingRunId") != prior_id
-                or entry.get("recoveryFromSigningRunId") is not None):
-            raise Hold("already_recovered_or_other_signer_state")
+                or prior_id in prior_history):
+            raise Hold("recovery_limit_or_signer_state_mismatch")
         entry["phase"] = next_phase
+        entry["signingRecoveryHistory"] = prior_history + [prior_id]
         entry["recoveryFromSigningRunId"] = prior_id
     elif next_phase == "signer_started":
         if (entry.get("phase") != "sign_retry_reserved"
@@ -123,8 +129,11 @@ def perform(env, source, test_id, failed_id):
     if (not isinstance(entry, dict) or entry.get("phase") != "signer_started"
             or entry.get("testRunId") != test_id
             or entry.get("signingRunId") != failed_id
-            or entry.get("recoveryFromSigningRunId") is not None):
-        raise Hold("signing_retry_registered_once_only")
+            or entry.get("recoveryFromSigningRunId") == failed_id
+            or len(entry.get("signingRecoveryHistory") or
+                   ([entry["recoveryFromSigningRunId"]]
+                    if entry.get("recoveryFromSigningRunId") else [])) >= 2):
+        raise Hold("signing_retry_limit_or_state_mismatch")
 
     failed = api(signer_token, SIGNER, "/actions/runs/" + str(failed_id))
     validate_run(failed, SIGNER, SIGN_WORKFLOW, failed_id)
