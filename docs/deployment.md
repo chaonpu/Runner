@@ -1,5 +1,13 @@
 # 统一调度中心部署与迁移计划（2026-10-17）
 
+## Billing Administration(read) 令牌的实际 Stock 私有仓库可见性（2026-10-17 追加验证）
+
+- 原来 RUNNER 的 `config/repositories.json` 为 `chaonpu` 把 `runnerSecret` 指向 `RUNNER_READ_TOKEN`，为 `anwpustudent-lab` 指向 `TEST_RUNNER_READ_TOKEN`，与用户已经配置的 Billing Administration(read) 令牌没有对应。现在已将这两个 `runnerSecret` 分别统一指向**已有** `CHAONPU_BILLING_READ_TOKEN`、`TEST_BILLING_READ_TOKEN`；只更改公开的 Secret 名称引用，**没有创建或输出实际 Secret 值**、没有启用生产开关。
+- [Runner #38987993429](https://github.com/chaonpu/Runner/actions/runs/38987993429)：**157/157 测试通过**，Billing API 两账户均 `readable`。但是 Stock `GET /repos/chaonpu/Stock/actions/runners` 使用 Billing 令牌仍返回 `not_found`（404）。不能仅据此声称该令牌没有 Administration(read) 设置。
+- 为区分仓库授权范围与 Runner 列表权限，又加入**仅读取仓库元数据**的 `GET /repos/chaonpu/Stock` 测试。 [Runner #38988098594](https://github.com/chaonpu/Runner/actions/runs/38988098594) **159/159 测试通过**，`billingTokenCanSeePrivateRepository=not_found`，而 `usageEndpointRead=readable`。因此并非仅 Runner list endpoint 受限：**当前配置的 `CHAONPU_BILLING_READ_TOKEN` 在该工作流上下文无法访问 `chaonpu/Stock` 私有仓库资源**。有 Administration(read) 权限标签与能访问某个特定私有 repo 是两个独立条件。
+- GitHub 细粒度 PAT 除了仓库 `Administration(read)`，还需要 Resource owner 为 `chaonpu` 且 Repository access 包含 `chaonpu/Stock`（或所有适用仓库）。需在 GitHub 中核查该既有 PAT 的 owner、仓库列表/授权、有效性，以及 RUNNER 仓库 Secret `CHAONPU_BILLING_READ_TOKEN` 是否确实保存了用户指的那一枚令牌。**不要求创建新 PAT；也不能在此没有 Secret 内容和用户交互的条件下声称已更改 PAT 的仓库授权范围**。
+- 不能把 Billing 用量可读取当作 Stock repo/Runner 状态可读取，也不能从历史 Windows Job 成功推断该 Runner 现在在线。只有 repo 元数据和 Runner list 经同一现存令牌真实返回且匹配标签/在线/不忙时，才可把在线作为实际一次性预检的完整证据；在此之前保留 fail-closed HOLD 与按需无业务 canary 方案。生产 `dispatchEnabled=false`，所有任务 `enabledForDispatch=false`，登记表不变。
+
 ## 2026-10-17 额度/运行器最新线上验证与活动任务漏检修复
 
 - [RUNNER #38986833536](https://github.com/chaonpu/Runner/actions/runs/38986833536) 在线公有云安全 CI 首次完成 **146/146** 项测试。新增 `scheduler/runtime_status.py`，在**不对私有 Stock 调度或写入**的条件下，仅从已有只读令牌提取两账户 Actions 用量接口是否可访问、Stock 运行状态读取、Windows Runner 列表能否读取、是否有生产任务登记。云端两账户的 usage API 均为 `readable`，但用量与**剩余免费可运行分钟数不是同一数据**，两账户 `hostedDecision=unknown`。
