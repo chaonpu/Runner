@@ -59,7 +59,7 @@
       "windowsWorkflow": "test-self-hosted.yml",
       "runnerName": "ziwuxilv-test-win",
       "signingRepo": "chaonpu/ziwuxilv-android",
-      "signingCloudWorkflow": "android.yml",
+      "signingCloudWorkflow": "cloud-signing-verified-handoff.yml",
       "signingWindowsWorkflow": "windows-signing-verified-handoff.yml",
       "signingRunnerName": "ziwuxilv-sign-win",
       "estimatedMinutes": 80,
