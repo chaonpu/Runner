@@ -37,14 +37,19 @@
 
 本入口完成后只获得**私有签名成功**，并不等于正式 APK 已发布。若要公开暂存，另行使用 [签名 APK 独立审批暂存](https://github.com/chaonpu/Runner/actions/workflows/stage-android-apk.yml)，按其要求提供来源 SHA、Test Run ID、签名 Run ID、版本及人工审批短语。正式发布继续使用 `chaonpu/ziwuxilv` 自有发布保护流程，必须经过现有版本递增与更新清单校验。未经审批，绝不自动发布。
 
-## 本轮实际验收状态
+## 2026-10-17 正式接入验收结果
 
-- 2026-10-17 [公开安全 CI](https://github.com/chaonpu/Runner/actions/workflows/validate.yml) 252 项测试通过。
-- 公开 Runner 只读检测显示 Test 与签名 Runner 均 `online`、闲置，两个私有工作流均 `no_active_run`；原始 Test SHA 在公有协调器的令牌下不可读，因此需人工指定 SHA 或增加仅 Test Contents:Read 的可选凭据。
-- **尚未执行此新入口的真实 Android 私有构建+签名生产 Run**，不可将现有历史签名成功误写为此次接入的完整端到端验收。
+- **私有 Android 构建、测试及签名生产链已完成端到端验收**。源码 SHA：`ce0be22bf758f2621235a165bfc07c059cca5de1`；APP 版本：`2.3.4 (117)`。
+- Test Run [39039852886](https://github.com/anwpustudent-lab/Test/actions/runs/39039852886) 成功：Windows SDK/JDK、源码校验、Unsigned Release、单元测试、Lint、Debug、通知 Manifest 和私有 `windows-test-verified` Artifact 均成功。
+- 原签名 Run [39041021094](https://github.com/chaonpu/ziwuxilv-android/actions/runs/39041021094) 在官方上传组件下载中断时安全停止；第二次 [39043072529](https://github.com/chaonpu/ziwuxilv-android/actions/runs/39043072529) 在下载恢复回归测试中安全停止，二者均未进入密钥恢复或 APK 签名。
+- 签名恢复 Run [39043329939](https://github.com/chaonpu/ziwuxilv-android/actions/runs/39043329939) **success**。源码、原 Test Run、Unsigned APK SHA256、签名证书、包名、版本、APK SHA256、发布候选元数据及 `windows-signed-release` 私有 Artifact 上传全部通过。签名 Artifact ID：`12105485401`，GitHub Artifact SHA256：`977f8c747a41bb8302dd5fc41054f5bf81badbd0298899821135dcf8dc5c31d6`。
+- RUNNER [39043318075](https://github.com/chaonpu/Runner/actions/runs/39043318075) **success**，`state/android-production.json` 当前精确源码标记为 `signed_verified`，并保留先前两次失败 Run 的溯源。
+- 新增独立的签名仅恢复入口 `android-signing-recovery-launch.yml`：仅显式批准、只允许旧签名任务在访问密钥前失败、必须原 Test Run 成功且原 Artifact 存在时受控启动；采用 CAS 派发意图并限制最多两次、禁止盲目重派。
+- 本轮 Windows 同机签名 Runner 经真实测试可**只读复用 Test Runner 的官方公开上传组件缓存**，每次重新验证固定 Git Blob 哈希及长度；不复制签名密钥，也不公开源码。
+- Android 构建启动和签名恢复两个一次性申请文件均为 `enabled=false`；未生成任何公开 Release，也未修改正式版更新清单。
 
 ## 当前限制
 
 - 本次仅新增**Windows 精确 Test → Windows 私有签名**生产执行路径；云端 `Test/android.yml` 与签名仓库旧云端工作流的数据契约不同，尚不具备与这条不可变 handoff 直接互换的生产证明。即使云端额度可用，也不绕过上述校验。云端优先/Windows 自动切换需单独补齐一个接受云端已验证 handoff 的私有签名工作流及回归后再开放。
 - 公开工作流能否实际派发取决于 RUNNER Secrets：`TEST_ACTIONS_READ_TOKEN`、`CHAONPU_ACTIONS_READ_TOKEN` 需 Actions 写与运行只读；`TEST_RUNNER_READ_TOKEN`、`RUNNER_READ_TOKEN` 已在实时只读预检中确认可分别读取两个 Windows Runner 的状态。可选 `TEST_SOURCE_READ_TOKEN` 只需精确限定私有 Test 仓库 `Contents: Read`，用于自动读取 `main` SHA；不配置时手动指定 SHA 即可保持源码权限隔离。某个必要权限缺失会保守停止。
-- 实际构建是否成功必须由**本入口真实运行**、两个原始私有 Run 及签名 Artifact 证明；公开 CI 回归通过不能替代跨仓库端到端验收。
+- 本次 Windows 私有链已通过真实 Run 和 Artifact 验收；若后续换机器、更新工具或接入云端路径，仍需重新验证。共享缓存仅在两台自托管 Runner 运行于同一 Windows 主机时适用，缺失或不匹配时会安全停止或走官方 API 并完整校验。
