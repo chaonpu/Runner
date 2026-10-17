@@ -543,6 +543,20 @@ def run(env, *, execute=False, resume=False, requested_sha=""):
                           TEST, HOSTED_WORKFLOW, test_account, env).get("status"))
         return
 
+    # A signed and verified exact-SHA source is already complete. This is a
+    # truthful no-op, not an error and never a second dispatch/build/sign.
+    if entry is not None and entry.get("phase") == "signed_verified":
+        require(entry.get("sourceSha") == source
+                and type(entry.get("testRunId")) is int and entry["testRunId"] > 0
+                and type(entry.get("signingRunId")) is int and entry["signingRunId"] > 0,
+                "registered_signed_proof_incomplete")
+        record_public(source, "already_signed", status="skipped",
+                      reason="source_already_signed_verified_no_rebuild",
+                      priorPhase="signed_verified", testRunId=entry["testRunId"],
+                      signingRunId=entry["signingRunId"],
+                      publication="not_authorized_no_public_apk")
+        return
+
     require(route in ("windows", "hosted"), "hosted_allowance_unverified_dispatch_paused")
     if resume:
         require(bool(requested_sha) and SHA.fullmatch(requested_sha),
