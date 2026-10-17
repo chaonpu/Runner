@@ -26,6 +26,16 @@ jobs:
           clean: true
       - name: Run route, billing and permissions tests
         run: python3 -m unittest discover -s tests -p 'test_*.py' -v
+      - name: Inspect hosted balance evidence and Windows runner status (read only)
+        if: github.actor == 'chaonpu'
+        env:
+          CHAONPU_ACTIONS_READ_TOKEN: ${{ secrets.CHAONPU_ACTIONS_READ_TOKEN }}
+          CHAONPU_BILLING_READ_TOKEN: ${{ secrets.CHAONPU_BILLING_READ_TOKEN }}
+          RUNNER_READ_TOKEN: ${{ secrets.RUNNER_READ_TOKEN }}
+          TEST_ACTIONS_READ_TOKEN: ${{ secrets.TEST_ACTIONS_READ_TOKEN }}
+          TEST_BILLING_READ_TOKEN: ${{ secrets.TEST_BILLING_READ_TOKEN }}
+          TEST_RUNNER_READ_TOKEN: ${{ secrets.TEST_RUNNER_READ_TOKEN }}
+        run: python3 -m scheduler.runtime_status
       - name: Enforce public repository secrets boundary
         run: |
           python3 - <<'PY'
