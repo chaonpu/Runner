@@ -303,14 +303,22 @@ def run(env, *, execute=False, resume=False, requested_sha=""):
     test_account = config["accounts"]["anwpustudent-lab"]
     sign_account = config["accounts"]["chaonpu"]
     if not execute:
+        test_probe = runner_for_repo(TEST, task["runnerName"], test_account, env)
+        sign_probe = runner_for_repo(SIGNER, task["signingRunnerName"], sign_account, env)
+        def is_ready(item):
+            return (item.get("status") == "online" and item.get("busy") is False
+                    and item.get("labelsVerified") is True)
         record_public(source or None, "read_only",
                       priorPhase=entry.get("phase") if entry else None,
                       branchShaVerified=branch_verified,
                       manualSourceShaRequired=not bool(source),
                       route="windows-verified-chain-only",
-                      testRunnerReady=runner_ready(TEST, task["runnerName"], test_account, env),
-                      signerRunnerReady=runner_ready(SIGNER, task["signingRunnerName"],
-                                                    sign_account, env),
+                      testRunnerReady=is_ready(test_probe),
+                      signerRunnerReady=is_ready(sign_probe),
+                      testRunnerProbe={"read": test_probe.get("read"),
+                                       "status": test_probe.get("status")},
+                      signerRunnerProbe={"read": sign_probe.get("read"),
+                                         "status": sign_probe.get("status")},
                       testWorkflowActiveStatus=existing_attempt(
                           TEST, TEST_WORKFLOW, test_account, env).get("status"),
                       signingWorkflowActiveStatus=existing_attempt(
