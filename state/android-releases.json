@@ -33,7 +33,7 @@
       "signingRunId": 39065243664,
       "updateLog": "\u66f4\u65b0\u81f3 2.3.6\uff08119\uff09\u3002",
       "forceUpdate": false,
-      "phase": "prepared",
+      "phase": "dispatch_reserved",
       "publishRequest": {
         "sourceUrl": "https://github.com/chaonpu/Runner/releases/download/staged-apk-v2.3.6-signrun-39065243664/ziwuxilv-verified-v2.3.6.zip",
         "artifactSha256": "5bed780765d115eac3a304a3c063a3d677072083147c1709a09d1a58bf17b888",
