@@ -45,7 +45,7 @@ jobs:
           set -euo pipefail
           args=()
           if [[ "$EXECUTE" == 'true' ]]; then args+=(--execute); fi
-          python3 -m scheduler.android_publish "${args[@]}"
+          python3 -m scheduler.android_publish "${args[@]}" 2>&1 | tee "$RUNNER_TEMP/entry-result.jsonl"
       - name: Downloadable public release request
         if: always() && inputs.execute == true
         uses: actions/upload-artifact@v4
@@ -54,3 +54,13 @@ jobs:
           path: publication-output/android-publish-request.json
           if-no-files-found: ignore
           retention-days: 7
+
+      - name: Show authoritative entry outcome (not GitHub green alone)
+        if: always()
+        env:
+          JOB_RESULT: ${{ job.status }}
+          ENTRY_PREVIEW: ${{ inputs.execute != true }}
+        run: |
+          python3 -m scheduler.entry_result --entry android_publish \
+            --result "$JOB_RESULT" --preview "$ENTRY_PREVIEW" \
+            --log "$RUNNER_TEMP/entry-result.jsonl"
