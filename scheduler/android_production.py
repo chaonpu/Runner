@@ -202,6 +202,20 @@ def wait_run(token, repo, workflow, rid, source=None):
     raise Hold("run_deadline_original_id_must_be_reviewed")
 
 
+def verify_execution_runner(token, repo, rid, expected):
+    """A successful job must actually have run on the approved private service."""
+    response = api(token, repo, "/actions/runs/" + str(rid) + "/jobs?per_page=100")
+    jobs = response.get("jobs")
+    count = response.get("total_count")
+    require(type(count) is int and 0 < count <= 100
+            and isinstance(jobs, list) and len(jobs) == count,
+            "private_run_jobs_incomplete")
+    completed = [job for job in jobs
+                 if job.get("runner_name") == expected
+                 and job.get("conclusion") == "success"]
+    require(len(completed) == 1, "expected_private_runner_not_verified")
+
+
 def verify_artifact(token, repo, rid, expected):
     response = api(token, repo, "/actions/runs/" + str(rid) + "/artifacts?per_page=100")
     artifacts = response.get("artifacts")
@@ -245,6 +259,8 @@ def run(env, *, execute=False, resume=False, requested_sha=""):
     test_account = config["accounts"]["anwpustudent-lab"]
     sign_account = config["accounts"]["chaonpu"]
     if resume:
+        require(bool(requested_sha) and SHA.fullmatch(requested_sha),
+                "resume_requires_original_source_sha")
         require(isinstance(entry, dict) and entry.get("sourceSha") == source
                 and entry.get("phase") in ("test_started", "test_verified", "signer_started"),
                 "no_resumable_original_attempt")
@@ -266,6 +282,7 @@ def run(env, *, execute=False, resume=False, requested_sha=""):
         test_run = entry.get("testRunId")
         require(type(test_run) is int and test_run > 0, "unknown_test_dispatch_no_retry")
         wait_run(test, TEST, TEST_WORKFLOW, test_run, source)
+        verify_execution_runner(test, TEST, test_run, task["runnerName"])
         verify_artifact(test, TEST, test_run, "windows-test-verified")
         put_state(pub, source, "test_verified")
         record_public(source, "test_verified", testRunId=test_run)
@@ -291,6 +308,7 @@ def run(env, *, execute=False, resume=False, requested_sha=""):
         require(type(sign_run) is int and sign_run > 0,
                 "unknown_signing_dispatch_no_retry")
         wait_run(sign, SIGNER, SIGN_WORKFLOW, sign_run)
+        verify_execution_runner(sign, SIGNER, sign_run, task["signingRunnerName"])
         verify_artifact(sign, SIGNER, sign_run, "windows-signed-release")
         put_state(pub, source, "signed_verified")
         record_public(source, "signed_verified", testRunId=entry["testRunId"],
