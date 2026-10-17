@@ -460,7 +460,7 @@ def run(env, *, execute=False, resume=False, requested_sha=""):
     require(task.get("repo") == TEST and task.get("signingRepo") == SIGNER
             and task.get("windowsWorkflow") == TEST_WORKFLOW
             and task.get("signingWindowsWorkflow") == SIGN_WORKFLOW
-            and task.get("signingCloudWorkflow") == CLOUD_SIGN_WORKFLOW,
+            and task.get("signingCloudWorkflow", CLOUD_SIGN_WORKFLOW) == CLOUD_SIGN_WORKFLOW,
             "android_workflow_configuration_changed")
     # A resumed exact-source run may be older than current Test/main.
     # New builds, however, must always start from the current main SHA.
