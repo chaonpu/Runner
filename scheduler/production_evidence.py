@@ -30,7 +30,7 @@ def timestamp(value):
     return result.astimezone(timezone.utc)
 
 
-def inspect(reader, task, day, now):
+def inspect(reader, task, day, now, publication_mode="formal"):
     """Require newest original readiness Run, exact dated job and final step.
 
     The future producer must independently check live session completion,
@@ -38,7 +38,7 @@ def inspect(reader, task, day, now):
     Returned SHA is a fresh SOURCE CANDIDATE, not a claim of current main.
     Actual production Run SHA must match before binding/private admission.
     """
-    if task not in WORKFLOWS or not isinstance(now, datetime) or now.tzinfo is None:
+    if task not in WORKFLOWS or publication_mode not in ("formal", "theoretical_catchup") or not isinstance(now, datetime) or now.tzinfo is None:
         raise RegistryGuard("readiness_evidence_request_invalid")
     try:
         if date.fromisoformat(day).isoformat() != day:
@@ -78,8 +78,8 @@ def inspect(reader, task, day, now):
                 or not 1 <= jobs["total_count"] <= 100
                 or jobs["total_count"] != len(jobs["jobs"])):
             return hold("hold_evidence_jobs_incomplete")
-        matches = [j for j in jobs["jobs"] if isinstance(j, dict)
-                   and j.get("name") == f"readiness-v1:{task}:{day}"]
+        expected_name = f"readiness-v1:{task}:{day}" + (":theoretical_catchup" if publication_mode != "formal" else "")
+        matches = [j for j in jobs["jobs"] if isinstance(j, dict) and j.get("name") == expected_name]
         if len(matches) != 1:
             return hold("hold_evidence_dated_job_missing_or_ambiguous")
         job = matches[0]
@@ -105,7 +105,8 @@ def inspect(reader, task, day, now):
             return hold("hold_evidence_stale_or_future")
         inputs = run.get("inputs")
         if inputs is not None and (not isinstance(inputs, dict)
-                or inputs.get("business_date") not in ("", None, day)):
+                or inputs.get("business_date") not in ("", None, day)
+                or inputs.get("publication_mode", "formal") != publication_mode):
             return hold("hold_evidence_run_inputs_conflict")
         return {"evidenceStatus": "private_readiness_run_and_dated_job_match",
                 "exchangeSessionVerified": True, "marketDataReady": True,

@@ -48,13 +48,14 @@ def need(ok, code):
 def request(token, method, path, body=None, *, opener=bounded_open):
     """One request only, with an endpoint/method allowlist before credentials."""
     public_get = path == PUBLIC + "/branches/main" or bool(re.fullmatch(
-        re.escape(PUBLIC) + r"/contents/(config/repositories\.json|state/tasks\.json)\?ref=[0-9a-f]{40}", path))
-    public_put = path == PUBLIC + "/contents/" + REGISTRY
+        re.escape(PUBLIC) + r"/contents/(config/repositories\.json|config/launch-request\.json|state/tasks\.json)\?ref=[0-9a-f]{40}", path))
+    public_put = path in (PUBLIC + "/contents/" + REGISTRY, PUBLIC + "/contents/" + CONFIG)
     private_post = path in {PRIVATE + "/actions/workflows/" + wf + "/dispatches"
-                            for wf in WORKFLOWS.values()}
+                            for wf in (*WORKFLOWS.values(), "production-readiness-a.yml", "production-readiness-us.yml")}
+    public_launch = path == PUBLIC + "/actions/workflows/production-dispatch.yml/dispatches"
     need((method == "GET" and public_get and body is None)
          or (method == "PUT" and public_put and isinstance(body, dict))
-         or (method == "POST" and private_post and isinstance(body, dict)),
+         or (method == "POST" and (private_post or public_launch) and isinstance(body, dict)),
          "ports_endpoint_not_allowed")
     need(isinstance(token, str) and bool(token), "ports_credential_missing")
     req = urllib.request.Request("https://api.github.com" + path, method=method,
@@ -140,7 +141,7 @@ class ReadOnlyPorts:
         attempts = [self.active("chaonpu/Stock", wf, account, self.env) for wf in WORKFLOWS.values()]
         active = "no_active_run" if all(x.get("status") == "no_active_run" for x in attempts) else (
             "active" if any(x.get("status") == "active" for x in attempts) else "unknown")
-        evidence = inspect(self.private_reader(), task, day, self.clock())
+        evidence = inspect(self.private_reader(), task, day, self.clock(), spec.get("publicationMode", "formal"))
         source = evidence["sourceSha"]
         closed = calendar["calendarCoverageCurrent"] and calendar["scheduledSessionClosed"]
         report = {"taskId": task + ":" + day, "sourceSha": source,
@@ -167,6 +168,8 @@ class ProductionPorts(ReadOnlyPorts):
     def __init__(self, env, **kwargs):
         context(dict(env))
         super().__init__(env, **kwargs)
+        from scheduler.production_origin import authorize
+        authorize(self.env, self.requester, self.reader_factory)
         self._armed, self._accepted = {}, {}
 
     def save(self, config, before, after, sha, env):
@@ -188,7 +191,7 @@ class ProductionPorts(ReadOnlyPorts):
                  "ports_original_dispatch_not_known")
             run = self.run(row["repo"], row["runId"])
             need(run.get("head_sha") == accepted["sourceSha"], "ports_binding_source_changed")
-            dispatch_inputs(run, key, context(self.env), row["route"])
+            dispatch_inputs(run, key, context(self.env), row["route"], row.get("publicationMode", "formal"))
             observe_run(config, after, key, run, at=row["updatedAt"])
         else:
             # A caller cannot mark progress based on a fabricated green dict.
@@ -202,7 +205,8 @@ class ProductionPorts(ReadOnlyPorts):
             confirmed_config, confirmed_state, confirmed_sha = self.load()
             need(confirmed_config == config and confirmed_state == after and confirmed_sha != sha,
                  "ports_reservation_confirmation_failed")
-            self._armed[key] = {"sha": confirmed_sha, "sourceSha": source, "route": route}
+            self._armed[key] = {"sha": confirmed_sha, "sourceSha": source, "route": route,
+                                "publicationMode": row.get("publicationMode", "formal")}
         return result
 
     def dispatch(self, repo, workflow, payload):
@@ -212,14 +216,16 @@ class ProductionPorts(ReadOnlyPorts):
              and payload.get("ref") == "main" and payload.get("return_run_details") is True,
              "ports_dispatch_target_invalid")
         inputs = payload.get("inputs")
-        need(isinstance(inputs, dict) and set(inputs) == {
-            "task_id", "coordinator_run_id", "force_run", "runner_mode"}, "ports_dispatch_inputs_invalid")
+        need(isinstance(inputs, dict) and {"task_id", "coordinator_run_id", "force_run", "runner_mode"}.issubset(inputs)
+             and set(inputs).issubset({"task_id", "coordinator_run_id", "force_run", "runner_mode", "publication_mode"}),
+             "ports_dispatch_inputs_invalid")
         key = inputs.get("task_id")
         need(isinstance(key, str) and key in self._armed, "ports_reservation_not_armed")
         arm = self._armed.pop(key)  # Consume before any uncertain network call.
         task, day = key.split(":", 1)
         need(WORKFLOWS.get(task) == workflow and inputs.get("coordinator_run_id") == self.env["GITHUB_RUN_ID"]
              and inputs.get("force_run") == "false"
+             and inputs.get("publication_mode", "formal") == arm.get("publicationMode", "formal")
              and inputs.get("runner_mode") == ("ubuntu" if arm["route"] == "cloud" else "windows"),
              "ports_dispatch_inputs_conflict")
         cfg, state, sha = self.load()
@@ -235,6 +241,36 @@ class ProductionPorts(ReadOnlyPorts):
         need(type(rid) is int and RUN_ID.fullmatch(str(rid)), "ports_dispatch_id_unknown_no_retry")
         self._accepted[key] = {"runId": rid, "sourceSha": arm["sourceSha"]}
         return {"workflow_run_id": rid}
+
+    def finish(self, session):
+        """The only verified transition: live original Run + private attestation."""
+        from scheduler.production_effect import verify as verify_effect
+        from copy import deepcopy
+        context(self.env)
+        config, state, sha = self.load()
+        rows = [r for r in state["tasks"] if r["id"] == session["taskId"]]
+        need(len(rows) == 1, "effect_task_not_unique")
+        row = rows[0]
+        need(row["status"] == "awaiting_effect_verification"
+             and row["coordinatorRunId"] == context(self.env)
+             and row["runId"] == session["runId"] and row.get("sourceSha") == session["sourceSha"],
+             "effect_original_session_mismatch")
+        run = self.run(row["repo"], row["runId"])
+        jobs = self.private_reader().get(PRIVATE+f"/actions/runs/{row['runId']}/jobs?filter=latest&per_page=100")
+        proof = verify_effect(run, jobs, row)
+        after = deepcopy(state)
+        entry = next(x for x in after["tasks"] if x["id"] == row["id"])
+        entry.update(status="verified", updatedAt=self.clock().isoformat())
+        validate(config, after)
+        # Generic save/verify_change still cannot write 'verified'. Only this
+        # method obtains the required metadata independently from GitHub.
+        response = self.requester(self.env["GH_TOKEN"], "PUT", PUBLIC+"/contents/"+REGISTRY, {
+            "branch":"main", "sha":sha, "message":"Verify original production task effect",
+            "content":base64.b64encode((json.dumps(after,indent=2)+"\n").encode()).decode()})
+        need(isinstance(response.get("content"),dict), "effect_write_unconfirmed")
+        current_cfg, current, _ = self.load()
+        need(current_cfg == config and current == after, "effect_finalization_confirmation_failed")
+        return dict(proof, taskId=row["id"], status="verified", businessVerified=True, safeToRetry=False)
 
 
 def public_report(config, state, audit):

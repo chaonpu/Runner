@@ -63,7 +63,7 @@ class ProductionRegistryTests(unittest.TestCase):
         cfg = configuration()
         state = json.loads((ROOT / "state/tasks.json").read_text(encoding="utf-8"))
         # Preserve the current on-disk schema, including its public-safe description.
-        self.assertEqual(state.get("tasks"), [])
+        self.assertIsInstance(state.get("tasks"), list)
         self.assertIs(validate(cfg, state), state)
         self.assertEqual(len(validate(cfg, blank())["tasks"]), 0)
         with self.assertRaisesRegex(RegistryGuard, "production_dispatch_disabled"):
@@ -206,3 +206,4 @@ class ProductionRegistryTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+

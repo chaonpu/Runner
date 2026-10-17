@@ -1,7 +1,7 @@
 """Bounded foreground observation of the ORIGINAL production run only.
 
 No CLI, dispatch, cancellation, timer registration or background service. This
-module remains unwired. Any uncertain read/write stops for manual review; it
+loop runs only in the active coordinator job. An uncertain read/write stops; it
 never repeats an uncertain state write or starts another business run.
 """
 import time

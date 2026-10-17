@@ -14,7 +14,7 @@ from scheduler.policies import request_id
 
 FIELDS = frozenset({
     "id", "task", "repo", "workflow", "route", "status", "coordinatorRunId",
-    "runId", "createdAt", "updatedAt"
+    "runId", "createdAt", "updatedAt", "sourceSha", "publicationMode"
 })
 STATES = frozenset({
     "reserved", "dispatched", "running", "awaiting_effect_verification",
@@ -86,6 +86,10 @@ def validate(config: dict, state: dict) -> dict:
         if not isinstance(task_name, str) or task_name not in config["tasks"]:
             raise RegistryGuard("unapproved_task")
         spec = config["tasks"][task_name]
+        if "sourceSha" in entry and not re.fullmatch(r"[0-9a-f]{40}", str(entry["sourceSha"])):
+            raise RegistryGuard("registered_source_invalid")
+        if entry.get("publicationMode", "formal") not in ("formal", "theoretical_catchup"):
+            raise RegistryGuard("publication_mode_invalid")
         _identity(task_name, spec, entry.get("id"))
         key = entry["id"]
         if key in keys:
@@ -94,6 +98,16 @@ def validate(config: dict, state: dict) -> dict:
         if entry.get("route") not in ROUTES:
             raise RegistryGuard("unapproved_route")
         workflow = spec.get(ROUTES[entry["route"]])
+        # A completed/uncertain exact-task permit is closed after the run. Its
+        # immutable historical Windows record must remain readable, without
+        # re-enabling that route for a NEW reservation.
+        historical = {"stock_a":"run-a-share.yml", "stock_us":"run-us.yml"}
+        if (workflow is None and entry["route"] == "windows" and task_name in historical
+                and isinstance(entry.get("sourceSha"), str)
+                and re.fullmatch(r"[0-9a-f]{40}", entry["sourceSha"])
+                and entry.get("publicationMode") in ("formal", "theoretical_catchup")
+                and entry.get("workflow") == historical[task_name]):
+            workflow = historical[task_name]
         if not isinstance(workflow, str) or not workflow.endswith(".yml"):
             raise RegistryGuard("unverified_workflow_route")
         if (entry.get("repo") != spec["repo"] or entry.get("workflow") != workflow
@@ -118,7 +132,7 @@ def validate(config: dict, state: dict) -> dict:
 
 def reserve(config: dict, state: dict, task_name: str, *, route: str,
             coordinator_run_id: int, at: str, business_date: str = "",
-            source_sha: str = "") -> dict:
+            source_sha: str = "", publication_mode: str = "formal") -> dict:
     """Reserve one task identity; never retry after any earlier reservation."""
     validate(config, state)
     if task_name not in config["tasks"]:
@@ -147,6 +161,10 @@ def reserve(config: dict, state: dict, task_name: str, *, route: str,
         "status": "reserved", "coordinatorRunId": coordinator_run_id,
         "createdAt": at, "updatedAt": at
     })
+    if task_name in ("stock_a", "stock_us"):
+        output["tasks"][-1]["publicationMode"] = publication_mode
+        if source_sha:
+            output["tasks"][-1]["sourceSha"] = source_sha
     return validate(config, output)
 
 
@@ -192,7 +210,8 @@ def observe_run(config: dict, state: dict, key: str, run: dict, *, at: str) -> d
             or run.get("head_branch") != "main"
             or type(run.get("run_attempt")) is not int
             or run["run_attempt"] != 1
-            or (expected_sha and run.get("head_sha") != expected_sha)):
+            or (expected_sha and run.get("head_sha") != expected_sha)
+            or (row.get("sourceSha") and run.get("head_sha") != row["sourceSha"])):
         raise RegistryGuard("run_provenance_unverified")
     status = run.get("status")
     if status not in RUN_STATUSES:
@@ -207,3 +226,4 @@ def observe_run(config: dict, state: dict, key: str, run: dict, *, at: str) -> d
     # Pending/queued remains dispatched or running; never regress a running task.
     row["updatedAt"] = at
     return validate(config, output)
+

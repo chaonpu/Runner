@@ -1,56 +1,70 @@
-name: Production dispatch safety gate (READ ONLY - NO DISPATCH)
+name: Controlled Stock production coordinator
 
 on:
   workflow_dispatch:
     inputs:
       task:
-        description: "Select A/US strategy for a read-only production gate; NO execution"
-        required: true
         type: choice
         options: [stock_a, stock_us]
+        required: true
       business_date:
-        description: "Optional override YYYY-MM-DD; blank = automatic market-clock date (audit only)"
-        required: false
-        default: ""
+        description: "Blank uses the latest completed official-calendar session"
         type: string
+        default: ""
+      publication_mode:
+        description: "Formal report follows native session rules; catchup writes theoretical data only"
+        type: choice
+        options: [formal, theoretical_catchup]
+        default: formal
+      execute:
+        description: "Execute this one task with a temporary permit; false is read only"
+        type: boolean
+        default: false
+      bootstrap_run_id:
+        description: "Internal reviewed-launch provenance; leave blank for administrator manual runs"
+        type: string
+        default: ""
 
 permissions:
-  contents: read
+  contents: write
+  actions: read
 
 concurrency:
-  group: runner-production-gate-readonly
+  group: runner-production-single-task
   cancel-in-progress: false
 
 jobs:
-  read-only-gate:
-    name: Verify task identity, registry and hosted account route, then exit
-    if: github.actor == 'chaonpu' && github.ref == 'refs/heads/main'
+  coordinate:
+    if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && (github.actor == 'chaonpu' || (github.actor == 'github-actions[bot]' && inputs.bootstrap_run_id != ''))
     runs-on: ubuntu-24.04
-    timeout-minutes: 8
+    timeout-minutes: 360
+    env:
+      GH_TOKEN: ${{ github.token }}
+      CHAONPU_ACTIONS_READ_TOKEN: ${{ secrets.CHAONPU_ACTIONS_READ_TOKEN }}
+      CHAONPU_BILLING_READ_TOKEN: ${{ secrets.CHAONPU_BILLING_READ_TOKEN }}
+      RUNNER_READ_TOKEN: ${{ secrets.RUNNER_READ_TOKEN }}
+      BOOTSTRAP_RUN_ID: ${{ inputs.bootstrap_run_id }}
+      REQUEST_TASK: ${{ inputs.task }}
+      REQUEST_PUBLICATION_MODE: ${{ inputs.publication_mode }}
+      REQUEST_BUSINESS_DATE: ${{ inputs.business_date }}
     steps:
-      - name: Checkout trusted public scheduler only
+      - name: Checkout trusted public coordinator only
         uses: actions/checkout@v4
         with:
-          ref: main
+          ref: ${{ github.sha }}
           persist-credentials: false
-          clean: true
-      - name: Enforce public production dispatch lock in unit tests
-        run: python3 -m unittest discover -s tests -p 'test_*.py' -q
-      - name: Read live public task registry and private Actions metadata only
+      - name: Coordinate one exact task or perform a read-only preview
         env:
-          GH_TOKEN: ${{ github.token }}
           TASK: ${{ inputs.task }}
           BUSINESS_DATE: ${{ inputs.business_date }}
-          CHAONPU_ACTIONS_READ_TOKEN: ${{ secrets.CHAONPU_ACTIONS_READ_TOKEN }}
-          CHAONPU_BILLING_READ_TOKEN: ${{ secrets.CHAONPU_BILLING_READ_TOKEN }}
-          RUNNER_READ_TOKEN: ${{ secrets.RUNNER_READ_TOKEN }}
+          PUBLICATION_MODE: ${{ inputs.publication_mode }}
+          EXECUTE: ${{ inputs.execute }}
         shell: bash
         run: |
           set -euo pipefail
-          python3 -m scheduler.production_dry_run --task "$TASK" --business-date "$BUSINESS_DATE"
-          python3 -m scheduler.production_ports --task "$TASK" --business-date "$BUSINESS_DATE"
-      - name: Confirm no business side effects
-        run: |
-          echo 'READ ONLY: no private checkout, no dispatch, no state commit, no database changes.'
-          echo 'No five-minute schedule, no background watcher; workflow exits here.'
-
+          args=(--task "$TASK" --business-date "$BUSINESS_DATE" --publication-mode "$PUBLICATION_MODE")
+          if [[ "$EXECUTE" == 'true' ]]; then args+=(--execute); fi
+          python3 -m scheduler.production_coordinator "${args[@]}"
+      - name: Close only this coordinator's temporary permit
+        if: always() && inputs.execute == true
+        run: python3 -m scheduler.production_lease

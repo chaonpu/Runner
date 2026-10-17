@@ -332,11 +332,14 @@ class ProductionSessionTests(unittest.TestCase):
                 start(self.ports, task, DAY, self.env, clock=self.clock)
         self.assertEqual(self.ports.events, [])
 
-    def test_read_only_production_workflow_does_not_import_session(self):
+    def test_workflow_execution_requires_explicit_flag_and_always_closes_lease(self):
         workflow = (ROOT / ".github/workflows/production-dispatch.yml").read_text()
         self.assertNotIn("production_session", workflow)
-        self.assertIn("permissions:\n  contents: read", workflow)
-        self.assertIn("scheduler.production_dry_run", workflow)
+        self.assertIn("execute:", workflow)
+        self.assertIn("default: false", workflow)
+        self.assertIn("scheduler.production_coordinator", workflow)
+        self.assertIn("if: always() && inputs.execute == true", workflow)
+        self.assertIn("scheduler.production_lease", workflow)
 
 
 if __name__ == "__main__":

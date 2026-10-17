@@ -1,9 +1,9 @@
-"""Unwired Stock coordinator core, exercised with in-memory ports.
+"""Exact-task Stock coordinator core.
 
 There is intentionally no CLI, HTTP client, credential lookup or default port.
-No workflow calls start/observe. Restricted production_ports adapters exist
-but their writer is unwired. Private readiness production and effect
-finalization remain incomplete; production configuration stays OFF.
+Explicit coordinator execution uses a temporary exact-task permit. Defaults
+remain OFF between runs. Native theoretical catchup is distinguished from
+formal report generation; business is never repeated after an uncertain call.
 
 Future trusted ports must provide load(), save(), audit(), dispatch(), run().
 Each uncertain effect aborts without retry. A durable reservation survives an
@@ -38,7 +38,9 @@ def context(env):
          and env.get("GITHUB_REF") == "refs/heads/main"
          and env.get("GITHUB_EVENT_NAME") == "workflow_dispatch"
          and env.get("GITHUB_WORKFLOW_REF") == WORKFLOW_REF
-         and env.get("GITHUB_ACTOR") == "chaonpu"
+         and (env.get("GITHUB_ACTOR") == "chaonpu" or
+              (env.get("GITHUB_ACTOR") == "github-actions[bot]"
+               and bool(RUN_ID.fullmatch(str(env.get("BOOTSTRAP_RUN_ID", ""))))))
          and env.get("GITHUB_RUN_ATTEMPT") == "1"
          and bool(SHA.fullmatch(str(env.get("GITHUB_SHA", ""))))
          and bool(RUN_ID.fullmatch(str(env.get("GITHUB_RUN_ID", "")))),
@@ -122,7 +124,7 @@ def persist(ports, config, before, after, sha, env):
     return current, current_sha
 
 
-def dispatch_inputs(run, key, owner, route):
+def dispatch_inputs(run, key, owner, route, publication_mode="formal"):
     # REST may omit workflow inputs. Missing is unknown; a known conflict is
     # never acceptable, even when repository/workflow/source SHA all match.
     if "inputs" not in run:
@@ -133,6 +135,8 @@ def dispatch_inputs(run, key, owner, route):
          and inputs.get("force_run") in (False, "false")
          and inputs.get("runner_mode") == ("ubuntu" if route == "cloud" else "windows"),
          "session_known_dispatch_inputs_conflict")
+    need(inputs.get("publication_mode", "formal") == publication_mode,
+         "session_publication_inputs_conflict")
 
 
 def start(ports, task, business_date, env, *, clock=lambda: datetime.now(timezone.utc)):
@@ -145,10 +149,11 @@ def start(ports, task, business_date, env, *, clock=lambda: datetime.now(timezon
     need(task in WORKFLOWS and isinstance(business_date, str), "session_task_invalid")
     config, state, sha = load(ports)
     route, source_sha = readiness(ports, config, state, task, business_date, clock)
+    publication_mode = config["tasks"][task].get("publicationMode", "formal")
     key = task + ":" + business_date
     reserved = reserve(config, state, task, route=route,
                        coordinator_run_id=owner, at=stamp(clock).isoformat(),
-                       business_date=business_date)
+                       business_date=business_date, source_sha=source_sha, publication_mode=publication_mode)
     current, current_sha = persist(ports, config, state, reserved, sha, env)
     need(readiness(ports, config, current, task, business_date, clock)
          == (route, source_sha), "session_route_or_source_changed")
@@ -156,6 +161,8 @@ def start(ports, task, business_date, env, *, clock=lambda: datetime.now(timezon
         "task_id": key, "coordinator_run_id": str(owner),
         "force_run": "false", "runner_mode": "ubuntu" if route == "cloud" else "windows",
     }}
+    if publication_mode != "formal":
+        payload["inputs"]["publication_mode"] = publication_mode
     # No retry on 204/missing Run ID, timeout, server error or later bind failure.
     response = call(ports.dispatch, "chaonpu/Stock", WORKFLOWS[task], payload)
     rid = response.get("workflow_run_id") if isinstance(response, dict) else None
@@ -165,12 +172,13 @@ def start(ports, task, business_date, env, *, clock=lambda: datetime.now(timezon
     run = call(ports.run, "chaonpu/Stock", rid)
     need(isinstance(run, dict) and run.get("head_sha") == source_sha,
          "session_source_changed_no_retry")
-    dispatch_inputs(run, key, owner, route)
+    dispatch_inputs(run, key, owner, route, publication_mode)
     # Validate the exact returned run without prematurely advancing state.
     observe_run(config, bound, key, run, at=stamp(clock).isoformat())
     persist(ports, config, current, bound, current_sha, env)
     return {"taskId": key, "runId": rid, "sourceSha": source_sha,
             "coordinatorRunId": owner, "status": "dispatched",
+            "publicationMode": publication_mode,
             "businessVerified": False, "safeToRetry": False}
 
 
@@ -195,7 +203,7 @@ def observe(ports, session, env, *, clock=lambda: datetime.now(timezone.utc)):
     run = call(ports.run, row["repo"], row["runId"])
     need(isinstance(run, dict) and run.get("head_sha") == session["sourceSha"],
          "session_observed_source_mismatch")
-    dispatch_inputs(run, row["id"], owner, row["route"])
+    dispatch_inputs(run, row["id"], owner, row["route"], row.get("publicationMode", "formal"))
     after = observe_run(config, state, row["id"], run, at=stamp(clock).isoformat())
     new_row = next(x for x in after["tasks"] if x["id"] == row["id"])
     # Queued observations do not create heartbeat commits or a second dispatch.

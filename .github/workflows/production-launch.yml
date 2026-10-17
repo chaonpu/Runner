@@ -1,0 +1,29 @@
+name: Launch reviewed single production request
+
+on:
+  push:
+    branches: [main]
+    paths: ["config/launch-request.json"]
+
+permissions:
+  contents: read
+  actions: write
+
+concurrency:
+  group: reviewed-production-launch
+  cancel-in-progress: false
+
+jobs:
+  launch:
+    if: github.actor == 'chaonpu' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Launch only the immutable reviewed request
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 -m scheduler.production_bootstrap

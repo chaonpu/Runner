@@ -17,7 +17,7 @@ from scheduler.production_registry import RegistryGuard, validate
 API = "https://api.github.com"
 CONTENTS_PATH = "/repos/chaonpu/Runner/contents/state/tasks.json"
 SHA = re.compile(r"^[0-9a-f]{40}$")
-PROTECTED = ("id", "task", "repo", "workflow", "route", "coordinatorRunId", "createdAt")
+PROTECTED = ("id", "task", "repo", "workflow", "route", "coordinatorRunId", "createdAt", "sourceSha", "publicationMode")
 ALLOWED = {
     "reserved": {"dispatched", "hold"},
     "dispatched": {"running", "awaiting_effect_verification", "hold"},
@@ -32,7 +32,7 @@ def context_allowed(env: dict) -> None:
     if (env.get("GITHUB_REPOSITORY") != "chaonpu/Runner"
             or env.get("GITHUB_REF") != "refs/heads/main"
             or env.get("GITHUB_EVENT_NAME") != "workflow_dispatch"
-            or env.get("GITHUB_ACTOR") != "chaonpu"
+            or env.get("GITHUB_ACTOR") not in ("chaonpu", "github-actions[bot]")
             or not re.fullmatch(r"[1-9][0-9]{7,19}", env.get("GITHUB_RUN_ID", ""))):
         raise RegistryGuard("untrusted_production_registry_context")
 
@@ -158,3 +158,4 @@ def save(config: dict, before: dict, after: dict, sha: str, env: dict,
     if not isinstance(result, dict) or not SHA.fullmatch(str(result.get("sha", ""))):
         raise RegistryGuard("registry_write_result_unconfirmed")
     return {"taskId": key, "recorded": True, "dispatched": False, "verified": False}
+
