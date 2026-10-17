@@ -18,12 +18,14 @@ import urllib.request
 
 from scheduler.probes import existing_attempt, runner_for_repo, account_usage
 from scheduler.android_route import choose as choose_route, workflow as workflow_for, artifact as artifact_for, HOSTED_WORKFLOW
+from scheduler.policies import hosted_capacity
 
 RUNNER = "chaonpu/Runner"
 TEST = "anwpustudent-lab/Test"
 SIGNER = "chaonpu/ziwuxilv-android"
 TEST_WORKFLOW = "test-self-hosted.yml"
 SIGN_WORKFLOW = "windows-signing-verified-handoff.yml"
+CLOUD_SIGN_WORKFLOW = "cloud-signing-verified-handoff.yml"
 STATE_PATH = "state/android-production.json"
 CONFIG_PATH = "config/repositories.json"
 SHA = re.compile(r"^[0-9a-f]{40}$")
@@ -98,7 +100,7 @@ def json_file(token, path):
     return data, item["sha"]
 
 
-def put_state(public_token, source, phase, *, test_run_id=None, signing_run_id=None):
+def put_state(public_token, source, phase, *, test_run_id=None, signing_run_id=None, signing_route=None):
     """Optimistic-SHA write. A conflict is never silently retried."""
     require(bool(SHA.fullmatch(source)) and phase in PHASES, "invalid_state_transition")
     record, blob = json_file(public_token, STATE_PATH)
@@ -127,6 +129,10 @@ def put_state(public_token, source, phase, *, test_run_id=None, signing_run_id=N
         require(entry.get("signingRunId") in (None, signing_run_id),
                 "sign_run_binding_mismatch")
         entry["signingRunId"] = signing_run_id
+    if signing_route is not None:
+        require(phase == "signer_reserved" and signing_route in ("windows", "cloud")
+                and not entry.get("signingRoute"), "signing_route_change_forbidden")
+        entry["signingRoute"] = signing_route
     entry["phase"] = phase
     entry["updatedAt"] = datetime.now(timezone.utc).isoformat()
     body = {"message": "Track verified Android build/sign stage",
@@ -204,7 +210,7 @@ def runner_ready(repo, name, account, env):
 
 def dispatch(token, repo, workflow, inputs):
     path = "/actions/workflows/" + workflow + "/dispatches"
-    require((repo, workflow) in ((TEST, TEST_WORKFLOW), (TEST, HOSTED_WORKFLOW), (SIGNER, SIGN_WORKFLOW)),
+    require((repo, workflow) in ((TEST, TEST_WORKFLOW), (TEST, HOSTED_WORKFLOW), (SIGNER, SIGN_WORKFLOW), (SIGNER, CLOUD_SIGN_WORKFLOW)),
             "dispatch_target_not_allowlisted")
     response = api(token, repo, path, method="POST",
                    payload={"ref": "main", "return_run_details": True, "inputs": inputs})
@@ -423,6 +429,24 @@ def verify_artifact(token, repo, rid, expected):
     require(len(matches) == 1, "verified_private_artifact_missing_or_ambiguous")
 
 
+def choose_signer_route(task, account, env):
+    """Independent verified allowance for chaonpu signing account."""
+    usage = account_usage("chaonpu", account, env)
+    capacity = hosted_capacity(usage, task)
+    if capacity == "available":
+        return "cloud", CLOUD_SIGN_WORKFLOW
+    if capacity in ("insufficient", "exhausted") and runner_ready(
+            SIGNER, task["signingRunnerName"], account, env):
+        return "windows", SIGN_WORKFLOW
+    raise Hold("no_verified_android_signing_route")
+
+
+def sign_route_for(entry):
+    route = entry.get("signingRoute", "windows")
+    require(route in ("windows", "cloud"), "registered_signer_route_invalid")
+    return route, CLOUD_SIGN_WORKFLOW if route == "cloud" else SIGN_WORKFLOW
+
+
 def record_public(source, phase, **extra):
     print(json.dumps({"sourceSha": source, "phase": phase, **extra}, sort_keys=True), flush=True)
 
@@ -435,7 +459,8 @@ def run(env, *, execute=False, resume=False, requested_sha=""):
     task = config.get("tasks", {}).get("android", {})
     require(task.get("repo") == TEST and task.get("signingRepo") == SIGNER
             and task.get("windowsWorkflow") == TEST_WORKFLOW
-            and task.get("signingWindowsWorkflow") == SIGN_WORKFLOW,
+            and task.get("signingWindowsWorkflow") == SIGN_WORKFLOW
+            and task.get("signingCloudWorkflow") == CLOUD_SIGN_WORKFLOW,
             "android_workflow_configuration_changed")
     # A resumed exact-source run may be older than current Test/main.
     # New builds, however, must always start from the current main SHA.
@@ -525,10 +550,11 @@ def run(env, *, execute=False, resume=False, requested_sha=""):
         check_idle(TEST, TEST_WORKFLOW, test_account, env)
         check_idle(TEST, HOSTED_WORKFLOW, test_account, env)
         check_idle(SIGNER, SIGN_WORKFLOW, sign_account, env)
-        require((route == "hosted" or runner_ready(
-                    TEST, task["runnerName"], test_account, env))
-                and runner_ready(SIGNER, task["signingRunnerName"], sign_account, env),
-                "required_private_runner_not_ready")
+        check_idle(SIGNER, CLOUD_SIGN_WORKFLOW, sign_account, env)
+        choose_signer_route(task, sign_account, env)
+        require(route == "hosted" or runner_ready(
+                    TEST, task["runnerName"], test_account, env),
+                "required_private_test_runner_not_ready")
         reserve(pub, source, route=route)
         # This exact route is fixed before the first potentially irreversible POST.
         # A failed cloud job must NOT be redispatched to Windows after it starts.
@@ -570,26 +596,29 @@ def run(env, *, execute=False, resume=False, requested_sha=""):
                       source_workflow, test_run, source)
         verify_artifact(test, TEST, test_run, source_artifact)
         check_idle(SIGNER, SIGN_WORKFLOW, sign_account, env)
-        require(runner_ready(SIGNER, task["signingRunnerName"], sign_account, env),
-                "signing_runner_offline_resume_original_test_later")
-        # Persist an irrevocable dispatch-intent barrier BEFORE the signing POST.
-        # Any unknown response or failed state write requires manual Run lookup;
-        # a resumed test_verified state must never silently dispatch again.
-        put_state(pub, source, "signer_reserved")
-        sign_run = dispatch(sign, SIGNER, SIGN_WORKFLOW,
+        check_idle(SIGNER, CLOUD_SIGN_WORKFLOW, sign_account, env)
+        signing_route, signing_workflow = choose_signer_route(task, sign_account, env)
+        # Persist chosen signing route AND irreversible intent before POST.
+        put_state(pub, source, "signer_reserved", signing_route=signing_route)
+        sign_run = dispatch(sign, SIGNER, signing_workflow,
                             {"test_run_id": str(test_run), "source_commit": source})
         put_state(pub, source, "signer_started", signing_run_id=sign_run)
-        record_public(source, "signer_started", signingRunId=sign_run)
+        record_public(source, "signer_started", signingRunId=sign_run,
+                      signingRoute=signing_route)
         entry = {"phase": "signer_started", "testRunId": test_run,
-                 "signingRunId": sign_run}
+                 "signingRunId": sign_run, "signingRoute": signing_route}
 
     if entry["phase"] == "signer_started":
         sign_run = entry.get("signingRunId")
         require(type(sign_run) is int and sign_run > 0,
                 "unknown_signing_dispatch_no_retry")
+        signing_route, signing_workflow = sign_route_for(entry)
         wait_recorded(pub, source, "signer", sign, SIGNER,
-                      SIGN_WORKFLOW, sign_run)
-        verify_execution_runner(sign, SIGNER, sign_run, task["signingRunnerName"])
+                      signing_workflow, sign_run)
+        if signing_route == "cloud":
+            verify_hosted_execution(sign, SIGNER, sign_run)
+        else:
+            verify_execution_runner(sign, SIGNER, sign_run, task["signingRunnerName"])
         verify_artifact(sign, SIGNER, sign_run, "windows-signed-release")
         put_state(pub, source, "signed_verified")
         record_public(source, "signed_verified", testRunId=entry["testRunId"],
