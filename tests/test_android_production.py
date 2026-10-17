@@ -40,7 +40,7 @@ class Tests(unittest.TestCase):
         sha = "d" * 40
         cfg = {"accounts": {"anwpustudent-lab": {"actionsSecret": "T", "runnerSecret": "R"}, "chaonpu": {"actionsSecret": "C", "runnerSecret": "S"}}, "tasks": {"android": {"repo": a.TEST, "signingRepo": a.SIGNER,
                "windowsWorkflow": a.TEST_WORKFLOW,
-               "signingWindowsWorkflow": a.SIGN_WORKFLOW}}}
+               "signingWindowsWorkflow": a.SIGN_WORKFLOW, "runnerName": "ziwuxilv-test-win", "signingRunnerName": "ziwuxilv-sign-win"}}}
         def document(token, path):
             if path == a.CONFIG_PATH:
                 return cfg, "blob"
@@ -72,7 +72,7 @@ class Tests(unittest.TestCase):
         sha = "a" * 40
         cfg = {"accounts": {"anwpustudent-lab": {"actionsSecret": "T", "runnerSecret": "R"}, "chaonpu": {"actionsSecret": "C", "runnerSecret": "S"}}, "tasks": {"android": {"repo": a.TEST, "signingRepo": a.SIGNER,
                "windowsWorkflow": a.TEST_WORKFLOW,
-               "signingWindowsWorkflow": a.SIGN_WORKFLOW}}}
+               "signingWindowsWorkflow": a.SIGN_WORKFLOW, "runnerName": "ziwuxilv-test-win", "signingRunnerName": "ziwuxilv-sign-win"}}}
         record = {"version": 1, "builds": {sha: {
             "sourceSha": sha, "phase": "test_started", "testRunId": 42}}}
         def doc(token, path):
