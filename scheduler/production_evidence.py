@@ -12,6 +12,7 @@ from scheduler.production_registry import RegistryGuard
 REPO = "chaonpu/Stock"
 WORKFLOWS = {"stock_a": "production-readiness-a.yml", "stock_us": "production-readiness-us.yml"}
 STEP = "Attest live readiness"
+EXISTING_STEP = "Attest existing authoritative market state"
 SHA = re.compile(r"^[0-9a-f]{40}$")
 
 
@@ -30,7 +31,7 @@ def timestamp(value):
     return result.astimezone(timezone.utc)
 
 
-def inspect(reader, task, day, now, publication_mode="formal"):
+def inspect(reader, task, day, now, publication_mode="formal", *, expected_run_id=None):
     """Require newest original readiness Run, exact dated job and final step.
 
     The private producer must independently check live session completion,
@@ -67,6 +68,8 @@ def inspect(reader, task, day, now, publication_mode="formal"):
                 or run.get("actor", {}).get("login") != "chaonpu"
                 or run.get("status") != "completed" or run.get("conclusion") != "success"):
             return hold("hold_evidence_run_unverified")
+        if expected_run_id is not None and run["id"] != expected_run_id:
+            return hold("hold_evidence_original_run_mismatch")
         # Never fall back to older green evidence after a failed/pending run.
         finished = timestamp(run.get("updated_at"))
         if not 0 <= (now - finished).total_seconds() <= 300:
@@ -92,10 +95,20 @@ def inspect(reader, task, day, now, publication_mode="formal"):
         # required to have attempt=1. Reject a conflicting known job attempt.
         if "run_attempt" in job and (type(job["run_attempt"]) is not int or job["run_attempt"] != 1):
             return hold("hold_evidence_job_unverified")
-        steps = [s for s in job["steps"] if isinstance(s, dict) and s.get("name") == STEP]
-        if (len(steps) != 1 or steps[0].get("status") != "completed"
-                or steps[0].get("conclusion") != "success"):
+        live = [s for s in job["steps"] if isinstance(s, dict) and s.get("name") == STEP]
+        existing = [s for s in job["steps"] if isinstance(s, dict) and s.get("name") == EXISTING_STEP]
+        good = lambda step: step.get("status") == "completed" and step.get("conclusion") == "success"
+        if len(live) != 1 or len(existing) > 1:
             return hold("hold_evidence_attestation_step_unverified")
+        already_current = bool(existing and good(existing[0]))
+        if already_current:
+            if live[0].get("conclusion") != "skipped":
+                return hold("hold_evidence_attestation_conflict")
+            steps = existing
+        else:
+            if not good(live[0]):
+                return hold("hold_evidence_attestation_step_unverified")
+            steps = live
         observed = timestamp(steps[0].get("completed_at"))
         started = timestamp(run.get("run_started_at"))
         completed = timestamp(job.get("completed_at"))
@@ -108,6 +121,12 @@ def inspect(reader, task, day, now, publication_mode="formal"):
                 or inputs.get("business_date") not in ("", None, day)
                 or inputs.get("publication_mode", "formal") != publication_mode):
             return hold("hold_evidence_run_inputs_conflict")
+        if already_current:
+            return {"evidenceStatus": "private_existing_state_run_and_dated_job_match",
+                    "alreadyCurrent": True, "exchangeSessionVerified": True,
+                    "marketDataReady": False, "selectionInputsVerified": True,
+                    "sourceSha": run["head_sha"], "observedAt": observed.isoformat(),
+                    "productionReady": False, "businessVerified": False}
         return {"evidenceStatus": "private_readiness_run_and_dated_job_match",
                 "exchangeSessionVerified": True, "marketDataReady": True,
                 "selectionInputsVerified": True, "sourceSha": run["head_sha"],

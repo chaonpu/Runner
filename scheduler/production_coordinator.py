@@ -41,10 +41,10 @@ def prepare(ports, cfg, task, day, mode):
              "readiness_run_origin_mismatch")
         if run.get("status") == "completed":
             need(run.get("conclusion") == "success", "private_readiness_failed")
-            proof = inspect(ports.private_reader(),task,day,datetime.now(timezone.utc),mode)
-            need(proof["marketDataReady"] is True and proof["sourceSha"] == run["head_sha"],
-                 "fresh_private_readiness_not_verified")
-            return
+            proof = inspect(ports.private_reader(),task,day,datetime.now(timezone.utc),mode,expected_run_id=rid)
+            need((proof["marketDataReady"] is True or proof.get("alreadyCurrent") is True)
+                 and proof["sourceSha"] == run["head_sha"], "fresh_private_readiness_not_verified")
+            return {**proof, "readinessRunId": rid}
         time.sleep(30)
     raise RegistryGuard("private_readiness_deadline")
 
@@ -58,20 +58,41 @@ def manual_task_context(env, task):
          and env.get("GITHUB_REF") == "refs/heads/main", "manual_market_context_mismatch")
 
 
+def skip_result(env, task, day, reason, **extra):
+    result = {"status": "skipped", "reason": reason, "taskId": task + ":" + day,
+              "dispatches": 0, "databaseWrites": 0, "emailsSent": 0,
+              "businessVerified": False, **extra}
+    print(json.dumps(result, sort_keys=True), flush=True)
+    if env.get("GITHUB_STEP_SUMMARY"):
+        with open(env["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as stream:
+            stream.write("### 已有结果，已跳过\n\n" + task + " / " + day +
+                         " 已有核验记录或权威数据，无需重复计算、调仓或入账。本次未生成新的正式报告。\n")
+    return result
+
+
 def execute(env, task, day, mode):
     manual_task_context(env, task)
     env = dict(env, REQUEST_TASK=task, REQUEST_BUSINESS_DATE=env.get("ENTERED_BUSINESS_DATE", ""),
                REQUEST_PUBLICATION_MODE=mode)
     ports = ProductionPorts(env)
     config,state,_ = ports.load()
-    need(not any(r["id"] == task+":"+day for r in state["tasks"]), "task_already_registered_no_redispatch")
+    registered = [r for r in state["tasks"] if r["id"] == task+":"+day]
+    if registered:
+        need(len(registered) == 1 and registered[0].get("status") == "verified",
+             "task_already_registered_no_redispatch")
+        return skip_result(env, task, day, "previously_verified_task_no_redispatch",
+                           priorRunVerified=True, priorRunId=registered[0].get("runId"),
+                           existingPublicationMode=registered[0].get("publicationMode", "formal"))
     need(config.get('dispatchEnabled') is False and 'activeLease' not in config,
          'another_production_permit_is_active')
     schedule=evaluate(task,day)
     today=datetime.now(timezone.utc).astimezone(ZoneInfo(schedule['marketTimezone'])).date().isoformat()
     need((mode=='formal' and today==day) or (mode=='theoretical_catchup' and today>day),
          'native_publication_window_not_open')
-    prepare(ports,config,task,day,mode)
+    prepared = prepare(ports,config,task,day,mode)
+    if prepared.get("alreadyCurrent") is True:
+        return skip_result(env, task, day, "authoritative_market_already_current",
+                           readinessRunId=prepared["readinessRunId"], authoritativeStateChecked=True)
     lease = Lease(ports)
     try:
         lease.arm(task,day,mode)
