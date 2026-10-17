@@ -166,6 +166,8 @@ class Tests(unittest.TestCase):
              "network_retry_exhausted_same_run_no_publication"),
             (a.TEST, "SOURCE_CHECKOUT_UNVERIFIED - investigate",
              "source_checkout_unverified_manual_review"),
+            (a.TEST, "SOURCE_WORKTREE_FAILED - verified source could not be installed locally",
+             "source_local_worktree_failed_manual_review"),
             (a.TEST, "Build unsigned Release APK on Windows",
              "android_compile_failed_manual_review"),
             (a.TEST, "Run unit tests, release lint and debug APK build",
@@ -295,3 +297,4 @@ class Tests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+

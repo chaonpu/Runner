@@ -269,6 +269,8 @@ def classify_failed_run(token, repo, rid):
     if any(x.startswith(("NETWORK_TRANSIENT_PREFLIGHT",
                           "NETWORK_TRANSIENT_SOURCE_FETCH")) for x in failures):
         return "network_retry_exhausted_same_run_no_publication"
+    if any(x.startswith("SOURCE_WORKTREE_FAILED") for x in failures):
+        return "source_local_worktree_failed_manual_review"
     if any(x.startswith("SOURCE_CHECKOUT_UNVERIFIED") for x in failures):
         return "source_checkout_unverified_manual_review"
     if repo == TEST:
@@ -671,3 +673,4 @@ def main():
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
