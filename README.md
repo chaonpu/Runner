@@ -32,7 +32,7 @@ A/US 的受控单任务执行链已接线：私有实时就绪检查 → 临时�
 
 私有准备证据必须来自准确源码、日期和模式的首次成功 Run，最终步骤在 300 秒有效期内。普通业务完成要求私有回执核验成功且原业务 Run 整体成功。明确的原提交恢复另需原计算成功、发布失败及恢复 Run 整体成功的证明，并单独登记恢复 Run/SHA；不改写原 Run、源码或协调者绑定。补算记录的 `formalReportVerified` 仍为 false。
 
-当前 `production-dispatch.yml` 已接线市场为 A/US。ETF 和公开正式 APK 发布不由该入口执行。Android 的独立手动生产入口 `android-production.yml` 已接入 Test Windows 全量验证与私有 Windows 签名，**默认只读、需 `execute=true` 明确启动**；它不会公开 APK 或改写 APP 更新清单，也尚未接入云端构建/签名优先路由。APK 暂存与正式发布保持独立；未经相应发布任务授权，不会公开新的安装包或更新用户 APP。
+当前 `production-dispatch.yml` 已接线市场为 A/US。ETF 和公开正式 APK 发布不由该入口执行。Android 的独立手动生产入口 `android-production.yml` 已接入 Test Windows 全量验证与私有 Windows 签名，**默认只读、需 `execute=true` 明确启动**；现有 Test 令牌不能直接读取 `main` SHA，首次真实构建需填写完整 `source_sha`，或另配只读分支元数据凭据；它不会公开 APK 或改写 APP 更新清单，也尚未接入云端构建/签名优先路由。APK 暂存与正式发布保持独立；未经相应发布任务授权，不会公开新的安装包或更新用户 APP。
 
 ## 其他入口
 
