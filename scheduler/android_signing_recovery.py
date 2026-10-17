@@ -75,3 +75,37 @@ def verify_no_signing_started(response):
     if any(steps.get(name) != "skipped" for name in FORBIDDEN_STARTED):
         raise Hold("old_signer_could_have_accessed_keys")
 
+
+def change_state(token, source, test_id, prior_id, next_phase, new_id=None):
+    """CAS transition reserves signing retry BEFORE dispatch; no blind repeat."""
+    document, etag = json_file(token, STATE_PATH)
+    entry = document.get("builds", {}).get(source)
+    if (not isinstance(entry, dict) or entry.get("sourceSha") != source
+            or entry.get("testRunId") != test_id):
+        raise Hold("recovery_state_not_bound_to_original_test")
+    if next_phase == "sign_retry_reserved":
+        if (entry.get("phase") != "signer_started"
+                or entry.get("signingRunId") != prior_id
+                or entry.get("recoveryFromSigningRunId") is not None):
+            raise Hold("already_recovered_or_other_signer_state")
+        entry["phase"] = next_phase
+        entry["recoveryFromSigningRunId"] = prior_id
+    elif next_phase == "signer_started":
+        if (entry.get("phase") != "sign_retry_reserved"
+                or entry.get("recoveryFromSigningRunId") != prior_id
+                or entry.get("signingRunId") != prior_id
+                or type(new_id) is not int or new_id <= 0 or new_id == prior_id):
+            raise Hold("recovery_pre_dispatch_reservation_missing")
+        entry["phase"] = next_phase
+        entry["signingRunId"] = new_id
+    else:
+        raise Hold("invalid_recovery_state_transition")
+    entry["updatedAt"] = datetime.now(timezone.utc).isoformat()
+    encoded = base64.b64encode((json.dumps(document, sort_keys=True, indent=2) + "\n").encode()).decode()
+    result = api(token, RUNNER, "/contents/" + STATE_PATH, method="PUT",
+                 payload={"message": "Track private Android signer recovery",
+                          "content": encoded, "sha": etag, "branch": "main"})
+    if not result.get("commit", {}).get("sha"):
+        raise Hold("recovery_state_write_unknown")
+
+
