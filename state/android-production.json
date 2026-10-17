@@ -16,11 +16,12 @@
     },
     "ce0be22bf758f2621235a165bfc07c059cca5de1": {
       "createdAt": "2026-10-17T14:13:49.824463+00:00",
-      "phase": "signer_started",
+      "phase": "sign_retry_reserved",
+      "recoveryFromSigningRunId": 39041021094,
       "signingRunId": 39041021094,
       "sourceSha": "ce0be22bf758f2621235a165bfc07c059cca5de1",
       "testRunId": 39039852886,
-      "updatedAt": "2026-10-17T14:30:13.156900+00:00"
+      "updatedAt": "2026-10-17T14:59:20.690768+00:00"
     }
   },
   "version": 1
