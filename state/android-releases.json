@@ -1,4 +1,15 @@
 {
   "version": 1,
-  "releases": {}
+  "releases": {
+    "118": {
+      "sourceCommit": "538b3ded770fdf7b54885ca773755fd7587ffae5",
+      "versionName": "2.3.5",
+      "versionCode": 118,
+      "testRunId": 39051122647,
+      "signingRunId": 39051666258,
+      "updateLog": "\u66f4\u65b0\u81f3 2.3.5\uff08118\uff09\u3002",
+      "forceUpdate": false,
+      "phase": "staging_reserved"
+    }
+  }
 }
