@@ -36,6 +36,37 @@ class Tests(unittest.TestCase):
             with self.assertRaises(a.Hold):
                 a.dispatch("token", a.TEST, a.TEST_WORKFLOW, {})
 
+    def test_already_signed_source_skips_without_dispatching(self):
+        sha = "a" * 40
+        cfg = {"accounts": {"anwpustudent-lab": {}, "chaonpu": {}},
+               "tasks": {"android": {"repo": a.TEST, "signingRepo": a.SIGNER,
+                   "windowsWorkflow": a.TEST_WORKFLOW,
+                   "signingWindowsWorkflow": a.SIGN_WORKFLOW}}}
+        row = {"sourceSha": sha, "phase": "signed_verified",
+               "route": "windows", "testRunId": 321, "signingRunId": 456}
+        def document(token, path):
+            if path == a.CONFIG_PATH:
+                return cfg, "config"
+            return {"version": 1, "builds": {sha: row}}, "state"
+        with patch.object(a, "json_file", side_effect=document):
+            with patch.object(a, "current_source", return_value=sha):
+                with patch.object(a, "dispatch", side_effect=AssertionError("duplicate dispatch")):
+                    with patch.object(a, "reserve", side_effect=AssertionError("duplicate reservation")):
+                        with patch.object(a, "record_public") as report:
+                            a.run({"GH_TOKEN": "public", "TEST_ACTIONS_READ_TOKEN": "test"},
+                                  execute=True, requested_sha=sha)
+                            report.assert_called_once_with(
+                                sha, "already_signed", status="skipped",
+                                reason="source_already_signed_verified_no_rebuild",
+                                priorPhase="signed_verified", testRunId=321,
+                                signingRunId=456,
+                                publication="not_authorized_no_public_apk")
+                # Signed state without an original signer ID must NOT masquerade as verified.
+                row.pop("signingRunId")
+                with self.assertRaisesRegex(a.Hold, "registered_signed_proof_incomplete"):
+                    a.run({"GH_TOKEN": "public", "TEST_ACTIONS_READ_TOKEN": "test"},
+                          execute=True, requested_sha=sha)
+
     def test_read_only_never_dispatches(self):
         sha = "d" * 40
         cfg = {"accounts": {"anwpustudent-lab": {"actionsSecret": "T", "runnerSecret": "R"}, "chaonpu": {"actionsSecret": "C", "runnerSecret": "S"}}, "tasks": {"android": {"repo": a.TEST, "signingRepo": a.SIGNER,
