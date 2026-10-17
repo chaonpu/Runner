@@ -17,7 +17,7 @@
 2. 检查两个独立 Windows 服务及私有工作流活跃状态；在 `state/android-production.json` 以 GitHub Contents SHA CAS 预约唯一 SHA。
 3. 派发 `anwpustudent-lab/Test/.github/workflows/test-self-hosted.yml`，要求 GitHub API 返回实际 Run ID。
 4. 同一 RUNNER Job 前台持续检查该 Run 的仓库、触发方式、分支、SHA、重试次数、最终成功状态和执行 Runner；验证存在 `windows-test-verified` 私有 handoff artifact。
-5. 原 Test Run 成功且签名 Runner 在线后，派发 `chaonpu/ziwuxilv-android/.github/workflows/windows-signing-verified-handoff.yml`；仅传入原 Test Run ID 与源码 SHA。
+5. 原 Test Run 成功且签名 Runner 在线后，**先 CAS 持久登记 `signer_reserved` 派发意图，再**派发 `chaonpu/ziwuxilv-android/.github/workflows/windows-signing-verified-handoff.yml`；仅传入原 Test Run ID 与源码 SHA。若 POST 响应不明或 Run ID 登记失败，原状态禁止自动重派签名。
 6. 签名仓库在私有 Runner 上校验完整源码/unsigned APK SHA256、测试与 lint、固定生产证书指纹、包名与版本，完成签名；密钥始终留在私有工作区。
 7. RUNNER 核验原始签名 Run 成功、实际 Runner 匹配，并确认存在非空 `windows-signed-release` 私有 artifact 后，登记 `signed_verified`。
 
@@ -28,6 +28,7 @@
 - 源码已预约，但 GitHub POST 返回不确定：原预约保留；不自动重试，先从私有仓库核实是否已经开始运行。
 - Test 有精确 Run ID 但执行中断：手动 `resume=true` + 原 SHA，继续监控同一 Run，禁止新建 Test Run。
 - Test 已成功，签名机离线：保留 Test Run ID，待签名机重新在线后按原 SHA 手动恢复；须在私有 Artifact 有效期内完成。
+- 已进入 `signer_reserved` 而未登记签名 Run ID：必须人工查看签名仓库有无原始派发及副作用；调度器不接受自动恢复重派。
 - 签名有 Run ID 但状态不明：仅观察原始签名 Run，不能重复签名。
 - 签名步骤失败：停止并保留记录，人工检查私有日志后才能决定新源码或显式恢复方案。
 - 本入口无定时五分钟轮询；一旦启动，同一公开 Job 前台监控至完成或保守停止。
