@@ -125,5 +125,96 @@ class Tests(unittest.TestCase):
                 with self.assertRaisesRegex(a.Hold, "state_transition_not_allowed"):
                     a.put_state("token", sha, "signer_started")
 
+    def test_failed_run_categories_use_only_job_step_metadata(self):
+        cases = (
+            (a.TEST, "NETWORK_TRANSIENT_PREFLIGHT - verify HTTPS",
+             "network_retry_exhausted_same_run_no_publication"),
+            (a.TEST, "NETWORK_TRANSIENT_SOURCE_FETCH - bounded retries exhausted",
+             "network_retry_exhausted_same_run_no_publication"),
+            (a.SIGNER, "NETWORK_TRANSIENT_SOURCE_FETCH - signer fetch",
+             "network_retry_exhausted_same_run_no_publication"),
+            (a.TEST, "SOURCE_CHECKOUT_UNVERIFIED - investigate",
+             "source_checkout_unverified_manual_review"),
+            (a.TEST, "Build unsigned Release APK on Windows",
+             "android_compile_failed_manual_review"),
+            (a.TEST, "Run unit tests, release lint and debug APK build",
+             "android_tests_or_lint_failed_manual_review"),
+            (a.SIGNER, "Sign already-tested unsigned APK without executing Test code",
+             "android_signing_failed_manual_review"),
+            (a.SIGNER, "Verify certificate, package, version and signed APK digest",
+             "android_signature_verification_failed_manual_review"),
+        )
+        for repo, failed, expected in cases:
+            with self.subTest(repo=repo, failed=failed):
+                steps = {"total_count": 1, "jobs": [{
+                    "conclusion": "failure", "steps": [
+                        {"name": failed, "conclusion": "failure"}]}]}
+                with patch.object(a, "api", return_value=steps) as request:
+                    self.assertEqual(a.classify_failed_run("private", repo, 321), expected)
+                    self.assertIn("/jobs?per_page=100", request.call_args.args[2])
+
+    def test_checkout_failure_not_automatically_called_network_error(self):
+        jobs = {"total_count": 1, "jobs": [{
+            "conclusion": "failure", "steps": [
+                {"name": "Check out private Test source - attempt 3",
+                 "conclusion": "failure"}]}]}
+        with patch.object(a, "api", return_value=jobs):
+            self.assertEqual(a.classify_failed_run("t", a.TEST, 9),
+                             "android_test_or_artifact_failed_manual_review")
+
+    def test_failed_exact_run_never_returns_success(self):
+        sha = "a" * 40
+        item = self.record(a.TEST, a.TEST_WORKFLOW, 9, sha)
+        item.update(status="completed", conclusion="failure")
+        jobs = {"total_count": 1, "jobs": [{
+            "conclusion": "failure", "steps": [{
+                "name": "NETWORK_TRANSIENT_PREFLIGHT - GitHub HTTPS",
+                "conclusion": "failure"}]}]}
+        with patch.object(a, "api", side_effect=[item, jobs]) as request:
+            with self.assertRaisesRegex(a.Hold, "network_retry_exhausted"):
+                a.wait_run("private", a.TEST, a.TEST_WORKFLOW, 9, sha)
+            self.assertEqual(request.call_count, 2)  # both GET; never dispatch
+
+    def test_failure_record_preserves_phase_and_bound_source(self):
+        import base64
+        import json
+        sha = "e" * 40
+        record = {"version": 1, "builds": {sha: {
+            "phase": "test_started", "sourceSha": sha, "testRunId": 9}}}
+        with patch.object(a, "json_file", return_value=(record, "blob")):
+            with patch.object(a, "api", return_value={
+                    "commit": {"sha": "f" * 40}}) as write:
+                a.record_failed_stage("public", sha, "test", 9,
+                                      "network_retry_exhausted_same_run_no_publication")
+                body = write.call_args.kwargs["payload"]
+                updated = json.loads(base64.b64decode(body["content"]))
+                entry = updated["builds"][sha]
+                self.assertEqual(entry["phase"], "test_started")
+                self.assertNotEqual(entry["phase"], "signed_verified")
+                self.assertEqual(entry["testRunId"], 9)
+                self.assertEqual(entry["lastFailure"]["stage"], "test")
+                self.assertEqual(body["sha"], "blob")
+                self.assertEqual(write.call_args.kwargs["method"], "PUT")
+        with patch.object(a, "json_file", return_value=(record, "blob")):
+            with patch.object(a, "api", side_effect=AssertionError("unsafe write")):
+                with self.assertRaisesRegex(a.Hold, "failure_run_binding_mismatch"):
+                    a.record_failed_stage("public", sha, "signer", 9,
+                                          "network_retry_exhausted_same_run_no_publication")
+
+    def test_failed_stage_records_without_dispatching_or_signing(self):
+        sha = "e" * 40
+        with patch.object(a, "wait_run",
+                          side_effect=a.Hold("android_compile_failed_manual_review")):
+            with patch.object(a, "record_failed_stage") as saved:
+                with patch.object(a, "dispatch",
+                                  side_effect=AssertionError("unsafe redispatch")):
+                    with patch.object(a, "record_public") as report:
+                        with self.assertRaisesRegex(a.Hold, "android_compile_failed"):
+                            a.wait_recorded("public", sha, "test", "private",
+                                            a.TEST, a.TEST_WORKFLOW, 9, sha)
+                        saved.assert_called_once()
+                        self.assertEqual(report.call_args.kwargs["failureClass"],
+                                         "android_compile_failed_manual_review")
+
 if __name__ == "__main__":
     unittest.main()
