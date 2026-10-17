@@ -79,7 +79,7 @@ class Tests(unittest.TestCase):
             return (cfg, "blob") if path == a.CONFIG_PATH else (record, "blob")
         with patch.object(a, "json_file", side_effect=doc):
             with self.assertRaisesRegex(a.Hold, "resume_requires_original_source_sha"):
-                a.run({"GH_TOKEN": "p"}, execute=True, resume=True)
+                a.run({"GH_TOKEN": "p", "TEST_ACTIONS_READ_TOKEN": "t"}, execute=True, resume=True)
 
 if __name__ == "__main__":
     unittest.main()
