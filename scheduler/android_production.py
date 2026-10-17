@@ -152,11 +152,30 @@ def reserve(public_token, source):
     require(bool(result.get("commit", {}).get("sha")), "reservation_unknown_no_redispatch")
 
 
-def current_source(token):
-    result = api(token, TEST, "/branches/main")
-    source = result.get("commit", {}).get("sha")
-    require(isinstance(source, str) and SHA.fullmatch(source), "test_main_sha_unavailable")
-    return source
+def current_source(tokens):
+    """Read only branch SHA using an authorized Test Contents:read credential.
+
+    Actions:write alone is not Contents:read. Do not skip exact SHA pinning.
+    Only permission-denied read attempts can fall back to another configured token.
+    """
+    seen = set()
+    for token in tokens:
+        if not token or token in seen:
+            continue
+        seen.add(token)
+        try:
+            result = api(token, TEST, "/branches/main")
+        except Hold as exc:
+            if str(exc) in ("github_http_401_anwpustudent-lab_source_head_no_retry",
+                            "github_http_403_anwpustudent-lab_source_head_no_retry",
+                            "github_http_404_anwpustudent-lab_source_head_no_retry"):
+                continue
+            raise
+        source = result.get("commit", {}).get("sha")
+        require(isinstance(source, str) and SHA.fullmatch(source),
+                "test_main_sha_unavailable")
+        return source
+    raise Hold("test_main_contents_read_permission_missing")
 
 
 def check_idle(repo, workflow, account, env):
@@ -255,7 +274,10 @@ def run(env, *, execute=False, resume=False, requested_sha=""):
     if resume:
         require(bool(requested_sha) and SHA.fullmatch(requested_sha),
                 "resume_requires_original_source_sha")
-    source = requested_sha if resume else current_source(test)
+    source = requested_sha if resume else current_source((
+        env.get("TEST_SOURCE_READ_TOKEN", ""),
+        env.get("TEST_ACTIONS_READ_TOKEN", ""),
+        env.get("TEST_BILLING_READ_TOKEN", "")))
     require(bool(SHA.fullmatch(source)), "invalid_source_sha")
     if requested_sha and not resume:
         require(source == requested_sha, "requested_sha_not_current_test_main")
