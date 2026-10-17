@@ -106,6 +106,9 @@ def account_usage(account: str, spec: dict, env: dict, *, now=None) -> dict:
                       period=instant.strftime("%Y-%m"), observedAt=instant.isoformat(),
                       reportingPeriodVerified=True,
                       note="Usage is not free allowance, remaining balance, or dispatch eligibility")
+        from scheduler.allowance_usage import probe
+        result["allowanceEstimate"] = probe(
+            account, spec, env, instant, reader_factory=GitHubReadOnly)
     except (urllib.error.HTTPError, urllib.error.URLError, OSError, TimeoutError,
             ValueError, KeyError, TypeError) as exc:
         result["read"] = safe_error(exc)

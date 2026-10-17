@@ -46,12 +46,21 @@ def audit(config: dict, registry: dict, env: dict, *,
     accounts = {}
     for owner, spec in config["accounts"].items():
         entry = bill(owner, spec, env)
+        estimate = entry.get("allowanceEstimate", {})
         accounts[owner] = {
             "usageEndpointRead": entry.get("read", "unknown"),
             "reportingPeriodVerified": entry.get("reportingPeriodVerified") is True,
             "verifiedRemainingFreeMinutes": False,
             "hostedDecision": "unknown",
             "totalsNotUsedAsRemaining": True,
+            "allowanceEstimateRead": estimate.get("read", "not_checked"),
+            "allowanceEstimateStatus": estimate.get("estimateStatus", "unavailable"),
+            "publicStandardUsageExcluded": estimate.get("publicStandardUsageExcluded") is True,
+            "publicStandardUsagePresent": estimate.get("publicStandardUsagePresent") is True,
+            "estimatedAllowanceRemainingPositive": (
+                estimate.get("remainingMinutesEstimate", -1) > 0
+                if estimate.get("read") == "readable"
+                and estimate.get("conversionSupported") is True else None),
         }
     stocks = {}
     for market in ("stock_a", "stock_us"):

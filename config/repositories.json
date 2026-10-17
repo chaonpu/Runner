@@ -5,12 +5,14 @@
   "accounts": {
     "anwpustudent-lab": {
       "kind": "user",
+      "includedMinutes": 2000,
       "billingSecret": "TEST_BILLING_READ_TOKEN",
       "actionsSecret": "TEST_ACTIONS_READ_TOKEN",
       "runnerSecret": "TEST_BILLING_READ_TOKEN"
     },
     "chaonpu": {
       "kind": "user",
+      "includedMinutes": 2000,
       "billingSecret": "CHAONPU_BILLING_READ_TOKEN",
       "actionsSecret": "CHAONPU_ACTIONS_READ_TOKEN",
       "runnerSecret": "RUNNER_READ_TOKEN"
