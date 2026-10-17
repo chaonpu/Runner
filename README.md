@@ -1,49 +1,73 @@
-# 子午汐律 · GitHub Actions 统一调度中心
+# 子午汐律 · 手动任务中心
 
-公开中心负责额度检查、Windows Runner 检测、私有任务单次派发、同一 Job 前台监控和结果登记。策略、持仓、账本、完整私有日志与签名密钥仅留在私有仓库。
+RUNNER 仅保留以下 **4 个手动工作流**，均从 Actions → 选择工作流 → **Run workflow** → 分支 `main` 启动。仅仓库所有者 `chaonpu` 可以执行。没有 push、定时、演练或自动重派发入口。
 
-## 当前部署
+| 工作流 | 作用 | 入口 |
+| --- | --- | --- |
+| APK 构建与签名（手动） | Test 全量验证、构建 APK、私有隔离签名 | [运行](https://github.com/chaonpu/Runner/actions/workflows/android-production.yml) |
+| APK 正式发布（手动） | 验证已签名 APK、准备发布请求或派发正式发布、核验更新清单 | [运行](https://github.com/chaonpu/Runner/actions/workflows/android-publish.yml) |
+| A股策略（手动） | 预检、运行 A股策略、推进快照与账本、核验回执 | [运行](https://github.com/chaonpu/Runner/actions/workflows/production-dispatch.yml) |
+| 美股策略（手动） | 预检、运行美股策略、推进快照与账本、核验回执 | [运行](https://github.com/chaonpu/Runner/actions/workflows/stock-us.yml) |
 
-A/US 的受控单任务执行链已接线：私有实时就绪检查 → 临时任务许可 → CAS 预约 → 唯一派发与原 Run 绑定 → 前台监控 → 同一数据库提交回执核验 → 关闭临时许可。**美股 2026-10-16 原生理论补算已真实入账并独立核验。** 原运行计算成功、发布确认失败后，已通过[一次性原提交恢复](https://github.com/chaonpu/Stock/actions/runs/39031059755)完成发布，没有重算策略；原运行仍保留失败结论。
+所有入口默认 `execute=false`，只读检查；需要真实执行时勾选 `execute`。执行期间留在同一个任务中跟踪，完成后结束；不依赖五分钟定时检查。
 
-配置默认保持关闭。明确启动的单任务只会临时开启相应市场；任务结束后恢复原配置，历史登记继续防重。没有五分钟 cron，没有后台反复派发，也不会因为某次响应不确定而自动重算。
+## APK 构建与签名
 
-两个个人账户的免费额度配置均为每月 **2000 分钟**。公开仓库标准托管运行器用量排除在私有额度消耗之外；余额未知时不猜测、不当作耗尽。云端与 Windows 路由仍须通过对应的预算、在线状态和业务门槛。
+1. 在 **Test/main** 提交要发布的代码，确认 `versionName`、`versionCode` 和 `release/version.json` 一致。正式发布必须比当前公开版本更新；RUNNER 不会替你虚增版本号。
+2. 打开「APK 构建与签名」，`source_sha` 填 Test/main 完整 **40 位 SHA**。当前已有令牌可能无法读取分支 SHA，建议明确填写。
+3. 首次运行 `resume=false`。可先不勾选 `execute` 检查；真实构建勾选 `execute` 后运行。
+4. 成功后 [构建登记](state/android-production.json) 中该 SHA 的 `phase` 应为 `signed_verified`，同时登记 `testRunId`、`signingRunId`。签名包保存在私有签名仓库 `windows-signed-release`，保留 3 天，请及时发布。
 
-## 运行策略
+额度证据满足保守门槛时 Test 优先云端构建；否则回退 Windows。私有签名始终使用 `ziwuxilv-sign-win`。走 Windows 时 Test 还需 `ziwuxilv-test-win` 在线且空闲。云端任务启动后失败不会自动换机重建。
 
-打开[受控策略入口](https://github.com/chaonpu/Runner/actions/workflows/production-dispatch.yml)，选择 `stock_a` 或 `stock_us`：
+已有未完成任务只有 `test_started`、`test_verified`、`signer_started` 可使用原 `source_sha` + `resume=true` + `execute=true` 继续。`reserved`、`signer_reserved` 或不确定失败需核对原 Run，不能清空登记后重试。已成功的同一 SHA 不重复构建。
 
-| 输入 | 行为 |
+## APK 正式发布
+
+打开「APK 正式发布」，填写：
+
+| 输入 | 填写方法 |
 | --- | --- |
-| `business_date` 留空 | 按实际时钟、市场时区及已覆盖交易所日历选择最近完成的交易日 |
-| `execute=false`（默认） | 只读预检 |
-| `execute=true` | 明确运行一次任务，先做私有实时就绪验证 |
-| `publication_mode=formal` | 只允许原策略的交易日收盘后正式窗口 |
-| `publication_mode=theoretical_catchup` | 只允许原生补算窗口，推进理论持仓与账本；不视为正式报告 |
+| `source_sha` | 构建签名成功的同一个 Test SHA |
+| `version_name` | APK 内真实版本号，如 `2.3.5`（仅示例） |
+| `version_code` | APK 内真实 Code，如 `118`（仅示例），必须大于当前正式版 |
+| `update_log` | 用户可见的更新说明 |
+| `mode` | `prepare`、`publish` 或 `verify`，见下方 |
+| `execute` | 不勾选只检查；勾选后才真实操作 |
 
-`force_run` 固定为 false。周末不会伪造交易日或绕过正式报告门槛。同日期已有登记时停止；业务失败或响应未知时先核对原 Run 和实际副作用。
+**无需增加令牌的完整手动发布：**
 
-详细执行顺序与异常处理见[单任务运行说明](docs/production-execution.md)，首次真实运行结果见[2026-10-17 验收记录](docs/production-acceptance-20261017.md)。本次为理论补算，尚非正式日报或自动定时运行。
+1. 选 `prepare`，勾选 `execute`。此步会下载私有签名包，只公开严格白名单的已签名 APK 传输 ZIP 及校验凭据；不会包含源码或密钥，也不会切换 APP 正式更新清单。
+2. 在成功运行的 **Artifacts** 下载 `apk-publication-request`，解压取得 `android-publish-request.json`。
+3. 打开 [ziwuxilv 正式发布入口](https://github.com/chaonpu/ziwuxilv/actions/workflows/publish-android-release.yml)，点 **Run workflow**，分支 `main`，将 JSON **完整内容**粘贴进 `publish_request`，再运行。
+4. 等该发布任务成功后，回 RUNNER 用相同输入、`mode=verify`、`execute=true` 核验。结果必须为 `published=true`，才表示清单和公开下载的 APK 哈希已核验成功。
 
-## 验证和边界
+**可选的一键发布：** 在 RUNNER 配置 `ZIWUXILV_ACTIONS_WRITE_TOKEN`，仅授权公开仓库 `chaonpu/ziwuxilv` 的 **Actions: Read and write**。然后选择 `mode=publish`、勾选 `execute`。此方式派发发布仓库自身工作流，由该仓库自己的 `GITHUB_TOKEN` 写 Release 和更新清单。原有私有仓库令牌不扩权。缺少专用令牌时会在公开签名包之前停止，并提示使用 `prepare`。
 
-公开协调器本地及[公开 CI](https://github.com/chaonpu/Runner/actions/runs/39031504310) **243 项回归通过**；私有针对性回归本地 **146 项通过**；真实 Windows 就绪检查 **138 项通过**并完成隔离原生计算、账本回放与行情源探测。公开 CI 结果见安全 CI 入口。这些测试之外，本次还独立核验了真实远端回执、原始文件哈希、父提交、历史净值、交易事实、配置同步及另一市场不变。Windows 数据库检出逐文件比对 Git blob，避免换行转换破坏快照与账本哈希。
+发布会校验真实包名、版本、原生产证书、SHA-256、准确 Test/签名 Run，以及正式下载地址。`prepare` 成功只代表**请求已准备**。同版本重复执行不会重复暂存或重复派发；发布中断后保留准确 Run ID。状态为 `staging_reserved`、`dispatch_reserved` 时先人工核对原结果，勿反复点击。正常继续已有 `publishing` 任务请新建一次手动运行，不使用旧 Run 的 Re-run。
 
-私有准备证据必须来自准确源码、日期和模式的首次成功 Run，最终步骤在 300 秒有效期内。普通业务完成要求私有回执核验成功且原业务 Run 整体成功。明确的原提交恢复另需原计算成功、发布失败及恢复 Run 整体成功的证明，并单独登记恢复 Run/SHA；不改写原 Run、源码或协调者绑定。补算记录的 `formalReportVerified` 仍为 false。
+> 当前公开版本仍为 **2.3.4 (117)**。此前新链签名验证也使用了相同版本，不能再次当作新正式版发布；请在 Test 提交真实新版本后按上述步骤操作。
 
-当前 `production-dispatch.yml` 已接线市场为 A/US。ETF 和公开正式 APK 发布不由该入口执行。Android 的独立手动生产入口 `android-production.yml` 已接入 Test Windows 全量验证与私有 Windows 签名，**默认只读、需 `execute=true` 明确启动**；现有 Test 令牌不能直接读取 `main` SHA，首次真实构建需填写完整 `source_sha`，或另配只读分支元数据凭据；它不会公开 APK 或改写 APP 更新清单，也尚未接入云端构建/签名优先路由。APK 暂存与正式发布保持独立；未经相应发布任务授权，不会公开新的安装包或更新用户 APP。
+## A股与美股策略
 
-## 其他入口
+分别打开对应工作流，输入只有三项：
 
-- [安全 CI](https://github.com/chaonpu/Runner/actions/workflows/validate.yml)
-- [按需预检](https://github.com/chaonpu/Runner/actions/workflows/scheduler.yml)
-- [无操作防重演练](https://github.com/chaonpu/Runner/actions/workflows/stock-noop-pilot.yml)
-- [人工异常核对](https://github.com/chaonpu/Runner/actions/workflows/reconcile.yml)
-- [Android 私有构建与签名生产入口](https://github.com/chaonpu/Runner/actions/workflows/android-production.yml)
-- [Android 生产链验收与操作说明](docs/android-production.md)
-- [批准后的 APK 公开预发布暂存](https://github.com/chaonpu/Runner/actions/workflows/stage-android-apk.yml)
-- [部署说明](docs/deployment.md)
-- [此前各阶段验收历史](docs/implementation-history-20261017.md)
+| 输入 | 用法 |
+| --- | --- |
+| `business_date` | **平时留空**，按实际时间、市场时区和交易所日历选择最近已收盘交易日；补算指定日期时才填写 `YYYY-MM-DD` |
+| `publication_mode` | `formal`：该市场当地交易日收盘后的正式运行；`theoretical_catchup`：历史交易日理论补算 |
+| `execute` | 不勾选预检；勾选运行一次 |
 
-公开仓库令牌仅派发明确列入白名单的私有工作流。`ZIWUXILV/database` 由 Stock 内部发布，不由本中心派发；公开正式 APK 发布由其所属仓库的独立发布流程执行。
+正常收盘后运行选择 `formal`；周末、跨过市场当地日期或补算历史选择 `theoretical_catchup`。补算推进理论持仓、快照与账本，不冒充当日正式报告、不发送正式策略邮件。美股日期按纽约当地交易日，不按北京时间换日。
+
+运行前需 Windows `ziwuxilv-stock-win` 在线且空闲，以完成私有实时就绪检查；这项检查目前即使云端额度充足也需要 Windows。业务计算再按已核实账户额度选云端或 Windows。两市场共用串行锁，避免同时改账本。运行结束关闭本次临时许可，日常配置保持 OFF；这是手动执行模式，不表示功能禁用。
+
+同一市场、同一日期已有登记会停止，不能重复调仓/入账。遇到 `hold` 或失败，先核对日志中的原 Run ID 和 [任务登记](state/tasks.json)，不要删除记录或盲目 Re-run。成功以**下游业务成功 + 数据库回执核验成功**为准。
+
+## 维护与验证
+
+本次精简删除了 10 个旧工作流文件（旧预检、canary、演练、push 启动、一次性恢复、独立暂存及自动 CI），增加美股和统一发布两个入口，最终净保留 4 个。历史状态、防重记录和底层测试保留，未删除实际 APK、历史运行或账本。
+
+维护者在本地运行：`python3 -m unittest discover -s tests -p 'test_*.py' -v`。当前交易所日历覆盖 2026 年，跨年需先更新 `config/exchange_schedule_2026.json`，覆盖不足时系统停止执行。
+
+旧的部署、演练及阶段性说明保留作历史记录；**当前使用以本 README 为准**。

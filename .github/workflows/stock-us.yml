@@ -1,0 +1,61 @@
+name: 美股策略（手动）
+
+on:
+  workflow_dispatch:
+    inputs:
+      business_date:
+        description: "留空：按交易所日历选择最近已收盘交易日"
+        type: string
+        default: ""
+      publication_mode:
+        description: "formal：当日正式报告；theoretical_catchup：历史理论补算（无正式邮件）"
+        type: choice
+        options: [formal, theoretical_catchup]
+        default: formal
+      execute:
+        description: "勾选：真实运行一次；不勾选：只读检查"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: runner-production-single-task
+  cancel-in-progress: false
+
+jobs:
+  coordinate:
+    if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && github.actor == 'chaonpu'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    env:
+      GH_TOKEN: ${{ github.token }}
+      CHAONPU_ACTIONS_READ_TOKEN: ${{ secrets.CHAONPU_ACTIONS_READ_TOKEN }}
+      CHAONPU_BILLING_READ_TOKEN: ${{ secrets.CHAONPU_BILLING_READ_TOKEN }}
+      RUNNER_READ_TOKEN: ${{ secrets.RUNNER_READ_TOKEN }}
+      REQUEST_TASK: stock_us
+      REQUEST_PUBLICATION_MODE: ${{ inputs.publication_mode }}
+      REQUEST_BUSINESS_DATE: ${{ inputs.business_date }}
+    steps:
+      - name: Checkout trusted public coordinator only
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Coordinate one exact task or perform a read-only preview
+        env:
+          TASK: stock_us
+          BUSINESS_DATE: ${{ inputs.business_date }}
+          PUBLICATION_MODE: ${{ inputs.publication_mode }}
+          EXECUTE: ${{ inputs.execute }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          args=(--task "$TASK" --business-date "$BUSINESS_DATE" --publication-mode "$PUBLICATION_MODE")
+          if [[ "$EXECUTE" == 'true' ]]; then args+=(--execute); fi
+          python3 -m scheduler.production_coordinator "${args[@]}"
+      - name: Close only this coordinator's temporary permit
+        if: always() && inputs.execute == true
+        run: python3 -m scheduler.production_lease

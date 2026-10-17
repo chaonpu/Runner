@@ -113,6 +113,22 @@ class APKStagingTests(unittest.TestCase):
         validate_run(signer, "chaonpu/ziwuxilv-android",
                      ".github/workflows/windows-signing-verified-handoff.yml", 456)
 
+    def test_cloud_test_provenance_survives_to_publication(self):
+        from unittest.mock import patch
+        from scheduler import apk_stage
+        source = dict(id=123, repository={"full_name": "anwpustudent-lab/Test"},
+                      path=".github/workflows/android-cloud-verified.yml", status="completed",
+                      conclusion="success", event="workflow_dispatch", head_branch="main", head_sha=SHA)
+        signing = dict(id=456, repository={"full_name": "chaonpu/ziwuxilv-android"},
+                       path=".github/workflows/windows-signing-verified-handoff.yml", status="completed",
+                       conclusion="success", event="workflow_dispatch", head_branch="main")
+        with patch.object(apk_stage, "api_json", side_effect=[signing, source]):
+            apk_stage.verify_provenance(params(), "sign", "test")
+        source["path"] = ".github/workflows/untrusted.yml"
+        with patch.object(apk_stage, "api_json", side_effect=[signing, source]):
+            with self.assertRaisesRegex(GuardError, "not_allowlisted"):
+                apk_stage.verify_provenance(params(), "sign", "test")
+
     def test_candidate_artifact_matches_all_metadata(self):
         with tempfile.TemporaryDirectory() as d:
             req = params()

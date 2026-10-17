@@ -1,29 +1,21 @@
-name: Controlled Stock production coordinator
+name: A股策略（手动）
 
 on:
   workflow_dispatch:
     inputs:
-      task:
-        type: choice
-        options: [stock_a, stock_us]
-        required: true
       business_date:
-        description: "Blank uses the latest completed official-calendar session"
+        description: "留空：按交易所日历选择最近已收盘交易日"
         type: string
         default: ""
       publication_mode:
-        description: "Formal report follows native session rules; catchup writes theoretical data only"
+        description: "formal：当日正式报告；theoretical_catchup：历史理论补算（无正式邮件）"
         type: choice
         options: [formal, theoretical_catchup]
         default: formal
       execute:
-        description: "Execute this one task with a temporary permit; false is read only"
+        description: "勾选：真实运行一次；不勾选：只读检查"
         type: boolean
         default: false
-      bootstrap_run_id:
-        description: "Internal reviewed-launch provenance; leave blank for administrator manual runs"
-        type: string
-        default: ""
 
 permissions:
   contents: write
@@ -35,7 +27,7 @@ concurrency:
 
 jobs:
   coordinate:
-    if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && (github.actor == 'chaonpu' || (github.actor == 'github-actions[bot]' && inputs.bootstrap_run_id != ''))
+    if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && github.actor == 'chaonpu'
     runs-on: ubuntu-24.04
     timeout-minutes: 360
     env:
@@ -43,8 +35,7 @@ jobs:
       CHAONPU_ACTIONS_READ_TOKEN: ${{ secrets.CHAONPU_ACTIONS_READ_TOKEN }}
       CHAONPU_BILLING_READ_TOKEN: ${{ secrets.CHAONPU_BILLING_READ_TOKEN }}
       RUNNER_READ_TOKEN: ${{ secrets.RUNNER_READ_TOKEN }}
-      BOOTSTRAP_RUN_ID: ${{ inputs.bootstrap_run_id }}
-      REQUEST_TASK: ${{ inputs.task }}
+      REQUEST_TASK: stock_a
       REQUEST_PUBLICATION_MODE: ${{ inputs.publication_mode }}
       REQUEST_BUSINESS_DATE: ${{ inputs.business_date }}
     steps:
@@ -55,7 +46,7 @@ jobs:
           persist-credentials: false
       - name: Coordinate one exact task or perform a read-only preview
         env:
-          TASK: ${{ inputs.task }}
+          TASK: stock_a
           BUSINESS_DATE: ${{ inputs.business_date }}
           PUBLICATION_MODE: ${{ inputs.publication_mode }}
           EXECUTE: ${{ inputs.execute }}

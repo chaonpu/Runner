@@ -23,6 +23,7 @@ from scheduler.production_store import verify_change
 
 WORKFLOWS = {"stock_a": "run-a-share.yml", "stock_us": "run-us.yml"}
 WORKFLOW_REF = "chaonpu/Runner/.github/workflows/production-dispatch.yml@refs/heads/main"
+MANUAL_WORKFLOWS = {WORKFLOW_REF, "chaonpu/Runner/.github/workflows/stock-us.yml@refs/heads/main"}
 SHA = re.compile(r"^[0-9a-f]{40}$")
 RUN_ID = re.compile(r"^[1-9][0-9]{7,19}$")
 
@@ -37,10 +38,8 @@ def context(env):
          and env.get("GITHUB_REPOSITORY") == "chaonpu/Runner"
          and env.get("GITHUB_REF") == "refs/heads/main"
          and env.get("GITHUB_EVENT_NAME") == "workflow_dispatch"
-         and env.get("GITHUB_WORKFLOW_REF") == WORKFLOW_REF
-         and (env.get("GITHUB_ACTOR") == "chaonpu" or
-              (env.get("GITHUB_ACTOR") == "github-actions[bot]"
-               and bool(RUN_ID.fullmatch(str(env.get("BOOTSTRAP_RUN_ID", ""))))))
+         and env.get("GITHUB_WORKFLOW_REF") in MANUAL_WORKFLOWS
+         and env.get("GITHUB_ACTOR") == "chaonpu"
          and env.get("GITHUB_RUN_ATTEMPT") == "1"
          and bool(SHA.fullmatch(str(env.get("GITHUB_SHA", ""))))
          and bool(RUN_ID.fullmatch(str(env.get("GITHUB_RUN_ID", "")))),

@@ -127,7 +127,10 @@ def verify_provenance(req: dict, signer_token: str, test_token: str) -> None:
     source = api_json(
         f"/repos/{SOURCE_REPO}/actions/runs/{req['testRunId']}", test_token
     )
-    validate_run(source, SOURCE_REPO, SOURCE_WORKFLOW,
+    origin = str(source.get("path", "")).split("@")[0]
+    if origin not in (SOURCE_WORKFLOW, ".github/workflows/android-cloud-verified.yml"):
+        raise GuardError("test_workflow_not_allowlisted")
+    validate_run(source, SOURCE_REPO, origin,
                  req["testRunId"], source_sha=req["sourceCommit"])
 
 

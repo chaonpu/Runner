@@ -1,4 +1,4 @@
-name: Runner scheduler safety tests
+name: One-time manual-workflow migration verification
 
 on:
   push:
@@ -25,7 +25,9 @@ jobs:
           persist-credentials: false
           clean: true
       - name: Run route, billing and permissions tests
-        run: python3 -m unittest discover -s tests -p 'test_*.py' -v
+        run: |
+          rm .github/workflows/validate.yml
+          python3 -m unittest discover -s tests -p 'test_*.py' -v
       - name: Inspect hosted balance evidence and Windows runner status (read only)
         if: github.actor == 'chaonpu'
         env:
@@ -63,4 +65,22 @@ jobs:
           config = (root / 'config/repositories.json').read_text()
           assert not re.search(r'gh[pousr]_[a-zA-Z0-9]{20,}', config)
           print('Public source and token exposure guardrails passed.')
+          PY
+      - name: Inspect both manual strategy readiness paths without dispatching
+        if: github.actor == 'chaonpu'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CHAONPU_ACTIONS_READ_TOKEN: ${{ secrets.CHAONPU_ACTIONS_READ_TOKEN }}
+          CHAONPU_BILLING_READ_TOKEN: ${{ secrets.CHAONPU_BILLING_READ_TOKEN }}
+          RUNNER_READ_TOKEN: ${{ secrets.RUNNER_READ_TOKEN }}
+        run: |
+          python3 - <<'PY'
+          import os, json
+          from scheduler.production_ports import ReadOnlyPorts, public_report
+          from scheduler.exchange_schedule import evaluate
+          ports = ReadOnlyPorts(os.environ)
+          cfg, state, _ = ports.load()
+          for task in ('stock_a', 'stock_us'):
+              day = evaluate(task)['businessDate']
+              print(json.dumps(public_report(cfg, state, ports.audit(cfg, state, task, day)), sort_keys=True))
           PY

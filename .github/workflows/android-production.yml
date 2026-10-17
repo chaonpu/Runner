@@ -1,20 +1,20 @@
-name: Controlled Android private build and signing
+name: APK 构建与签名（手动）
 
 on:
   workflow_dispatch:
     inputs:
       execute:
-        description: "False: read-only preview. True: explicitly build and sign once."
+        description: "勾选：构建并签名；不勾选：只读检查"
         type: boolean
         required: true
         default: false
       resume:
-        description: "Resume ONLY a registered original run; never redispatch Test."
+        description: "仅继续已有任务；必须填写原 source_sha，不会重建 Test"
         type: boolean
         required: true
         default: false
       source_sha:
-        description: "Optional exact 40-character Test source SHA; blank uses current main."
+        description: "Test/main 的完整40位提交SHA；有读取权限时可留空"
         type: string
         required: false
         default: ""
@@ -30,7 +30,7 @@ concurrency:
 jobs:
   android:
     name: Verify Test source then isolated Windows APK signing
-    if: github.ref == 'refs/heads/main' && github.actor == 'chaonpu'
+    if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && github.actor == 'chaonpu'
     runs-on: ubuntu-24.04
     timeout-minutes: 340
     env:
@@ -60,6 +60,9 @@ jobs:
           if [[ "$EXECUTE" == 'true' ]]; then args+=(--execute); fi
           if [[ "$RESUME" == 'true' ]]; then args+=(--resume); fi
           python3 -m scheduler.android_production "${args[@]}"
-      - name: Confirm no automatic APK publication
+      - name: Explain next manual step
         if: always()
-        run: echo 'No public APK or update manifest is written by this workflow.'
+        run: |
+          echo '### APK 构建与签名' >> "$GITHUB_STEP_SUMMARY"
+          echo '成功状态：state/android-production.json 中 phase=signed_verified。' >> "$GITHUB_STEP_SUMMARY"
+          echo '正式发布：另行手动运行 APK 正式发布，填写相同 source_sha、新版本号及更新日志。' >> "$GITHUB_STEP_SUMMARY"

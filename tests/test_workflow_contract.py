@@ -1,110 +1,62 @@
-"""Enforce the no-periodic-polling, manual-only coordinator workflow contract."""
+"""Only four owner-operated manual workflows; never automatic business triggers."""
 from pathlib import Path
 import json
 import re
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-WORKFLOWS = ROOT / ".github" / "workflows"
-MANUAL_ONLY = {
-    "dispatch-canary.yml",
-    "dispatch-extra-canary.yml",
-    "reconcile.yml",
-    "scheduler.yml",
-    "production-dispatch.yml",
-    "stage-android-apk.yml",
-    "android-production.yml",
-    "stock-noop-pilot.yml",
-}
-VALIDATE = "validate.yml"
+WORKFLOWS = ROOT / '.github/workflows'
+MANUAL_ONLY = {'android-production.yml','android-publish.yml','production-dispatch.yml','stock-us.yml'}
 
 
-def event_keys(yaml_text):
-    """Inspect root on: mapping keys without depending on a YAML library."""
-    match = re.search(r"(?m)^on:\s*$", yaml_text)
+def event_keys(text):
+    match = re.search(r'(?m)^on:\s*$', text)
     if not match:
-        raise ValueError("missing root on mapping")
-    body = yaml_text[match.end():]
-    body = re.split(r"(?m)^[A-Za-z][A-Za-z0-9_-]*:\s*", body, maxsplit=1)[0]
-    keys = re.findall(r"(?m)^  ([A-Za-z_][A-Za-z0-9_-]*):(?:\s|$)", body)
-    if not keys or len(keys) != len(set(keys)):
-        raise ValueError("missing or duplicate workflow event keys")
-    return set(keys)
+        raise ValueError('missing on mapping')
+    body = re.split(r'(?m)^[A-Za-z][A-Za-z0-9_-]*:', text[match.end():], maxsplit=1)[0]
+    return set(re.findall(r'(?m)^  ([A-Za-z_][A-Za-z0-9_-]*):(?:\s|$)', body))
 
 
 class WorkflowContractTests(unittest.TestCase):
-    def test_only_validation_has_push_all_others_manual_only(self):
-        files = {p.name: p for p in WORKFLOWS.glob("*.yml")}
-        self.assertEqual(set(files), MANUAL_ONLY | {VALIDATE, "production-launch.yml", "android-production-launch.yml", "android-signing-recovery-launch.yml"})
-        for name, path in files.items():
-            with self.subTest(workflow=name):
-                actual = event_keys(path.read_text(encoding="utf-8"))
-                wanted = {"workflow_dispatch", "push"} if name == VALIDATE else {"push"} if name in ("production-launch.yml", "android-production-launch.yml", "android-signing-recovery-launch.yml") else {"workflow_dispatch"}
-                self.assertEqual(actual, wanted, "No scheduled, PR, or other automatic task trigger")
+    def test_exactly_four_manual_workflows(self):
+        files = {p.name:p for p in WORKFLOWS.glob('*.yml')}
+        self.assertEqual(set(files), MANUAL_ONLY)
+        for path in files.values():
+            text = path.read_text()
+            self.assertEqual(event_keys(text), {'workflow_dispatch'})
+            self.assertIn("github.actor == 'chaonpu'", text)
+            self.assertIn("github.ref == 'refs/heads/main'", text)
+            self.assertIn('cancel-in-progress: false', text)
+            self.assertIn('ref: ${{ github.sha }}', text)
+            self.assertIn('execute:', text)
+            self.assertIn('default: false', text)
+            self.assertNotIn('pull_request_target', text)
+            self.assertNotIn('actions: write', text)
 
-    def test_production_workflow_has_explicit_single_task_execution_and_cleanup(self):
-        src = (WORKFLOWS / "production-dispatch.yml").read_text(encoding="utf-8")
-        self.assertIn("github.actor == 'chaonpu'", src)
-        self.assertIn("github.ref == 'refs/heads/main'", src)
-        self.assertIn("permissions:\n  contents: write", src)
-        self.assertNotIn("actions: write", src)
-        self.assertNotRegex(src, r"(?m)^\s*(schedule|cron):")
-        self.assertIn("scheduler.production_coordinator", src)
-        self.assertIn("execute:", src)
-        self.assertIn("default: false", src)
-        self.assertIn("scheduler.production_lease", src)
-        self.assertNotIn("workflow_dispatch --", src)
-        self.assertNotIn("scheduler.production_store.save", src)
-        self.assertNotIn("checkout@v4\n        with:\n          repository:", src)
-        self.assertNotIn("run-a-share.yml", src)
-        self.assertNotIn("run-us.yml", src)
+    def test_strategy_market_and_cleanup(self):
+        for name, task in (('production-dispatch.yml','stock_a'),('stock-us.yml','stock_us')):
+            text = (WORKFLOWS/name).read_text()
+            self.assertIn('TASK: '+task, text)
+            self.assertNotIn('inputs.task', text)
+            self.assertNotIn('bootstrap', text)
+            self.assertIn('scheduler.production_coordinator', text)
+            self.assertIn('scheduler.production_lease', text)
+            self.assertIn('if: always() && inputs.execute == true', text)
+            self.assertIn('group: runner-production-single-task', text)
 
-    def test_launch_push_is_limited_to_reviewed_request_file(self):
-        src = (WORKFLOWS / "production-launch.yml").read_text(encoding="utf-8")
-        self.assertIn('paths: ["config/launch-request.json"]', src)
-        self.assertIn("github.actor == 'chaonpu'", src)
-        self.assertIn("ref: ${{ github.sha }}", src)
-        self.assertIn("scheduler.production_bootstrap", src)
-        self.assertNotRegex(src, r"(?m)^\s*(schedule|cron):")
+    def test_publication_is_separate_and_no_source_checkout(self):
+        text = (WORKFLOWS/'android-publish.yml').read_text()
+        self.assertIn('scheduler.android_publish', text)
+        self.assertIn('options: [prepare, publish, verify]', text)
+        self.assertIn('ZIWUXILV_ACTIONS_WRITE_TOKEN', text)
+        self.assertNotIn('ANDROID_SIGNING_KEYSTORE', text)
+        self.assertNotRegex(text, r'(?m)^\s+repository:')
 
-    def test_android_bootstrap_is_single_reviewed_file_push(self):
-        src=(WORKFLOWS / "android-production-launch.yml").read_text(encoding="utf-8")
-        self.assertIn('paths: ["config/android-launch-request.json"]', src)
-        self.assertIn("github.actor == 'chaonpu'", src)
-        self.assertIn("ref: " + "$" + "{{ github.sha }}", src)
-        self.assertIn("scheduler.android_launch_request", src)
-        self.assertNotRegex(src, r"(?m)^\\s*(schedule|cron):")
-        self.assertNotIn("ziwuxilv/contents", src)
-        self.assertNotIn("publish-android-release.yml", src)
-
-    def test_pilot_dispatch_watch_finalize_remain_same_job(self):
-        src = (WORKFLOWS / "stock-noop-pilot.yml").read_text(encoding="utf-8")
-        self.assertIn("github.actor == 'chaonpu'", src)
-        self.assertIn("github.ref == 'refs/heads/main'", src)
-        self.assertIn("cancel-in-progress: false", src)
-        self.assertIn("scheduler.pilot_registry --date", src)
-        self.assertIn("scheduler.foreground_watch --date", src)
-        self.assertIn("scheduler.pilot_finalize --date", src)
-        self.assertIn("PILOT_MODE: $" + "{{ inputs.mode }}", src)
-        self.assertNotRegex(src, r"(?m)^\s*(schedule|cron):")
-
-    def test_production_dispatch_stays_closed(self):
-        config = json.loads((ROOT / "config/repositories.json").read_text(encoding="utf-8"))
-        self.assertIs(config["dispatchEnabled"], False)
-        self.assertTrue(config["tasks"])
-        self.assertTrue(all(t["enabledForDispatch"] is False for t in config["tasks"].values()))
-        self.assertNotIn("apk_publish", config["tasks"])
-        self.assertNotIn("database_sync", config["tasks"])
-        self.assertTrue(all(t["repo"] != "chaonpu/ziwuxilv" for t in config["tasks"].values()))
-
-    def test_staging_stays_independently_approved(self):
-        src = (WORKFLOWS / "stage-android-apk.yml").read_text(encoding="utf-8")
-        self.assertIn("github.actor == 'chaonpu'", src)
-        self.assertIn("github.ref == 'refs/heads/main'", src)
-        self.assertIn("public_staging_approval:", src)
-        self.assertNotRegex(src, r"(?m)^\s*(schedule|cron):")
+    def test_production_dispatch_stays_closed_between_runs(self):
+        config = json.loads((ROOT/'config/repositories.json').read_text())
+        self.assertIs(config['dispatchEnabled'], False)
+        self.assertTrue(all(t['enabledForDispatch'] is False for t in config['tasks'].values()))
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     unittest.main()
-

@@ -49,7 +49,17 @@ def prepare(ports, cfg, task, day, mode):
     raise RegistryGuard("private_readiness_deadline")
 
 
+def manual_task_context(env, task):
+    expected = {"stock_a": "production-dispatch.yml", "stock_us": "stock-us.yml"}
+    need(env.get("GITHUB_WORKFLOW_REF") ==
+         "chaonpu/Runner/.github/workflows/" + expected[task] + "@refs/heads/main"
+         and env.get("GITHUB_EVENT_NAME") == "workflow_dispatch"
+         and env.get("GITHUB_ACTOR") == "chaonpu"
+         and env.get("GITHUB_REF") == "refs/heads/main", "manual_market_context_mismatch")
+
+
 def execute(env, task, day, mode):
+    manual_task_context(env, task)
     env = dict(env, REQUEST_TASK=task, REQUEST_BUSINESS_DATE=env.get("ENTERED_BUSINESS_DATE", ""),
                REQUEST_PUBLICATION_MODE=mode)
     ports = ProductionPorts(env)
@@ -84,6 +94,7 @@ def main():
     p.add_argument("--publication-mode",choices=("formal","theoretical_catchup"),default="formal")
     p.add_argument("--execute",action="store_true")
     a=p.parse_args()
+    manual_task_context(dict(os.environ), a.task)
     if not a.execute:
         from scheduler.production_ports import public_report
         ports=ReadOnlyPorts(os.environ)
