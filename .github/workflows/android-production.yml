@@ -1,0 +1,62 @@
+name: Controlled Android private build and signing
+
+on:
+  workflow_dispatch:
+    inputs:
+      execute:
+        description: "False: read-only preview. True: explicitly build and sign once."
+        type: boolean
+        required: true
+        default: false
+      resume:
+        description: "Resume ONLY a registered original run; never redispatch Test."
+        type: boolean
+        required: true
+        default: false
+      source_sha:
+        description: "Optional exact 40-character Test source SHA; blank uses current main."
+        type: string
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: runner-controlled-android-private-build
+  cancel-in-progress: false
+
+jobs:
+  android:
+    name: Verify Test source then isolated Windows APK signing
+    if: github.ref == 'refs/heads/main' && github.actor == 'chaonpu'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 340
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TEST_ACTIONS_READ_TOKEN: ${{ secrets.TEST_ACTIONS_READ_TOKEN }}
+      TEST_BILLING_READ_TOKEN: ${{ secrets.TEST_BILLING_READ_TOKEN }}
+      CHAONPU_ACTIONS_READ_TOKEN: ${{ secrets.CHAONPU_ACTIONS_READ_TOKEN }}
+      EXECUTE: ${{ inputs.execute }}
+      RESUME: ${{ inputs.resume }}
+      SOURCE_SHA: ${{ inputs.source_sha }}
+    steps:
+      - name: Checkout only trusted public coordinator
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Offline safety regressions
+        run: python3 -m unittest discover -s tests -p test_android_production.py -v
+      - name: Coordinate exact Test and private signer runs
+        shell: bash
+        run: |
+          set -euo pipefail
+          args=(--source-sha "$SOURCE_SHA")
+          if [[ "$EXECUTE" == 'true' ]]; then args+=(--execute); fi
+          if [[ "$RESUME" == 'true' ]]; then args+=(--resume); fi
+          python3 -m scheduler.android_production "${args[@]}"
+      - name: Confirm no automatic APK publication
+        if: always()
+        run: echo 'No public APK or update manifest is written by this workflow.'
