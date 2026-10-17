@@ -7,13 +7,13 @@
       "kind": "user",
       "billingSecret": "TEST_BILLING_READ_TOKEN",
       "actionsSecret": "TEST_ACTIONS_READ_TOKEN",
-      "runnerSecret": "TEST_RUNNER_READ_TOKEN"
+      "runnerSecret": "TEST_BILLING_READ_TOKEN"
     },
     "chaonpu": {
       "kind": "user",
       "billingSecret": "CHAONPU_BILLING_READ_TOKEN",
       "actionsSecret": "CHAONPU_ACTIONS_READ_TOKEN",
-      "runnerSecret": "RUNNER_READ_TOKEN"
+      "runnerSecret": "CHAONPU_BILLING_READ_TOKEN"
     }
   },
   "tasks": {
