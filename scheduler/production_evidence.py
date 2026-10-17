@@ -11,6 +11,7 @@ from scheduler.production_registry import RegistryGuard
 
 REPO = "chaonpu/Stock"
 WORKFLOWS = {"stock_a": "production-readiness-a.yml", "stock_us": "production-readiness-us.yml"}
+CLOUD_WORKFLOWS = {"stock_a": "production-readiness-cloud-a.yml", "stock_us": "production-readiness-cloud-us.yml"}
 STEP = "Attest live readiness"
 EXISTING_STEP = "Attest existing authoritative market state"
 SHA = re.compile(r"^[0-9a-f]{40}$")
@@ -31,7 +32,7 @@ def timestamp(value):
     return result.astimezone(timezone.utc)
 
 
-def inspect(reader, task, day, now, publication_mode="formal", *, expected_run_id=None):
+def inspect(reader, task, day, now, publication_mode="formal", *, expected_run_id=None, expected_workflow=None):
     """Require newest original readiness Run, exact dated job and final step.
 
     The private producer must independently check live session completion,
@@ -46,8 +47,11 @@ def inspect(reader, task, day, now, publication_mode="formal", *, expected_run_i
             raise ValueError()
     except (TypeError, ValueError):
         raise RegistryGuard("readiness_evidence_date_invalid") from None
+    workflow = expected_workflow or WORKFLOWS[task]
+    if workflow not in (WORKFLOWS[task], CLOUD_WORKFLOWS[task]):
+        raise RegistryGuard("readiness_workflow_not_allowlisted")
     try:
-        listing = reader.get(f"/repos/{REPO}/actions/workflows/{WORKFLOWS[task]}/runs"
+        listing = reader.get(f"/repos/{REPO}/actions/workflows/{workflow}/runs"
                              "?event=workflow_dispatch&branch=main&per_page=1")
         if (not isinstance(listing, dict) or type(listing.get("total_count")) is not int
                 or listing["total_count"] < 0 or not isinstance(listing.get("workflow_runs"), list)):
@@ -61,7 +65,7 @@ def inspect(reader, task, day, now, publication_mode="formal", *, expected_run_i
         if (not isinstance(run, dict) or type(run.get("id")) is not int
                 or not re.fullmatch(r"[1-9][0-9]{7,19}", str(run["id"]))
                 or run.get("repository", {}).get("full_name") != REPO
-                or run.get("path", "").split("@")[0] != ".github/workflows/" + WORKFLOWS[task]
+                or run.get("path", "").split("@")[0] != ".github/workflows/" + workflow
                 or run.get("event") != "workflow_dispatch" or run.get("head_branch") != "main"
                 or not SHA.fullmatch(str(run.get("head_sha", "")))
                 or type(run.get("run_attempt")) is not int or run["run_attempt"] != 1
