@@ -69,9 +69,18 @@ def api(token, repo, path, *, method="GET", payload=None):
         value = json.loads(raw) if raw else {}
         require(isinstance(value, dict), "invalid_api_response")
         return value
-    except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError,
-            OSError, ValueError):
-        raise Hold("github_response_unknown_no_retry") from None
+    except urllib.error.HTTPError as exc:
+        # No response body, URL, header, token or private metadata is logged.
+        # This remains a hard stop (POSTs are never blindly retried).
+        kind = ("runner_state" if "/actions/runners" in path else
+                "workflow_state" if "/actions/workflows/" in path else
+                "run_state" if "/actions/runs/" in path else
+                "source_head" if path == "/branches/main" else
+                "registry" if path.startswith("/contents/") else
+                "other")
+        raise Hold(f"github_http_{exc.code}_{repo.split('/')[0]}_{kind}_no_retry") from None
+    except (urllib.error.URLError, TimeoutError, OSError, ValueError):
+        raise Hold("github_network_or_schema_unknown_no_retry") from None
 
 
 def json_file(token, path):
