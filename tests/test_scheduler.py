@@ -1,5 +1,6 @@
 import json
 import unittest
+from datetime import datetime, timezone
 from pathlib import Path
 from unittest.mock import patch
 from urllib.error import HTTPError
@@ -12,7 +13,11 @@ from scheduler.production_registry import reserve, RegistryGuard
 CONFIG = json.loads((Path(__file__).resolve().parents[1] / "config/repositories.json").read_text())
 
 def quota(status):
-    return {"status": status, "independentlyVerified": True}
+    now = datetime.now(timezone.utc)
+    return {"status": status, "independentlyVerified": True,
+            "remainingFreeMinutes": 0 if status == "exhausted" else 10000,
+            "period": now.strftime("%Y-%m"),
+            "observedAt": now.isoformat()}
 
 def online(name):
     return {"name": name, "status": "online", "busy": False, "labelsVerified": True}

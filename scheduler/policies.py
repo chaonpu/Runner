@@ -6,6 +6,8 @@ Never infer Windows executable compatibility merely from a Runner online status.
 """
 from __future__ import annotations
 from dataclasses import dataclass
+from datetime import datetime, timezone
+import math
 from typing import Any
 import re
 
@@ -26,6 +28,35 @@ def billing_state(value: Any) -> str:
     if state in ("available", "exhausted") and value.get("independentlyVerified") is True:
         return state
     return "unknown"
+
+def hosted_capacity(value: Any, task: dict, *, now=None) -> str:
+    """Apply a fresh, verified free balance to THIS task's Linux minute budget.
+
+    Usage totals, startup canaries and paid budgets are never free balances.
+    'insufficient' means below the task budget, not an exhausted account.
+    """
+    state = billing_state(value)
+    if state not in ("available", "exhausted"):
+        return "unknown"
+    remaining = value.get("remainingFreeMinutes")
+    estimate, reserve = task.get("estimatedMinutes"), task.get("reserveMinutes")
+    if any(type(n) not in (int, float) or not math.isfinite(n) or n < 0
+           for n in (remaining, estimate, reserve)) or estimate <= 0:
+        return "unknown"
+    instant = datetime.now(timezone.utc) if now is None else now
+    try:
+        observed = datetime.fromisoformat(value["observedAt"])
+        if instant.tzinfo is None or observed.tzinfo is None:
+            return "unknown"
+        instant = instant.astimezone(timezone.utc)
+        age = (instant - observed).total_seconds()
+        if not 0 <= age <= 300 or value.get("period") != instant.strftime("%Y-%m"):
+            return "unknown"
+    except (KeyError, TypeError, ValueError, AttributeError):
+        return "unknown"
+    if state == "exhausted":
+        return "exhausted" if remaining == 0 else "unknown"
+    return "available" if remaining >= estimate + reserve else "insufficient"
 
 def runner_available(obj: Any, name: str | None) -> bool:
     if not isinstance(obj, dict) or not name:
@@ -66,7 +97,7 @@ def decide(task_name: str, task: dict, account_states: dict,
     kind = task["kind"]
     repo = task["repo"]
     owner = repo.split("/")[0]
-    main_quota = billing_state(account_states.get(owner))
+    main_quota = hosted_capacity(account_states.get(owner), task)
 
     # Never auto-publish or modify a formal database on a green workflow alone.
     if kind in ("publish", "data"):
@@ -78,8 +109,8 @@ def decide(task_name: str, task: dict, account_states: dict,
                             repo, task["cloudWorkflow"])
         signing_repo = task["signingRepo"]
         signing_owner = signing_repo.split("/")[0]
-        signer_quota = billing_state(account_states.get(signing_owner))
-        if (main_quota == "exhausted" and signer_quota == "available"
+        signer_quota = hosted_capacity(account_states.get(signing_owner), task)
+        if (main_quota in ("exhausted", "insufficient") and signer_quota == "available"
                 and signing_source_verified):
             return Decision("cloud-signing", "Test hosted exhausted; verified source permits signing hosted",
                             signing_repo, task["signingCloudWorkflow"])

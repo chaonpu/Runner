@@ -48,6 +48,7 @@ def audit(config: dict, registry: dict, env: dict, *,
         entry = bill(owner, spec, env)
         accounts[owner] = {
             "usageEndpointRead": entry.get("read", "unknown"),
+            "reportingPeriodVerified": entry.get("reportingPeriodVerified") is True,
             "verifiedRemainingFreeMinutes": False,
             "hostedDecision": "unknown",
             "totalsNotUsedAsRemaining": True,

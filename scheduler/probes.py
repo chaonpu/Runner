@@ -6,6 +6,8 @@ makes API POST/PATCH/DELETE requests. All error messages are sanitized.
 from __future__ import annotations
 
 import json
+from datetime import datetime, timezone
+import math
 import os
 import urllib.error
 import urllib.request
@@ -62,7 +64,7 @@ class GitHubReadOnly:
             raise ValueError("invalid GitHub result type")
         return result
 
-def account_usage(account: str, spec: dict, env: dict) -> dict:
+def account_usage(account: str, spec: dict, env: dict, *, now=None) -> dict:
     token = env.get(spec["billingSecret"], "")
     result = {"owner": account, "accountType": spec["kind"],
               "read": "secret_missing" if not token else "unknown",
@@ -70,13 +72,23 @@ def account_usage(account: str, spec: dict, env: dict) -> dict:
     if not token:
         return result
     try:
+        instant = datetime.now(timezone.utc) if now is None else now
+        if instant.tzinfo is None:
+            raise ValueError("ambiguous billing clock")
+        instant = instant.astimezone(timezone.utc)
+        query = f"?product=Actions&year={instant.year}&month={instant.month}"
         if spec["kind"] == "user":
-            path = f"/users/{account}/settings/billing/usage/summary?product=Actions"
+            path = f"/users/{account}/settings/billing/usage/summary" + query
         elif spec["kind"] == "organization":
-            path = f"/organizations/{account}/settings/billing/usage/summary?product=Actions"
+            path = f"/organizations/{account}/settings/billing/usage/summary" + query
         else:
             raise ValueError("unsupported account kind")
         data = GitHubReadOnly(token).get(path)
+        period = data.get("timePeriod")
+        if (not isinstance(period, dict) or type(period.get("year")) is not int
+                or type(period.get("month")) is not int
+                or period["year"] != instant.year or period["month"] != instant.month):
+            raise ValueError("billing period not confirmed")
         items = data.get("usageItems")
         if not isinstance(items, list):
             raise ValueError("missing usageItems")
@@ -88,9 +100,11 @@ def account_usage(account: str, spec: dict, env: dict) -> dict:
             if unit.lower() != "minutes" or not sku.lower().startswith("actions_"):
                 continue
             value = item.get("grossQuantity")
-            if type(value) in (int, float) and value >= 0:
+            if type(value) in (int, float) and math.isfinite(value) and value >= 0:
                 amounts[sku[:48]] = round(amounts.get(sku[:48], 0) + value, 3)
         result.update(read="readable", minuteUsageBySku=amounts,
+                      period=instant.strftime("%Y-%m"), observedAt=instant.isoformat(),
+                      reportingPeriodVerified=True,
                       note="Usage is not free allowance, remaining balance, or dispatch eligibility")
     except (urllib.error.HTTPError, urllib.error.URLError, OSError, TimeoutError,
             ValueError, KeyError, TypeError) as exc:
