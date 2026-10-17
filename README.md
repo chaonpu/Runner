@@ -11,6 +11,8 @@
 
 ## 当前状态
 
+**Runner 令牌修复已线上验收（2026-10-17 09:12 北京时间）**：[安全检查 #38989843184](https://github.com/chaonpu/Runner/actions/runs/38989843184) 成功，代码提交 `4356c58` 将 Stock 所属账号的 `runnerSecret` 改为用户已核对的 `RUNNER_READ_TOKEN`；`CHAONPU_BILLING_READ_TOKEN` 继续只读计费用量，`CHAONPU_ACTIONS_READ_TOKEN` 用于 Actions 查询。**159 项测试通过**。实际只读结果：A/US 的 `runnerRead=readable`、`windowsOnlineAndLabelsVerified=true`（指定 Runner 在线、空闲且标签匹配），两个工作流均 `no_active_run`。两账号 Billing Usage 可读，但剩余免费分钟仍未核实；Stock 的 Windows 生产工作流尚未完成业务验收，因此仍未加入调度白名单。生产派发、登记写入、database 写入及自动重试全部关闭。Test 的 Runner 凭据映射本次未改。
+
 **最新线上联通结果（2026-10-17）**：[RUNNER #38974929403](https://github.com/chaonpu/Runner/actions/runs/38974929403) 已通过现有安全 CI 完成一次性**真实 GitHub Contents API 只读读取**，`registryApiRead=true`、生产任务 `0`、A/美股自动候选日期均为 `2026-10-16`、路由建议均 `deferred`，生产派发/任务写入/账本读取/自动重试均为 `false`。同轮 **125 项测试通过**。临时线上联通步骤已移除，后续代码提交不会持续检查业务状态。[移除后 CI #38974990095](https://github.com/chaonpu/Runner/actions/runs/38974990095) 成功。注意此次是借助原本 `validate.yml` 执行的真实在线只读验收，并非 `production-dispatch.yml` 手动启动的完整验收。正式策略开关持续关闭。
 
 **安全验收新入口（2026-10-17）**：新增 [production-dispatch.yml](.github/workflows/production-dispatch.yml)，当前**仅人工 workflow_dispatch + contents:read**，支持 A股、美股**不填日期即可执行只读预检**。默认使用实际运行时刻推算市场时区下最近已完成的周一至周五收盘日：A股为北京时间 15:00，美股为纽约时间 16:00（自动适配夏令时）；周末和盘中回退到前一工作日。需要审计历史时仍可手工填写日期。**这只是日期候选，不包含交易所节假日/提前收盘核实，不能作为真实派发许可**。Python 入口 `scheduler.production_dry_run` 从公开 GitHub Contents API GET 当前 `state/tasks.json`，发现异常直接 hold，即使预检推荐 cloud 也永远输出 `dispatchAuthorized=false`、`registryWriteAuthorized=false`、`databaseWriteAuthorized=false`、`automaticRetryAuthorized=false`。没有任何跨仓库派发、状态写入、账本同步或定时触发。GitHub Base64 换行兼容已修复。[RUNNER 测试 #38974308079](https://github.com/chaonpu/Runner/actions/runs/38974308079) **121 项通过**。该入口**尚未真实手动执行**，不能把单元测试视为在线预检结果。
