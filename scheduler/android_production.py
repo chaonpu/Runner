@@ -28,7 +28,7 @@ CONFIG_PATH = "config/repositories.json"
 SHA = re.compile(r"^[0-9a-f]{40}$")
 RUN_ID = re.compile(r"^[1-9][0-9]*$")
 PHASES = {"reserved", "test_started", "test_verified",
-          "signer_started", "signed_verified"}
+          "signer_reserved", "signer_started", "signed_verified"}
 POLL_SECONDS = 30
 MAX_WAIT_SECONDS = 3 * 60 * 60
 
@@ -110,7 +110,8 @@ def put_state(public_token, source, phase, *, test_run_id=None, signing_run_id=N
     allowed = {
         "reserved": {"test_started"},
         "test_started": {"test_verified"},
-        "test_verified": {"signer_started"},
+        "test_verified": {"signer_reserved"},
+        "signer_reserved": {"signer_started"},
         "signer_started": {"signed_verified"},
         "signed_verified": set(),
     }
@@ -373,6 +374,10 @@ def run(env, *, execute=False, resume=False, requested_sha=""):
         check_idle(SIGNER, SIGN_WORKFLOW, sign_account, env)
         require(runner_ready(SIGNER, task["signingRunnerName"], sign_account, env),
                 "signing_runner_offline_resume_original_test_later")
+        # Persist an irrevocable dispatch-intent barrier BEFORE the signing POST.
+        # Any unknown response or failed state write requires manual Run lookup;
+        # a resumed test_verified state must never silently dispatch again.
+        put_state(pub, source, "signer_reserved")
         sign_run = dispatch(sign, SIGNER, SIGN_WORKFLOW,
                             {"test_run_id": str(test_run), "source_commit": source})
         put_state(pub, source, "signer_started", signing_run_id=sign_run)
