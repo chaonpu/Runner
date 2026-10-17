@@ -35,11 +35,11 @@ def event_keys(yaml_text):
 class WorkflowContractTests(unittest.TestCase):
     def test_only_validation_has_push_all_others_manual_only(self):
         files = {p.name: p for p in WORKFLOWS.glob("*.yml")}
-        self.assertEqual(set(files), MANUAL_ONLY | {VALIDATE, "production-launch.yml", "android-production-launch.yml"})
+        self.assertEqual(set(files), MANUAL_ONLY | {VALIDATE, "production-launch.yml", "android-production-launch.yml", "android-signing-recovery-launch.yml"})
         for name, path in files.items():
             with self.subTest(workflow=name):
                 actual = event_keys(path.read_text(encoding="utf-8"))
-                wanted = {"workflow_dispatch", "push"} if name == VALIDATE else {"push"} if name in ("production-launch.yml", "android-production-launch.yml") else {"workflow_dispatch"}
+                wanted = {"workflow_dispatch", "push"} if name == VALIDATE else {"push"} if name in ("production-launch.yml", "android-production-launch.yml", "android-signing-recovery-launch.yml") else {"workflow_dispatch"}
                 self.assertEqual(actual, wanted, "No scheduled, PR, or other automatic task trigger")
 
     def test_production_workflow_has_explicit_single_task_execution_and_cleanup(self):
