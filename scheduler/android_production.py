@@ -184,8 +184,15 @@ def check_idle(repo, workflow, account, env):
             "active_or_unknown_private_workflow_no_dispatch")
 
 
+def runner_account(repo, account, env):
+    """Prefer a Test-only Administration:read token if configured."""
+    if repo == TEST and env.get("TEST_RUNNER_READ_TOKEN"):
+        return {**account, "runnerSecret": "TEST_RUNNER_READ_TOKEN"}
+    return account
+
+
 def runner_ready(repo, name, account, env):
-    r = runner_for_repo(repo, name, account, env)
+    r = runner_for_repo(repo, name, runner_account(repo, account, env), env)
     return (r.get("status") == "online" and r.get("busy") is False
             and r.get("labelsVerified") is True)
 
@@ -303,7 +310,8 @@ def run(env, *, execute=False, resume=False, requested_sha=""):
     test_account = config["accounts"]["anwpustudent-lab"]
     sign_account = config["accounts"]["chaonpu"]
     if not execute:
-        test_probe = runner_for_repo(TEST, task["runnerName"], test_account, env)
+        test_probe = runner_for_repo(TEST, task["runnerName"],
+                                       runner_account(TEST, test_account, env), env)
         sign_probe = runner_for_repo(SIGNER, task["signingRunnerName"], sign_account, env)
         def is_ready(item):
             return (item.get("status") == "online" and item.get("busy") is False
