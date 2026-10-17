@@ -90,6 +90,7 @@ class AutomaticPublicationTests(unittest.TestCase):
             signed.rmdir()
             if tamper=='source':(root/'source-commit.txt').write_text('b'*40)
             if tamper=='extra':(root/'private-source.py').write_text('private')
+            if tamper=='idsig':(root/'ziwuxilv-native-v2.3.5.apk.idsig').write_bytes(b'incremental signature')
             return SimpleNamespace(returncode=0)
         with patch.object(p.apk_stage,'verify_provenance') as provenance,\
              patch.object(p.subprocess,'run',side_effect=download),\
@@ -103,6 +104,7 @@ class AutomaticPublicationTests(unittest.TestCase):
 
     def test_discovery_checks_private_provenance_artifact_hashes_and_apk_bytes(self):
         self.assertEqual(self.candidate(),('2.3.5',118))
+        self.assertEqual(self.candidate('idsig'),('2.3.5',118))
 
     def test_discovery_rejects_foreign_source_or_extra_private_file(self):
         for tamper in ('source','extra'):

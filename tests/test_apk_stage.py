@@ -141,6 +141,33 @@ class APKStagingTests(unittest.TestCase):
             digest = package_public_transport(signed, names, archived)
             self.assertEqual(digest, hashlib.sha256(archived.read_bytes()).hexdigest())
 
+    def test_optional_incremental_signature_is_never_publicly_packaged(self):
+        with tempfile.TemporaryDirectory() as d:
+            req=params();root=Path(d);signed=self.fixture(root,req)
+            sidecar=signed/(f"ziwuxilv-native-v{req['versionName']}.apk.idsig")
+            sidecar.write_bytes(b'private incremental install signature')
+            _,_,names=assert_clean_artifact(signed,req)
+            self.assertEqual(len(names),5)
+            self.assertNotIn(sidecar.name,names)
+            archive=root/'transport.zip'
+            package_public_transport(signed,names,archive)
+            import zipfile
+            with zipfile.ZipFile(archive) as z:
+                self.assertEqual(sorted(z.namelist()),names)
+                self.assertNotIn(sidecar.name,z.namelist())
+
+    def test_only_exact_bounded_regular_incremental_signature_is_accepted(self):
+        for kind in ('empty','oversized','foreign','symlink'):
+            with self.subTest(kind=kind),tempfile.TemporaryDirectory() as d:
+                req=params();signed=self.fixture(Path(d),req)
+                sidecar=signed/(f"ziwuxilv-native-v{req['versionName']}.apk.idsig")
+                if kind=='empty':sidecar.write_bytes(b'')
+                elif kind=='oversized':
+                    with sidecar.open('wb') as stream:stream.truncate(8*1024*1024+1)
+                elif kind=='foreign':(signed/'other.apk.idsig').write_bytes(b'other')
+                else:sidecar.symlink_to(signed/'source-commit.txt')
+                with self.assertRaises(GuardError):assert_clean_artifact(signed,req)
+
     def test_unrecognized_file_forbidden_to_block_private_source(self):
         with tempfile.TemporaryDirectory() as d:
             req = params()

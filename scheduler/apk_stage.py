@@ -157,8 +157,15 @@ def assert_clean_artifact(folder: Path, expected: dict) -> tuple[Path, dict, lis
     }
     entries = list(folder.iterdir())
     present = {entry.name for entry in entries if entry.is_file() and not entry.is_symlink()}
-    if present != required or any(not entry.is_file() or entry.is_symlink() for entry in entries):
+    # New Android build tools also produce a v4 incremental-install signature.
+    # It is private input only: the public transport still contains exactly
+    # the original five verified files, never this optional sidecar.
+    idsig = name + ".idsig"
+    if (present not in (required, required | {idsig})
+            or any(not entry.is_file() or entry.is_symlink() for entry in entries)):
         raise GuardError("artifact_files_not_allowlisted")
+    if idsig in present and not 0 < (folder / idsig).stat().st_size <= 8 * 1024 * 1024:
+        raise GuardError("incremental_signature_sidecar_size_invalid")
     apk = folder / name
     if apk.stat().st_size > MAX_APK_BYTES or apk.stat().st_size < 1024:
         raise GuardError("unexpected_apk_size")
