@@ -30,9 +30,13 @@ class RuntimeStatusTests(unittest.TestCase):
         return audit(config or CONFIG, STATE, {},
                      bill=billing, probe_runner=runner, active=attempts)
 
-    def test_billing_token_is_current_runner_read_secret_for_both_accounts(self):
-        for account in CONFIG["accounts"].values():
-            self.assertEqual(account["runnerSecret"], account["billingSecret"])
+    def test_dedicated_stock_runner_secret_mapping(self):
+        stock = CONFIG["accounts"]["chaonpu"]
+        self.assertEqual(stock["runnerSecret"], "RUNNER_READ_TOKEN")
+        self.assertNotEqual(stock["runnerSecret"], stock["billingSecret"])
+        # Keep the other account unchanged until its own runner token is verified.
+        other = CONFIG["accounts"]["anwpustudent-lab"]
+        self.assertEqual(other["runnerSecret"], other["billingSecret"])
 
     def test_billing_token_repository_scope_is_reported_without_runner_claim(self):
         class Visible:
