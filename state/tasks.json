@@ -9,10 +9,11 @@
       "publicationMode": "theoretical_catchup",
       "repo": "chaonpu/Stock",
       "route": "windows",
+      "runId": 39029549179,
       "sourceSha": "504f49dc90417102662f9ee615a2cad6d4cfe07f",
-      "status": "reserved",
+      "status": "dispatched",
       "task": "stock_us",
-      "updatedAt": "2026-10-17T11:39:19.024432+00:00",
+      "updatedAt": "2026-10-17T11:39:43.501774+00:00",
       "workflow": "run-us.yml"
     }
   ]
