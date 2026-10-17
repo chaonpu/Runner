@@ -70,6 +70,12 @@
     },
     "fefb9e69ba9f4069e0a651243b67fa29e6324d27": {
       "createdAt": "2026-10-17T20:53:52.760697+00:00",
+      "lastFailure": {
+        "code": "source_checkout_unverified_manual_review",
+        "recordedAt": "2026-10-17T20:54:56.991370+00:00",
+        "runId": 39068652100,
+        "stage": "test"
+      },
       "phase": "test_started",
       "route": "windows",
       "sourceSha": "fefb9e69ba9f4069e0a651243b67fa29e6324d27",
