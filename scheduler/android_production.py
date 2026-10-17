@@ -435,8 +435,13 @@ def choose_signer_route(task, account, env):
     capacity = hosted_capacity(usage, task)
     if capacity == "available":
         return "cloud", CLOUD_SIGN_WORKFLOW
-    if capacity in ("insufficient", "exhausted") and runner_ready(
-            SIGNER, task["signingRunnerName"], account, env):
+    if capacity == "unknown":
+        if not env.get(account.get("billingSecret", ""), ""):
+            raise Hold("signer_billing_read_token_missing")
+        raise Hold("signer_allowance_unverified_no_dispatch")
+    if capacity in ("insufficient", "exhausted"):
+        require(runner_ready(SIGNER, task["signingRunnerName"], account, env),
+                "signer_windows_runner_not_verified")
         return "windows", SIGN_WORKFLOW
     raise Hold("no_verified_android_signing_route")
 
