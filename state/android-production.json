@@ -94,11 +94,11 @@
     },
     "efde2087d0286be33aa9fd7d3c05f70ed219306c": {
       "createdAt": "2026-10-17T22:04:16.548614+00:00",
-      "phase": "test_started",
+      "phase": "test_verified",
       "route": "windows",
       "sourceSha": "efde2087d0286be33aa9fd7d3c05f70ed219306c",
       "testRunId": 39073550203,
-      "updatedAt": "2026-10-17T22:04:18.961691+00:00"
+      "updatedAt": "2026-10-17T22:14:26.073388+00:00"
     },
     "fefb9e69ba9f4069e0a651243b67fa29e6324d27": {
       "createdAt": "2026-10-17T20:53:52.760697+00:00",
