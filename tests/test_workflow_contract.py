@@ -13,6 +13,7 @@ MANUAL_ONLY = {
     "scheduler.yml",
     "production-dispatch.yml",
     "stage-android-apk.yml",
+    "android-production.yml",
     "stock-noop-pilot.yml",
 }
 VALIDATE = "validate.yml"
