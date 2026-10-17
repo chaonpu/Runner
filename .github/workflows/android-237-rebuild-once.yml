@@ -27,7 +27,7 @@ jobs:
       TEST_BILLING_READ_TOKEN: ${{ secrets.TEST_BILLING_READ_TOKEN }}
       CHAONPU_BILLING_READ_TOKEN: ${{ secrets.CHAONPU_BILLING_READ_TOKEN }}
       CHAONPU_ACTIONS_READ_TOKEN: ${{ secrets.CHAONPU_ACTIONS_READ_TOKEN }}
-      SOURCE_SHA: 73a9ce4c933f1a6fec971c83905f84e524a8cd5e
+      SOURCE_SHA: e20d59e487f3615ab1c5c594ea7e045e509c6b0e
     steps:
       - name: Checkout trusted coordinator at exact event SHA
         uses: actions/checkout@v4
