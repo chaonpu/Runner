@@ -128,8 +128,19 @@ def runner_for_repo(repo: str, expected_name: str | None, spec: dict, env: dict)
         status["read"] = safe_error(exc)
     return status
 
-def existing_attempt(repo: str, workflow: str | None, spec: dict, env: dict) -> dict:
-    result = {"status": "unknown", "read": "not_configured"}
+ACTIVE_RUN_STATES = ("queued", "in_progress", "waiting", "pending", "requested")
+
+
+def existing_attempt(repo: str, workflow: str | None, spec: dict, env: dict,
+                     *, reader_factory=GitHubReadOnly) -> dict:
+    """Query ALL active statuses explicitly; never infer absence from newest N runs.
+
+    GitHub's unfiltered list only returns the newest page, so an older stalled
+    run can be missed. Any one failed/malformed filtered query means UNKNOWN
+    and fails closed. Public output contains status only, not private run IDs.
+    """
+    result = {"status": "unknown", "read": "not_configured",
+              "matchingTaskVerified": False}
     if not workflow:
         return result
     token = env.get(spec["actionsSecret"], "")
@@ -137,18 +148,24 @@ def existing_attempt(repo: str, workflow: str | None, spec: dict, env: dict) -> 
         result["read"] = "secret_missing"
         return result
     try:
-        data = GitHubReadOnly(token).get(
-            f"/repos/{repo}/actions/workflows/{workflow}/runs?per_page=30")
-        runs = data.get("workflow_runs")
-        if not isinstance(runs, list):
-            raise ValueError("workflow_runs missing")
-        # No task-ID correlation is possible for legacy workflows without a
-        # dispatch marker. A possible active run blocks another dispatch.
-        active = [r for r in runs if isinstance(r, dict) and r.get("status") in
-                  ("queued", "in_progress", "waiting", "pending", "requested")]
-        result.update(read="readable", status="active" if active else "no_active_run",
-                      matchingTaskVerified=False)
+        reader = reader_factory(token)
+        for status in ACTIVE_RUN_STATES:
+            path = (f"/repos/{repo}/actions/workflows/{workflow}/runs"
+                    f"?status={status}&per_page=1")
+            record = reader.get(path)
+            count = record.get("total_count")
+            rows = record.get("workflow_runs")
+            if type(count) is not int or count < 0 or not isinstance(rows, list):
+                raise ValueError("untrusted_status_filtered_run_query")
+            if count > 0:
+                if not rows or not isinstance(rows[0], dict) or rows[0].get("status") != status:
+                    raise ValueError("filtered_run_missing_confirmed_status")
+                result.update(read="readable", status="active")
+                return result
+            if rows:
+                raise ValueError("zero_count_but_runs_returned")
+        result.update(read="readable", status="no_active_run")
     except (urllib.error.HTTPError, urllib.error.URLError, OSError, TimeoutError,
             ValueError, KeyError, TypeError) as exc:
-        result["read"] = safe_error(exc)
+        result.update(read=safe_error(exc), status="unknown")
     return result
