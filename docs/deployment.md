@@ -1,5 +1,14 @@
 # 统一调度中心部署与迁移计划（2026-10-17）
 
+## 2026-10-17 生产主分支之外的两次真实远端 Git 验收与协调准入门禁
+
+- [Stock #38985616567](https://github.com/chaonpu/Stock/actions/runs/38985616567)：在实际 Windows 自托管 Runner 上使用当前私有 database 凭据，仅向**`ZIWUXILV/database` 审计分支 `audit/windows-git-ack-20261017`** 写入一份固定合成 `ci_audits` 标记。**一次 `git push` 后通过独立 `git ls-remote` 核对准确远端 SHA**，Job 成功，事后用 GitHub API 复查审计分支文件存在。正式 database main **未变化**，没有真实交易数据/APP 快照/账本写入。审计分支不会合并进业务 main。
+- 另在公开 `chaonpu/Runner` 的 **`audit/runner-cas-20261017`** 分支建立只含合成状态的 `state/audits/runner-cas-20261017.json`，通过 GitHub Contents API 的前置 blob SHA 完成一次真实条件更新（CAS），独立 GET 回读内容确认正确。再故意以旧 blob SHA 尝试覆盖，GitHub 返回 **409 Conflict**，原状态不变。正式 RUNNER main 的 `state/tasks.json` 仍为 0 条，不创建生产登记，不包含任何私有数据。
+- **已存在的真实跨库无业务派发结果**：RUNNER public `state/pilot_runs.json` 记录 `pilot:stock:2026-10-17`（Runner Run `38961235915` → Stock Run `38961249562`）与 `pilot:stock:2026-10-18`（Runner Run `38967023305` → Stock Run `38967039826`），两项均已登记 `completed_success`。它们运行的仅是 `runner-dispatch-canary.yml`，**不是** A股/美股正式策略。
+- Stock 新增 `private_runner_admission.py`，且两套 A/US 工作流都在协调任务任何业务之前，独立向公开 Runner 读取 `config/repositories.json`、`state/tasks.json`、原始 Runner Run 元数据。只有当生产总开关及该任务开关均打开、该任务唯一登记、公开登记已把**准确 Stock Run ID** 绑定到准确协调 Run ID、执行路线及允许的工作流一致、来源上下文可信时才能通过。原 Stock Run 绑定可在单次工作流内部有上限地等待（最多五轮，间隔 10 秒），但不额外派发、重算、重复写入或后台守护。未登记/冲突/外部网络不可用立即 HOLD。
+- [Stock Windows #38986254988](https://github.com/chaonpu/Stock/actions/runs/38986254988) **Success**：28/28 项 private ACK、Windows mode、协调入场来源模拟测试全通过，并通过私有 GitHub API 对当前 A/US workflow 的准确源码位置做只读契约检验；没有触发生产策略、私有 database 正式写入或邮件。新增临时自动触发已删除。
+- **仍未满足的正式上线条件**：生产工作流 `production-dispatch.yml` 当前仍故意采用**只读安全门**，没有权限或代码真实调度 A/US；GitHub 托管免费余额不能仅以已消耗分钟推断；Windows 网络可靠性存在历史 443 超时；当前 registry 没有生产任务，未能用真实正式运行证明 Runner ID → Stock Run ID → database main 同提交回执 → 独立确认的闭环。必须逐项证实后再开启生产，不得把 audit 分支或 canary 成功写成 `businessVerified`。
+
 ## 2026-10-17 Git 远端写入 ACK 不确定性处理与 Windows 回执来源匹配（生产仍锁闭）
 
 - 私有 Stock 新增 `private_push_confirmation.py` 和 8 项合成测试；**仅带 coordinator task_id 的 A/US 正式工作流**使用。必须先生成正式行情结果、安全通过本次运行日期和覆盖校验、计算并提交同一次账本与私有回执，然后核对身份、任务日期、数据库唯一允许的 origin、同一 Git commit 的市场效应与私有 receipt。随后仅允许 **一次** `git push origin HEAD:main`，并单独通过**只读** `git ls-remote` 验证远端 main SHA 与本次拟提交 SHA 完全相同。如果客户端 push 响应丢失但 GitHub 已写入同一 commit，可以确认“提交存在”，但不会再次推送；如果远端无法读取或不等，则返回 HOLD，绝不执行第二次业务或第二次 Git push，也不授予 `verified`。
