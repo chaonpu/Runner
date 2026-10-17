@@ -37,6 +37,15 @@ jobs:
           TEST_BILLING_READ_TOKEN: ${{ secrets.TEST_BILLING_READ_TOKEN }}
           TEST_RUNNER_READ_TOKEN: ${{ secrets.TEST_RUNNER_READ_TOKEN }}
         run: python3 -m scheduler.runtime_status
+      - name: Read-only Android source and private runner preflight
+        if: github.actor == 'chaonpu'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TEST_ACTIONS_READ_TOKEN: ${{ secrets.TEST_ACTIONS_READ_TOKEN }}
+          TEST_BILLING_READ_TOKEN: ${{ secrets.TEST_BILLING_READ_TOKEN }}
+          CHAONPU_ACTIONS_READ_TOKEN: ${{ secrets.CHAONPU_ACTIONS_READ_TOKEN }}
+        run: python3 -m scheduler.android_production
       - name: Enforce public repository secrets boundary
         run: |
           python3 - <<'PY'
