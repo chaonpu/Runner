@@ -38,7 +38,7 @@ class Tests(unittest.TestCase):
 
     def test_read_only_never_dispatches(self):
         sha = "d" * 40
-        cfg = {"tasks": {"android": {"repo": a.TEST, "signingRepo": a.SIGNER,
+        cfg = {"accounts": {"anwpustudent-lab": {"actionsSecret": "T", "runnerSecret": "R"}, "chaonpu": {"actionsSecret": "C", "runnerSecret": "S"}}, "tasks": {"android": {"repo": a.TEST, "signingRepo": a.SIGNER,
                "windowsWorkflow": a.TEST_WORKFLOW,
                "signingWindowsWorkflow": a.SIGN_WORKFLOW}}}
         def document(token, path):
@@ -70,7 +70,7 @@ class Tests(unittest.TestCase):
 
     def test_resume_requires_exact_original_sha(self):
         sha = "a" * 40
-        cfg = {"tasks": {"android": {"repo": a.TEST, "signingRepo": a.SIGNER,
+        cfg = {"accounts": {"anwpustudent-lab": {"actionsSecret": "T", "runnerSecret": "R"}, "chaonpu": {"actionsSecret": "C", "runnerSecret": "S"}}, "tasks": {"android": {"repo": a.TEST, "signingRepo": a.SIGNER,
                "windowsWorkflow": a.TEST_WORKFLOW,
                "signingWindowsWorkflow": a.SIGN_WORKFLOW}}}
         record = {"version": 1, "builds": {sha: {
