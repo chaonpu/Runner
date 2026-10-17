@@ -11,6 +11,8 @@
 
 ## 当前状态
 
+**2000 分钟与公开仓库排除口径已修正（2026-10-17）**：用户已确认个人账户每月免费额度为 **2000 分钟**，现已写入两个账号配置。不能将账户总用量超出 2000 的部分当作私有额度消耗。新增按仓库拆分的 `/users/{owner}/settings/billing/usage` 读取，使用相应 Actions 令牌仅 GET 仓库元数据，排除公开仓库标准 GitHub-hosted Runner 的分钟；同时兼容线上实际返回的仓库短名。公开用量与账户包含额度均可能计入 discountAmount，因此不把折扣总量当作额度抵扣。私有标准 Linux 用量形成余额估算；其他私有运行器折算未核实时保持未知，不猜倍率，也不将当前可见性下的估算伪装成实时精确余额。[线上检查 #38990659922](https://github.com/chaonpu/Runner/actions/runs/38990659922) 成功，**176 项测试通过**。两个账号在排除公开标准用量后，剩余估算均为零；`chaonpu` 记录中确有公开标准用量被排除。公开日志只输出分类与布尔状态，不披露仓库账单明细和消耗数值。精确余额验证仍为 false；生产派发、登记/数据库写入、自动重试均保持关闭。
+
 **任务额度门槛已部署（2026-10-17）**：[线上检查 #38990217463](https://github.com/chaonpu/Runner/actions/runs/38990217463) 成功，**168 项测试通过**。云端推荐现要求经独立核实的 `remainingFreeMinutes` 足够覆盖任务 `estimatedMinutes + reserveMinutes`，证据 `observedAt` 为带时区时间、距检查时刻不超过 300 秒且不在未来，`period` 必须是当前 UTC 年月。不足只表示本任务预算不足，不把账户判为耗尽；未知、过期、跨月、负数、非有限数及缺字段均不推荐云端。可用和耗尽证据均受时效检查；耗尽还要求余额确为零。当前 Billing Usage 适配器仍不提供该独立余额证据，因此不因新门槛而启用云端派发。计费 GET 已显式传入当前 UTC year/month，并验证返回的 timePeriod；两个账户线上 `reportingPeriodVerified=true`、用量可读，但剩余额度继续 `unknown`。Windows Runner 在线空闲，A/US 无活跃运行，生产开关保持关闭。
 
 **Runner 令牌修复已线上验收（2026-10-17 09:12 北京时间）**：[安全检查 #38989843184](https://github.com/chaonpu/Runner/actions/runs/38989843184) 成功，代码提交 `4356c58` 将 Stock 所属账号的 `runnerSecret` 改为用户已核对的 `RUNNER_READ_TOKEN`；`CHAONPU_BILLING_READ_TOKEN` 继续只读计费用量，`CHAONPU_ACTIONS_READ_TOKEN` 用于 Actions 查询。**159 项测试通过**。实际只读结果：A/US 的 `runnerRead=readable`、`windowsOnlineAndLabelsVerified=true`（指定 Runner 在线、空闲且标签匹配），两个工作流均 `no_active_run`。两账号 Billing Usage 可读，但剩余免费分钟仍未核实；Stock 的 Windows 生产工作流尚未完成业务验收，因此仍未加入调度白名单。生产派发、登记写入、database 写入及自动重试全部关闭。Test 的 Runner 凭据映射本次未改。
