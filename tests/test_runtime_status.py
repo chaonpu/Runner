@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 import unittest
 
-from scheduler.runtime_status import audit
+from scheduler.runtime_status import audit, billing_token_repository_access
 
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG = json.loads((ROOT / "config/repositories.json").read_text(encoding="utf-8"))
@@ -29,6 +29,36 @@ class RuntimeStatusTests(unittest.TestCase):
     def invoke(self, config=None):
         return audit(config or CONFIG, STATE, {},
                      bill=billing, probe_runner=runner, active=attempts)
+
+    def test_billing_token_is_current_runner_read_secret_for_both_accounts(self):
+        for account in CONFIG["accounts"].values():
+            self.assertEqual(account["runnerSecret"], account["billingSecret"])
+
+    def test_billing_token_repository_scope_is_reported_without_runner_claim(self):
+        class Visible:
+            def __init__(self, token):
+                self.asserted = token
+            def get(self, path):
+                if path != "/repos/chaonpu/Stock":
+                    raise AssertionError("Wrong diagnostic API path")
+                return {"full_name": "chaonpu/Stock"}
+        a = CONFIG["accounts"]["chaonpu"]
+        env = {a["billingSecret"]: "synthetic"}
+        self.assertEqual(
+            billing_token_repository_access("chaonpu/Stock", a, env,
+                                            reader_factory=Visible), "readable")
+        self.assertEqual(
+            billing_token_repository_access("chaonpu/Stock", a, {}),
+            "secret_missing")
+        class Forbidden:
+            def __init__(self, token):
+                pass
+            def get(self, path):
+                from urllib.error import HTTPError
+                raise HTTPError("https://api.github.com",404,"synthetic",{},None)
+        self.assertEqual(
+            billing_token_repository_access("chaonpu/Stock", a, env,
+                                            reader_factory=Forbidden), "not_found")
 
     def test_unverified_free_balance_not_inferred(self):
         obj = self.invoke()
