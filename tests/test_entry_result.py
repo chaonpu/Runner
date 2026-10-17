@@ -9,6 +9,15 @@ class EntryResultTests(unittest.TestCase):
         self.assertEqual(status, "已跳过")
         self.assertFalse(ran)
 
+    def test_completed_android_source_is_a_clear_noop(self):
+        status, detail, ran = summarize("android_build", [{
+            "phase": "already_signed", "status": "skipped",
+            "reason": "source_already_signed_verified_no_rebuild",
+            "testRunId": 321, "signingRunId": 456}], "success", False)
+        self.assertEqual(status, "已跳过")
+        self.assertIn("已完成测试、构建与签名", detail)
+        self.assertFalse(ran)
+
     def test_prior_recovery_is_not_a_fresh_run(self):
         status, _, ran = summarize("stock_us", [{"status":"skipped",
              "completionMode":"recovered_original_commit"}], "success", False)
