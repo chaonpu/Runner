@@ -81,5 +81,40 @@ class Tests(unittest.TestCase):
             with self.assertRaisesRegex(a.Hold, "resume_requires_original_source_sha"):
                 a.run({"GH_TOKEN": "p", "TEST_ACTIONS_READ_TOKEN": "t"}, execute=True, resume=True)
 
+    def test_source_read_permission_fallback(self):
+        sha = "f" * 40
+        denied = a.Hold("github_http_403_anwpustudent-lab_source_head_no_retry")
+        def lookup(token, repo, endpoint):
+            if token == "actions":
+                raise denied
+            return {"commit": {"sha": sha}}
+        with patch.object(a, "api", side_effect=lookup):
+            self.assertEqual(a.current_source(("actions", "read-only")), sha)
+        with patch.object(a, "api", side_effect=denied):
+            with self.assertRaisesRegex(a.Hold, "contents_read_permission_missing"):
+                a.current_source(("actions",))
+
+    def test_manual_source_pin_no_unverified_signer_dispatch(self):
+        sha = "d" * 40
+        cfg = {"accounts": {"anwpustudent-lab": {"actionsSecret": "T", "runnerSecret": "R"},
+                            "chaonpu": {"actionsSecret": "C", "runnerSecret": "S"}},
+               "tasks": {"android": {
+                   "repo": a.TEST, "signingRepo": a.SIGNER,
+                   "windowsWorkflow": a.TEST_WORKFLOW,
+                   "signingWindowsWorkflow": a.SIGN_WORKFLOW,
+                   "runnerName": "test", "signingRunnerName": "sign"}}}
+        def document(token, path):
+            return (cfg, "blob") if path == a.CONFIG_PATH else ({"version": 1, "builds": {}}, "blob")
+        with patch.object(a, "json_file", side_effect=document):
+            with patch.object(a, "current_source",
+                              side_effect=a.Hold("test_main_contents_read_permission_missing")):
+                with patch.object(a, "dispatch", side_effect=AssertionError("unexpected dispatch")):
+                    with patch.object(a, "record_public") as report:
+                        a.run({"GH_TOKEN": "public"}, requested_sha=sha)
+                        self.assertEqual(report.call_args.kwargs["branchShaVerified"], False)
+                        self.assertEqual(report.call_args.kwargs["manualSourceShaRequired"], False)
+                    with self.assertRaisesRegex(a.Hold, "source_sha_required"):
+                        a.run({"GH_TOKEN": "public"}, execute=True)
+
 if __name__ == "__main__":
     unittest.main()
