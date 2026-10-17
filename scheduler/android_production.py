@@ -243,7 +243,10 @@ def run(env, *, execute=False, resume=False, requested_sha=""):
             "android_workflow_configuration_changed")
     # A resumed exact-source run may be older than current Test/main.
     # New builds, however, must always start from the current main SHA.
-    source = requested_sha if resume and requested_sha else current_source(test)
+    if resume:
+        require(bool(requested_sha) and SHA.fullmatch(requested_sha),
+                "resume_requires_original_source_sha")
+    source = requested_sha if resume else current_source(test)
     require(bool(SHA.fullmatch(source)), "invalid_source_sha")
     if requested_sha and not resume:
         require(source == requested_sha, "requested_sha_not_current_test_main")
