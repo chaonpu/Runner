@@ -376,23 +376,30 @@ def run(env, *, execute=False, resume=False, requested_sha=""):
     else:
         require(entry is None, "source_already_registered_no_redispatch")
         check_idle(TEST, TEST_WORKFLOW, test_account, env)
+        check_idle(TEST, HOSTED_WORKFLOW, test_account, env)
         check_idle(SIGNER, SIGN_WORKFLOW, sign_account, env)
-        require(runner_ready(TEST, task["runnerName"], test_account, env)
+        require((route == "hosted" or runner_ready(
+                    TEST, task["runnerName"], test_account, env))
                 and runner_ready(SIGNER, task["signingRunnerName"], sign_account, env),
-                "two_private_windows_runners_not_ready")
-        reserve(pub, source)
-        # Reservation is durable before the first potentially irreversible POST.
-        test_run = dispatch(test, TEST, TEST_WORKFLOW, {})
+                "required_private_runner_not_ready")
+        reserve(pub, source, route=route)
+        # This exact route is fixed before the first potentially irreversible POST.
+        # A failed cloud job must NOT be redispatched to Windows after it starts.
+        test_run = dispatch(test, TEST, source_workflow, {})
         put_state(pub, source, "test_started", test_run_id=test_run)
-        record_public(source, "test_started", testRunId=test_run)
-        entry = {"phase": "test_started", "testRunId": test_run}
+        record_public(source, "test_started", testRunId=test_run,
+                      route=route, quotaBasis=plan["reason"])
+        entry = {"phase": "test_started", "testRunId": test_run, "route": route}
 
     if entry["phase"] == "test_started":
         test_run = entry.get("testRunId")
         require(type(test_run) is int and test_run > 0, "unknown_test_dispatch_no_retry")
-        wait_run(test, TEST, TEST_WORKFLOW, test_run, source)
-        verify_execution_runner(test, TEST, test_run, task["runnerName"])
-        verify_artifact(test, TEST, test_run, "windows-test-verified")
+        wait_run(test, TEST, source_workflow, test_run, source)
+        if route == "hosted":
+            verify_hosted_execution(test, TEST, test_run)
+        else:
+            verify_execution_runner(test, TEST, test_run, task["runnerName"])
+        verify_artifact(test, TEST, test_run, source_artifact)
         put_state(pub, source, "test_verified")
         record_public(source, "test_verified", testRunId=test_run)
         entry = {"phase": "test_verified", "testRunId": test_run}
@@ -400,8 +407,8 @@ def run(env, *, execute=False, resume=False, requested_sha=""):
     if entry["phase"] == "test_verified":
         test_run = entry["testRunId"]
         # Never create another Test job on resume; revalidate the original run.
-        wait_run(test, TEST, TEST_WORKFLOW, test_run, source)
-        verify_artifact(test, TEST, test_run, "windows-test-verified")
+        wait_run(test, TEST, source_workflow, test_run, source)
+        verify_artifact(test, TEST, test_run, source_artifact)
         check_idle(SIGNER, SIGN_WORKFLOW, sign_account, env)
         require(runner_ready(SIGNER, task["signingRunnerName"], sign_account, env),
                 "signing_runner_offline_resume_original_test_later")
