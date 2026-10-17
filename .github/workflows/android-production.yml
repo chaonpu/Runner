@@ -4,17 +4,17 @@ on:
   workflow_dispatch:
     inputs:
       execute:
-        description: "勾选：构建并签名；不勾选：只读检查"
+        description: "构建并签名（不勾选仅检查）"
         type: boolean
         required: true
         default: false
       resume:
-        description: "仅继续已有任务；必须填写原 source_sha，不会重建 Test"
+        description: "继续旧任务（新构建勿选，需填原 SHA）"
         type: boolean
         required: true
         default: false
       source_sha:
-        description: "Test/main 的完整40位提交SHA；有读取权限时可留空"
+        description: "源码 SHA（通常留空；续跑填原40位）"
         type: string
         required: false
         default: ""
@@ -64,5 +64,5 @@ jobs:
         if: always()
         run: |
           echo '### APK 构建与签名' >> "$GITHUB_STEP_SUMMARY"
-          echo '成功状态：state/android-production.json 中 phase=signed_verified。' >> "$GITHUB_STEP_SUMMARY"
-          echo '正式发布：另行手动运行 APK 正式发布，填写相同 source_sha、新版本号及更新日志。' >> "$GITHUB_STEP_SUMMARY"
+          echo '本次构建与签名全部成功后，即可继续正式发布。' >> "$GITHUB_STEP_SUMMARY"
+          echo '下一步：打开「APK 正式发布」，勾选执行。版本与源码自动读取，更新说明可留空。' >> "$GITHUB_STEP_SUMMARY"

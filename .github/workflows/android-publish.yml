@@ -3,15 +3,15 @@ name: APK 正式发布（手动）
 on:
   workflow_dispatch:
     inputs:
+      execute:
+        description: "正式发布（不勾选仅检查）"
+        type: boolean
+        default: false
       update_log:
-        description: "更新说明（可留空，自动填写版本更新说明）"
+        description: "更新说明（可留空，自动填写）"
         type: string
         required: false
         default: ""
-      execute:
-        description: "勾选后真实操作；不勾选只检查，不公开APK"
-        type: boolean
-        default: false
 
 permissions:
   contents: write

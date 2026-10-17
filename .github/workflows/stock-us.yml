@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       execute:
-        description: "自动选日期与正式/补算模式；勾选执行，不勾选仅预检"
+        description: "运行策略／自动补算（不勾选仅检查）"
         type: boolean
         default: false
 
