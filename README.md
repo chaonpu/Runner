@@ -11,6 +11,8 @@
 
 ## 当前状态
 
+**Windows 真实行情样本验收通过（2026-10-17）**：私有 [Stock #38990879940](https://github.com/chaonpu/Stock/actions/runs/38990879940) **Success**。指定 Windows Runner 身份、首次源码拉取、隔离安装正式依赖和 5 项验收测试通过；7 类样本读取全部通过，覆盖 A股股票/ETF/概念日线、三级行业，以及美股报价与原始/前复权日线、官方概念日线和两份挂牌目录，日线末日均为 20261016。缓存隔离，未执行策略 main/run、未写 database、未发送邮件；跟踪的生产文件无改动。一次性部署触发已移除，新私有 `windows-live-source-acceptance.yml` 仅手动运行。此结果只证明样本数据源兼容，**尚不证明全池策略或入账**；两个市场 `windowsWorkflow=null`、生产派发开关仍关闭。下一阶段为隔离的完整策略计算和任务/回执验收。
+
 **2000 分钟与公开仓库排除口径已修正（2026-10-17）**：用户已确认个人账户每月免费额度为 **2000 分钟**，现已写入两个账号配置。不能将账户总用量超出 2000 的部分当作私有额度消耗。新增按仓库拆分的 `/users/{owner}/settings/billing/usage` 读取，使用相应 Actions 令牌仅 GET 仓库元数据，排除公开仓库标准 GitHub-hosted Runner 的分钟；同时兼容线上实际返回的仓库短名。公开用量与账户包含额度均可能计入 discountAmount，因此不把折扣总量当作额度抵扣。私有标准 Linux 用量形成余额估算；其他私有运行器折算未核实时保持未知，不猜倍率，也不将当前可见性下的估算伪装成实时精确余额。[线上检查 #38990659922](https://github.com/chaonpu/Runner/actions/runs/38990659922) 成功，**176 项测试通过**。两个账号在排除公开标准用量后，剩余估算均为零；`chaonpu` 记录中确有公开标准用量被排除。公开日志只输出分类与布尔状态，不披露仓库账单明细和消耗数值。精确余额验证仍为 false；生产派发、登记/数据库写入、自动重试均保持关闭。
 
 **任务额度门槛已部署（2026-10-17）**：[线上检查 #38990217463](https://github.com/chaonpu/Runner/actions/runs/38990217463) 成功，**168 项测试通过**。云端推荐现要求经独立核实的 `remainingFreeMinutes` 足够覆盖任务 `estimatedMinutes + reserveMinutes`，证据 `observedAt` 为带时区时间、距检查时刻不超过 300 秒且不在未来，`period` 必须是当前 UTC 年月。不足只表示本任务预算不足，不把账户判为耗尽；未知、过期、跨月、负数、非有限数及缺字段均不推荐云端。可用和耗尽证据均受时效检查；耗尽还要求余额确为零。当前 Billing Usage 适配器仍不提供该独立余额证据，因此不因新门槛而启用云端派发。计费 GET 已显式传入当前 UTC year/month，并验证返回的 timePeriod；两个账户线上 `reportingPeriodVerified=true`、用量可读，但剩余额度继续 `unknown`。Windows Runner 在线空闲，A/US 无活跃运行，生产开关保持关闭。
