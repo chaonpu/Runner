@@ -18,6 +18,7 @@ REASONS = {
     "authoritative_market_already_current": "权威账本与快照已更新，本次只完成预检。",
     "private_readiness_failed": "下游预检未通过，正式策略未派发。",
     "no_verified_android_signing_route": "未找到符合额度与运行器条件的签名路线。",
+    "source_already_signed_verified_no_rebuild": "该源码 SHA 已完成测试、构建与签名。本次跳过重复构建，原有签名产物仍可使用。",
     "network_retry_exhausted_same_run_no_publication": "私有源码检出遇到 GitHub 网络问题；本次没有签名或发布。",
 }
 
