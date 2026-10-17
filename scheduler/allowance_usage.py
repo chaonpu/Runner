@@ -11,6 +11,9 @@ import re
 REPO = re.compile(r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$")
 STANDARD = {"actions_linux", "actions_windows", "actions_macos",
             "actions_linux_arm", "actions_windows_arm", "actions_linux_slim"}
+REASONS = {"monthly_allowance_missing", "usage_items_missing", "invalid_usage_item",
+           "usage_period_conflict", "usage_quantity_invalid", "usage_repository_unresolved",
+           "repository_probe_limit", "repository_visibility_unresolved", "user_allowance_only"}
 
 
 def calculate(owner, allowance, data, metadata_get, instant):
@@ -42,6 +45,8 @@ def calculate(owner, allowance, data, metadata_get, instant):
         if sku in ("actions_self_hosted", "actions_self-hosted"):
             continue
         repo = row.get("repositoryName")
+        if isinstance(repo, str) and re.fullmatch(r"[A-Za-z0-9_.-]+", repo):
+            repo = owner + "/" + repo
         if not isinstance(repo, str) or not REPO.fullmatch(repo) or repo.split("/")[0].lower() != owner.lower():
             raise ValueError("usage_repository_unresolved")
         if repo not in visibility:
@@ -95,4 +100,5 @@ def probe(owner, spec, env, instant, *, reader_factory):
                          reader_factory(metadata).get, instant)
     except (OSError, ValueError, KeyError, TypeError, OverflowError) as exc:
         result["read"] = safe_error(exc)
+        result["reason"] = str(exc) if str(exc) in REASONS else "unavailable_or_invalid_schema"
         return result

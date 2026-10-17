@@ -35,6 +35,10 @@ class AllowanceUsageTests(unittest.TestCase):
         self.assertEqual(result["remainingMinutesEstimate"], 0)
         self.assertEqual(result["status"], "unknown")
 
+    def test_bare_repository_names_are_scoped_to_billing_owner(self):
+        result = self.calc([row("Public", 9000), row("Private", 1500)])
+        self.assertEqual(result["remainingMinutesEstimate"], 500)
+
     def test_private_discount_is_not_subtracted_as_public_free_usage(self):
         result = self.calc([row("owner/Private", 1700, discountAmount=999, netAmount=0)])
         self.assertEqual(result["remainingMinutesEstimate"], 300)

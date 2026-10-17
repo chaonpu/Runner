@@ -55,6 +55,7 @@ def audit(config: dict, registry: dict, env: dict, *,
             "totalsNotUsedAsRemaining": True,
             "allowanceEstimateRead": estimate.get("read", "not_checked"),
             "allowanceEstimateStatus": estimate.get("estimateStatus", "unavailable"),
+            "allowanceEstimateReason": estimate.get("reason", "none"),
             "publicStandardUsageExcluded": estimate.get("publicStandardUsageExcluded") is True,
             "publicStandardUsagePresent": estimate.get("publicStandardUsagePresent") is True,
             "estimatedAllowanceRemainingPositive": (
