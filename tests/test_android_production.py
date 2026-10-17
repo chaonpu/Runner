@@ -216,5 +216,22 @@ class Tests(unittest.TestCase):
                         self.assertEqual(report.call_args.kwargs["failureClass"],
                                          "android_compile_failed_manual_review")
 
+    def test_publication_rejects_failed_or_unverified_build(self):
+        from scheduler import android_publish as publication
+        sha = "a" * 40
+        for phase in ("reserved", "test_started", "test_verified",
+                      "signer_reserved", "signer_started"):
+            with self.subTest(phase=phase):
+                state = {"version": 1, "builds": {sha: {
+                    "sourceSha": sha, "phase": phase,
+                    "testRunId": 9, "signingRunId": 11,
+                    "lastFailure": {"stage": "test",
+                                    "code": "network_retry_exhausted_same_run_no_publication"}}}}
+                with patch.object(publication.build, "json_file",
+                                  return_value=(state, "blob")):
+                    with self.assertRaisesRegex(a.Hold, "source_not_verified_signed"):
+                        publication.signed_request({"GH_TOKEN": "public"},
+                                                   sha, "2.3.5", 118, "test log")
+
 if __name__ == "__main__":
     unittest.main()
