@@ -60,5 +60,26 @@ class Tests(unittest.TestCase):
                 with self.assertRaises(a.Hold):
                     a.put_state("token", sha, "signed_verified")
 
+    def test_runner_execution_is_bound(self):
+        jobs = {"total_count": 1, "jobs": [
+            {"runner_name": "ziwuxilv-test-win", "conclusion": "success"}]}
+        with patch.object(a, "api", return_value=jobs):
+            a.verify_execution_runner("token", a.TEST, 100, "ziwuxilv-test-win")
+            with self.assertRaises(a.Hold):
+                a.verify_execution_runner("token", a.TEST, 100, "untrusted-runner")
+
+    def test_resume_requires_exact_original_sha(self):
+        sha = "a" * 40
+        cfg = {"tasks": {"android": {"repo": a.TEST, "signingRepo": a.SIGNER,
+               "windowsWorkflow": a.TEST_WORKFLOW,
+               "signingWindowsWorkflow": a.SIGN_WORKFLOW}}}
+        record = {"version": 1, "builds": {sha: {
+            "sourceSha": sha, "phase": "test_started", "testRunId": 42}}}
+        def doc(token, path):
+            return (cfg, "blob") if path == a.CONFIG_PATH else (record, "blob")
+        with patch.object(a, "json_file", side_effect=doc):
+            with self.assertRaisesRegex(a.Hold, "resume_requires_original_source_sha"):
+                a.run({"GH_TOKEN": "p"}, execute=True, resume=True)
+
 if __name__ == "__main__":
     unittest.main()
