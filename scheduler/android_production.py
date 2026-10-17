@@ -327,6 +327,19 @@ def run(env, *, execute=False, resume=False, requested_sha=""):
     entry = state["builds"].get(source)
     test_account = config["accounts"]["anwpustudent-lab"]
     sign_account = config["accounts"]["chaonpu"]
+    if entry is not None:
+        require(isinstance(entry, dict), "registered_android_entry_invalid")
+        route = entry.get("route", "windows")
+        require(route in ("windows", "hosted"), "registered_android_route_unknown")
+        plan = {"route": route, "reason": "registered_original_route",
+                "hostedQuotaGuaranteed": False}
+    else:
+        # Billing reports may lag; unknown or conservative shortfall goes to
+        # Windows BEFORE any hosted dispatch. Never infer exact remaining funds.
+        plan = choose_route(task, account_usage("anwpustudent-lab", test_account, env))
+        route = plan["route"]
+    source_workflow = workflow_for(route)
+    source_artifact = artifact_for(route)
     if not execute:
         test_probe = runner_for_repo(TEST, task["runnerName"],
                                        runner_account(TEST, test_account, env), env)
@@ -338,7 +351,8 @@ def run(env, *, execute=False, resume=False, requested_sha=""):
                       priorPhase=entry.get("phase") if entry else None,
                       branchShaVerified=branch_verified,
                       manualSourceShaRequired=not bool(source),
-                      route="windows-verified-chain-only",
+                      route=route, routeReason=plan["reason"],
+                      hostedQuotaGuaranteed=False,
                       testRunnerReady=is_ready(test_probe),
                       signerRunnerReady=is_ready(sign_probe),
                       testRunnerProbe={"read": test_probe.get("read"),
@@ -349,7 +363,8 @@ def run(env, *, execute=False, resume=False, requested_sha=""):
                           TEST, TEST_WORKFLOW, test_account, env).get("status"),
                       signingWorkflowActiveStatus=existing_attempt(
                           SIGNER, SIGN_WORKFLOW, sign_account, env).get("status"),
-                      hostedTestSignRouting="not_integrated_never_infer_quota")
+                      hostedTestWorkflowStatus=existing_attempt(
+                          TEST, HOSTED_WORKFLOW, test_account, env).get("status"))
         return
 
     if resume:
