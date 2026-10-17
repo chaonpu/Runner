@@ -3,27 +3,11 @@ name: APK 正式发布（手动）
 on:
   workflow_dispatch:
     inputs:
-      source_sha:
-        description: "构建签名成功的 Test 源码完整40位SHA"
-        type: string
-        required: true
-      version_name:
-        description: "APK 内的新版本号，例如 2.3.5；必须已在 Test 中修改并完成签名"
-        type: string
-        required: true
-      version_code:
-        description: "APK 内的新版本Code；必须高于当前正式版"
-        type: string
-        required: true
       update_log:
-        description: "正式版更新说明"
+        description: "更新说明（可留空，自动填写版本更新说明）"
         type: string
-        required: true
-      mode:
-        description: "prepare：生成请求；publish：专用令牌一键发布；verify：核验已手动发布版本"
-        type: choice
-        options: [prepare, publish, verify]
-        default: prepare
+        required: false
+        default: ""
       execute:
         description: "勾选后真实操作；不勾选只检查，不公开APK"
         type: boolean
@@ -46,11 +30,7 @@ jobs:
       GH_TOKEN: ${{ github.token }}
       CHAONPU_ACTIONS_READ_TOKEN: ${{ secrets.CHAONPU_ACTIONS_READ_TOKEN }}
       TEST_ACTIONS_READ_TOKEN: ${{ secrets.TEST_ACTIONS_READ_TOKEN }}
-      SOURCE_SHA: ${{ inputs.source_sha }}
-      VERSION_NAME: ${{ inputs.version_name }}
-      VERSION_CODE: ${{ inputs.version_code }}
       UPDATE_LOG: ${{ inputs.update_log }}
-      PUBLICATION_MODE: ${{ inputs.mode }}
       EXECUTE: ${{ inputs.execute }}
     steps:
       - uses: actions/checkout@v4
@@ -59,7 +39,7 @@ jobs:
           persist-credentials: false
       - name: Verify publication guard regressions
         run: python3 -m unittest discover -s tests -p 'test_*publish*.py' -v
-      - name: Verify signed APK and prepare or publish exact version
+      - name: Automatically select and verify signed APK, then publish or preview
         shell: bash
         run: |
           set -euo pipefail

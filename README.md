@@ -24,29 +24,24 @@ RUNNER 仅保留以下 **4 个手动工作流**，均从 Actions → 选择工�
 
 ## APK 正式发布
 
-打开「APK 正式发布」，填写：
+打开「APK 正式发布」，只需两项：
 
-| 输入 | 填写方法 |
+| 输入 | 用法 |
 | --- | --- |
-| `source_sha` | 构建签名成功的同一个 Test SHA |
-| `version_name` | APK 内真实版本号，如 `2.3.5`（仅示例） |
-| `version_code` | APK 内真实 Code，如 `118`（仅示例），必须大于当前正式版 |
-| `update_log` | 用户可见的更新说明 |
-| `mode` | `prepare`、`publish` 或 `verify`，见下方 |
-| `execute` | 不勾选只检查；勾选后才真实操作 |
+| `update_log` | 可选的用户可见更新说明；留空使用“更新至 版本号（Code）。” |
+| `execute` | 不勾选仅检查；勾选后正式发布并核验下载 |
 
-**无需增加令牌的完整手动发布：**
+1. 先完成「APK 构建与签名」。
+2. 打开发布工作流，分支 `main`，按需填写更新说明，勾选 `execute` 后运行。
+3. 等待摘要显示正式发布成功；不需要输入 SHA、版本号、Code 或选择模式。
 
-1. 选 `prepare`，勾选 `execute`。此步会下载私有签名包，只公开严格白名单的已签名 APK 传输 ZIP 及校验凭据；不会包含源码或密钥，也不会切换 APP 正式更新清单。
-2. 在成功运行的 **Artifacts** 下载 `apk-publication-request`，解压取得 `android-publish-request.json`。
-3. 打开 [ziwuxilv 正式发布入口](https://github.com/chaonpu/ziwuxilv/actions/workflows/publish-android-release.yml)，点 **Run workflow**，分支 `main`，将 JSON **完整内容**粘贴进 `publish_request`，再运行。
-4. 等该发布任务成功后，回 RUNNER 用相同输入、`mode=verify`、`execute=true` 核验。结果必须为 `published=true`，才表示清单和公开下载的 APK 哈希已核验成功。
+自动使用最新登记的构建，必须已达到 `signed_verified`；最新构建尚未完成时停止，不退回旧包。源码 SHA 和准确 Test／签名 Run 从登记读取，版本号和 Code 从该签名产物读取，并核验 APK 实际包名、版本、原生产证书和 SHA-256。选中的版本、源码与 Run 会显示在摘要中。只读取私有签名产物及运行元数据，不读取 Test 源码。
 
-**一键发布：** 复用 RUNNER 现有 Secret `CHAONPU_ACTIONS_READ_TOKEN`，无需新增 `ZIWUXILV_ACTIONS_WRITE_TOKEN`。该令牌需在保留原有私有仓库授权的同时，包含公开仓库 `chaonpu/ziwuxilv`，并具备该仓库 **Actions: Read and write**。选择 `mode=publish`、勾选 `execute` 即可。此方式派发发布仓库自身工作流，由该仓库自己的 `GITHUB_TOKEN` 写 Release 和更新清单；跨仓库令牌不需要新增 Contents 写权限。未配置现有 Secret 时会在公开签名包之前停止，并提示使用 `prepare`。
+有唯一的已准备或发布中的任务时，自动继续原任务；更新说明留空即可沿用原文。`staging_reserved`、`dispatch_reserved` 表示结果不确定，仍需核对原 Run，不能盲目重试。相同版本不会重复暂存或派发；已完成的重复运行只核验已有发布。未完成任务超过一个时停止供人工核对。
 
-发布会校验真实包名、版本、原生产证书、SHA-256、准确 Test/签名 Run，以及正式下载地址。`prepare` 成功只代表**请求已准备**。同版本重复执行不会重复暂存或重复派发；发布中断后保留准确 Run ID。状态为 `staging_reserved`、`dispatch_reserved` 时先人工核对原结果，勿反复点击。正常继续已有 `publishing` 任务请新建一次手动运行，不使用旧 Run 的 Re-run。
+复用现有 `CHAONPU_ACTIONS_READ_TOKEN`，需包含公开仓库 `chaonpu/ziwuxilv` 的 **Actions: Read and write**；无需新令牌。公开 Release 和更新清单由发布仓库自身的 `GITHUB_TOKEN` 写入。发布后核验正式清单、准确版本、证书、更新说明、下载地址及 APK 哈希，只有 `published=true` 才代表成功。请新建手动运行，不用旧 Run 的 Re-run。
 
-> 当前公开版本仍为 **2.3.4 (117)**。此前新链签名验证也使用了相同版本，不能再次当作新正式版发布；请在 Test 提交真实新版本后按上述步骤操作。
+底层保留 `prepare`／`verify` 接口供维护核对，日常发布界面不再展示这些模式。
 
 ## A股与美股策略
 

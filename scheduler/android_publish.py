@@ -14,10 +14,12 @@ from pathlib import Path
 import re
 import subprocess
 import sys
+import tempfile
 import time
 import urllib.request
 
 from scheduler import android_production as build
+from scheduler import apk_stage
 from scheduler.apk_stage import CERT, VERSION, public_version, GuardError
 
 REPO = "chaonpu/ziwuxilv"
@@ -79,6 +81,110 @@ def signed_request(env, source, version, code, log):
     return {"sourceCommit": source, "versionName": version, "versionCode": code,
             "testRunId": row["testRunId"], "signingRunId": row["signingRunId"],
             "updateLog": log, "forceUpdate": False}
+
+
+def candidate_version(env, row):
+    """Read the version from the exact private signed APK, without publishing."""
+    need(bool(env.get("CHAONPU_ACTIONS_READ_TOKEN")) and bool(env.get("TEST_ACTIONS_READ_TOKEN")),
+         "private_read_credentials_missing")
+    expected = {"sourceCommit": row["sourceSha"], "testRunId": row["testRunId"],
+                "signingRunId": row["signingRunId"]}
+    apk_stage.verify_provenance(dict(expected), env["CHAONPU_ACTIONS_READ_TOKEN"],
+                                env["TEST_ACTIONS_READ_TOKEN"])
+    with tempfile.TemporaryDirectory(prefix="signed-publication-preview-") as folder:
+        root = Path(folder)
+        private_env = dict(env, GH_TOKEN=env["CHAONPU_ACTIONS_READ_TOKEN"])
+        result = subprocess.run(["gh", "run", "download", str(row["signingRunId"]),
+            "--repo", build.SIGNER, "--name", "windows-signed-release", "--dir", str(root)],
+            check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+            env=private_env, timeout=240)
+        need(result.returncode == 0, "verified_private_signed_artifact_unavailable")
+        path = root / "publish-candidate-metadata.json"
+        need(path.is_file() and not path.is_symlink() and path.stat().st_size <= 16384,
+             "signed_candidate_metadata_invalid")
+        metadata = json.loads(path.read_text(encoding="utf-8-sig"))
+        need(isinstance(metadata, dict), "signed_candidate_metadata_invalid")
+        version, code = metadata.get("versionName"), metadata.get("versionCode")
+        need(isinstance(version, str) and VERSION.fullmatch(version)
+             and type(code) is int and code > 0, "signed_candidate_version_invalid")
+        expected.update(versionName=version, versionCode=code)
+        apk, _, _ = apk_stage.assert_clean_artifact(root, expected)
+        apk_stage.verify_apk_bytes(apk, expected)
+        return version, code
+
+
+def automatic_request(env, log=""):
+    """Resume one known publication, otherwise use the newest registered build.
+
+    Never fall back to an older signed build when the newest is incomplete.
+    Uncertain stage/dispatch barriers still require original-run reconciliation.
+    """
+    validate_context(env)
+    releases, _ = build.json_file(env["GH_TOKEN"], STATE)
+    need(releases.get("version") == 1 and isinstance(releases.get("releases"), dict),
+         "release_registry_invalid")
+    rows = list(releases["releases"].values())
+    phases = {"staging_reserved", "prepared", "dispatch_reserved", "publishing", "published"}
+    need(all(isinstance(r, dict) and r.get("phase") in phases for r in rows),
+         "release_registry_invalid")
+    pending = [r for r in rows if r["phase"] != "published"]
+    need(len(pending) <= 1, "multiple_publications_require_review")
+    previous = pending[0] if pending else None
+    if previous:
+        need(previous["phase"] not in ("staging_reserved", "dispatch_reserved"),
+             "publication_outcome_unknown_review_original_run")
+    else:
+        state, _ = build.json_file(env["GH_TOKEN"], build.STATE_PATH)
+        need(state.get("version") == 1 and isinstance(state.get("builds"), dict)
+             and bool(state["builds"]), "no_registered_android_build")
+        dated = []
+        for source, row in state["builds"].items():
+            need(isinstance(row, dict) and isinstance(source, str) and build.SHA.fullmatch(source)
+                 and row.get("sourceSha") == source and row.get("phase") in build.PHASES,
+                 "registered_android_entry_invalid")
+            try:
+                created = datetime.fromisoformat(row["createdAt"])
+            except (KeyError, TypeError, ValueError):
+                raise build.Hold("build_creation_time_unverified") from None
+            need(created.tzinfo is not None, "build_creation_time_unverified")
+            dated.append((created, row))
+        newest = max(at for at, _ in dated)
+        latest = [row for at, row in dated if at == newest]
+        need(len(latest) == 1, "latest_build_ambiguous")
+        row = latest[0]
+        need(row["phase"] == "signed_verified", "latest_build_not_verified_signed")
+        need(all(type(row.get(k)) is int and row[k] > 0 for k in ("testRunId", "signingRunId")),
+             "exact_test_or_signing_run_missing")
+        matches = [r for r in rows if r.get("sourceCommit") == row["sourceSha"]]
+        need(len(matches) <= 1, "source_publication_ambiguous")
+        previous = matches[0] if matches else None
+        if previous is None:
+            version, code = candidate_version(env, row)
+            req = signed_request(env, row["sourceSha"], version, code,
+                                 log.strip() or f"更新至 {version}（{code}）。")
+            need(all(req[k] == row[k] for k in ("testRunId", "signingRunId")),
+                 "signed_build_changed_during_selection")
+            return req
+    # Use the original immutable identity and notes on continuation/repeated run.
+    need(not log.strip() or log == previous.get("updateLog"),
+         "existing_publication_update_log_conflict")
+    req = signed_request(env, previous["sourceCommit"], previous["versionName"],
+                         previous["versionCode"], previous["updateLog"])
+    need(all(previous.get(k) == v for k, v in req.items()), "version_publication_identity_conflict")
+    return req
+
+
+def run_automatic(env, *, log="", execute=False):
+    req = automatic_request(env, log)
+    if env.get("GITHUB_STEP_SUMMARY"):
+        with open(env["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as out:
+            out.write("### 自动选择已签名 APK\n\n版本：" + req["versionName"] + "（" +
+                      str(req["versionCode"]) + "）\n\n源码：`" + req["sourceCommit"] +
+                      "`\n\nTest Run：" + str(req["testRunId"]) + "；签名 Run：" +
+                      str(req["signingRunId"]) + "。\n\n" +
+                      ("本次执行正式发布。" if execute else "本次仅检查，不公开 APK。") + "\n")
+    return run(env, source=req["sourceCommit"], version=req["versionName"],
+               code=req["versionCode"], log=req["updateLog"], mode="publish", execute=execute)
 
 
 def save(env, key, row, previous):
@@ -226,9 +332,7 @@ def main():
     p.add_argument("--execute", action="store_true")
     a = p.parse_args()
     try:
-        run(os.environ, source=os.environ.get("SOURCE_SHA", ""), version=os.environ.get("VERSION_NAME", ""),
-            code=int(os.environ.get("VERSION_CODE", "0")), log=os.environ.get("UPDATE_LOG", ""),
-            mode=os.environ.get("PUBLICATION_MODE", "prepare"), execute=a.execute)
+        run_automatic(os.environ, log=os.environ.get("UPDATE_LOG", ""), execute=a.execute)
         return 0
     except Exception as exc:
         reason = str(exc) if isinstance(exc, (build.Hold, GuardError)) else "publication_stopped_manual_review"

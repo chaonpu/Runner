@@ -47,7 +47,10 @@ class WorkflowContractTests(unittest.TestCase):
     def test_publication_is_separate_and_no_source_checkout(self):
         text = (WORKFLOWS/'android-publish.yml').read_text()
         self.assertIn('scheduler.android_publish', text)
-        self.assertIn('options: [prepare, publish, verify]', text)
+        inputs = text.split('    inputs:\n', 1)[1].split('\npermissions:', 1)[0]
+        self.assertEqual(set(re.findall(r'(?m)^      (\w+):', inputs)), {'update_log', 'execute'})
+        self.assertNotIn('inputs.mode', text)
+        self.assertNotIn('inputs.source_sha', text)
         self.assertIn('CHAONPU_ACTIONS_READ_TOKEN: ${{ secrets.CHAONPU_ACTIONS_READ_TOKEN }}', text)
         self.assertNotIn('ZIWUXILV_ACTIONS_WRITE_TOKEN', text)
         self.assertNotIn('ANDROID_SIGNING_KEYSTORE', text)
