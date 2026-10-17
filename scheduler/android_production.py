@@ -374,7 +374,7 @@ def retry_checkout_before_business(pub, test, source, entry, test_account, env, 
                failedTestRunIds=[old], updatedAt=datetime.now(timezone.utc).isoformat())
     payload = {"branch": "main", "sha": blob,
                "message": "Reserve one same-SHA Android pre-build network recovery",
-               "content": base64.b64encode((json.dumps(state, indent=2, sort_keys=True)+"\\n").encode()).decode()}
+               "content": base64.b64encode((json.dumps(state, indent=2, sort_keys=True)+"\n").encode()).decode()}
     response = api(pub, RUNNER, "/contents/" + STATE_PATH, method="PUT", payload=payload)
     require(bool(response.get("commit", {}).get("sha")), "checkout_retry_reservation_uncertain")
     confirmed, _ = json_file(pub, STATE_PATH)
