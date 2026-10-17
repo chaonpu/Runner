@@ -35,14 +35,17 @@ def need(ok, reason):
 
 def public_api(path, token="", *, payload=None):
     # No arbitrary destination, no credential-bearing redirect, no POST retry.
-    need(path in ("/contents/android-native/version.json?ref=main",
+    need(path in ("/branches/main", "/contents/android-native/version.json?ref=main",
                   "/actions/workflows/" + WORKFLOW,
                   "/actions/workflows/" + WORKFLOW + "/dispatches")
+         or re.fullmatch(r"/contents/android-native/version\.json\?ref=[0-9a-f]{40}", path)
          or re.fullmatch(r"/actions/runs/[1-9][0-9]*", path), "public_endpoint_forbidden")
     headers = {"Accept": "application/vnd.github+json", "User-Agent": "ziwuxilv-manual-publish",
                "X-GitHub-Api-Version": "2026-03-10", "Content-Type": "application/json"}
     if token:
         headers["Authorization"] = "Bearer " + token
+    if payload is None:
+        headers["Cache-Control"] = "no-cache"
     req = urllib.request.Request("https://api.github.com/repos/" + REPO + path,
         headers=headers, method="GET" if payload is None else "POST",
         data=None if payload is None else json.dumps(payload).encode())
@@ -219,18 +222,48 @@ def stage(env, req):
             "updateLog": req["updateLog"], "forceUpdate": False}
 
 
-def verify_public(req):
-    item = public_api("/contents/android-native/version.json?ref=main")
+def read_public_manifest(token=""):
+    """Read one immutable, hash-checked manifest from an observed main commit."""
+    branch = public_api("/branches/main", token)
+    head = branch.get("commit", {}).get("sha")
+    need(isinstance(head, str) and build.SHA.fullmatch(head), "public_head_unverified")
+    item = public_api("/contents/android-native/version.json?ref=" + head, token)
     try:
-        active = json.loads(base64.b64decode(item["content"]))
-    except (ValueError, KeyError):
+        need(item.get("type") == "file" and item.get("encoding") == "base64"
+             and item.get("path") == "android-native/version.json", "public_manifest_unreadable")
+        raw = base64.b64decode(item["content"].replace("\n", "").replace("\r", ""), validate=True)
+        digest = hashlib.sha1(b"blob " + str(len(raw)).encode() + b"\0" + raw).hexdigest()
+        need(item.get("sha") == digest, "public_manifest_blob_mismatch")
+        active = json.loads(raw)
+        need(isinstance(active, dict), "public_manifest_unreadable")
+        return active
+    except (ValueError, KeyError, TypeError, AttributeError):
         raise build.Hold("public_manifest_unreadable") from None
-    need(all(active.get(k) == req[k] for k in ("versionName", "versionCode", "sourceCommit",
-         "apkSha256", "signingCertificateSha256", "updateLog", "forceUpdate")), "published_manifest_mismatch")
+
+
+def verify_public(req, token=""):
+    fields = ("versionName", "versionCode", "sourceCommit", "apkSha256",
+              "signingCertificateSha256", "updateLog", "forceUpdate")
+    for attempt in range(7):
+        active = read_public_manifest(token)
+        mismatch = [key for key in fields if active.get(key) != req[key]]
+        if not mismatch:
+            break
+        # Only read again when a previous version is still visible after the
+        # successful original publish run. Never retry staging or dispatch.
+        observed = active.get("versionCode")
+        need(type(observed) is int and observed < req["versionCode"],
+             "published_manifest_mismatch:" + ",".join(mismatch))
+        need(attempt < 6, "published_manifest_propagation_timeout")
+        print(json.dumps({"phase": "public_manifest_waiting_for_version",
+                          "expectedVersionCode": req["versionCode"],
+                          "observedVersionCode": observed}), flush=True)
+        time.sleep(5)
     url = f"https://github.com/{REPO}/releases/download/v{req['versionName']}/ziwuxilv-native-v{req['versionName']}.apk"
     need(active.get("downloadUrl") == url, "published_download_url_mismatch")
     digest, size = hashlib.sha256(), 0
-    with urllib.request.urlopen(url, timeout=90) as response:
+    request = urllib.request.Request(url, headers={"Cache-Control": "no-cache"})
+    with urllib.request.urlopen(request, timeout=90) as response:
         while chunk := response.read(1024 * 1024):
             size += len(chunk)
             need(size <= 200 * 1024 * 1024, "published_apk_oversized")
@@ -286,11 +319,13 @@ def run(env, *, source, version, code, log, mode="prepare", execute=False):
     need(row["phase"] in ("prepared", "dispatch_reserved", "publishing", "published"),
          "staging_outcome_unknown_review_before_any_retry")
     publish_request = row["publishRequest"]
+    publication_verified = False
     Path("publication-output").mkdir(exist_ok=True)
     Path("publication-output/android-publish-request.json").write_text(
         json.dumps(publish_request, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     if row["phase"] == "prepared" and mode == "verify":
-        verify_public(publish_request)
+        verify_public(publish_request, env.get("CHAONPU_ACTIONS_READ_TOKEN", ""))
+        publication_verified = True
         next_row = dict(row, phase="published")
         save(env, key, next_row, row)
         row = next_row
@@ -309,12 +344,13 @@ def run(env, *, source, version, code, log, mode="prepare", execute=False):
     need(row["phase"] != "dispatch_reserved", "publication_dispatch_unknown_no_repeat")
     if row["phase"] == "publishing":
         wait_public(row["publicRunId"], env.get("CHAONPU_ACTIONS_READ_TOKEN", ""))
-        verify_public(publish_request)
+        verify_public(publish_request, env.get("CHAONPU_ACTIONS_READ_TOKEN", ""))
+        publication_verified = True
         next_row = dict(row, phase="published")
         save(env, key, next_row, row)
         row = next_row
-    if row["phase"] == "published":
-        verify_public(publish_request)
+    if row["phase"] == "published" and not publication_verified:
+        verify_public(publish_request, env.get("CHAONPU_ACTIONS_READ_TOKEN", ""))
     published = row["phase"] == "published"
     result = {"status": row["phase"], "published": published,
               "publicRunId": row.get("publicRunId"), "versionName": version, "versionCode": code}
