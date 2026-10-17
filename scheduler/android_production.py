@@ -28,7 +28,7 @@ STATE_PATH = "state/android-production.json"
 CONFIG_PATH = "config/repositories.json"
 SHA = re.compile(r"^[0-9a-f]{40}$")
 RUN_ID = re.compile(r"^[1-9][0-9]*$")
-PHASES = {"reserved", "test_started", "test_verified",
+PHASES = {"reserved", "test_started", "test_retry_reserved", "test_verified",
           "signer_reserved", "signer_started", "signed_verified"}
 POLL_SECONDS = 30
 MAX_WAIT_SECONDS = 3 * 60 * 60
@@ -111,6 +111,7 @@ def put_state(public_token, source, phase, *, test_run_id=None, signing_run_id=N
     allowed = {
         "reserved": {"test_started"},
         "test_started": {"test_verified"},
+        "test_retry_reserved": {"test_started"},
         "test_verified": {"signer_reserved"},
         "signer_reserved": {"signer_started"},
         "signer_started": {"signed_verified"},
@@ -119,7 +120,7 @@ def put_state(public_token, source, phase, *, test_run_id=None, signing_run_id=N
     require(phase in allowed[previous], "state_transition_not_allowed")
     if test_run_id is not None:
         require(type(test_run_id) is int and test_run_id > 0, "invalid_test_run_id")
-        require(entry.get("testRunId") in (None, test_run_id), "test_run_binding_mismatch")
+        require(previous == "test_retry_reserved" or entry.get("testRunId") in (None, test_run_id), "test_run_binding_mismatch")
         entry["testRunId"] = test_run_id
     if signing_run_id is not None:
         require(type(signing_run_id) is int and signing_run_id > 0, "invalid_sign_run_id")
@@ -324,6 +325,66 @@ def wait_recorded(public_token, source, stage, private_token, repo, workflow,
         raise
 
 
+
+def retry_checkout_before_business(pub, test, source, entry, test_account, env, source_workflow):
+    """At most one same-SHA retry, only after an attested pre-build HTTPS failure.
+
+    Reserve the retry intent before the second POST. Ambiguous reservation or
+    dispatch cannot be retried blindly; no partial Test build is reused.
+    """
+    require(entry.get("phase") == "test_started" and entry.get("route") == "windows"
+            and source_workflow == TEST_WORKFLOW, "checkout_retry_route_invalid")
+    old = entry.get("testRunId")
+    require(type(old) is int and old > 0, "checkout_retry_original_run_missing")
+    original = api(test, TEST, "/actions/runs/" + str(old))
+    validate_run(original, TEST, source_workflow, old, source)
+    require(original.get("status") == "completed" and original.get("conclusion") == "failure",
+            "checkout_retry_original_not_failed")
+    require(classify_failed_run(test, TEST, old)
+            == "network_retry_exhausted_same_run_no_publication",
+            "checkout_retry_failure_not_proven_network")
+    jobs = api(test, TEST, "/actions/runs/" + str(old) + "/jobs?per_page=100")
+    require(jobs.get("total_count") == 1 and isinstance(jobs.get("jobs"), list)
+            and len(jobs["jobs"]) == 1, "checkout_retry_job_proof_incomplete")
+    job = jobs["jobs"][0]
+    steps = job.get("steps", [])
+    require(job.get("conclusion") == "failure" and isinstance(steps, list)
+            and any(isinstance(x, dict) and x.get("name", "").startswith(
+                ("NETWORK_TRANSIENT_PREFLIGHT", "NETWORK_TRANSIENT_SOURCE_FETCH"))
+                    and x.get("conclusion") == "failure" for x in steps)
+            and all(x.get("conclusion") in ("skipped", None)
+                    for x in steps if isinstance(x, dict) and x.get("name", "").startswith(
+                        ("Build unsigned Release APK", "Run unit tests", "Upload verified Windows source"))),
+            "checkout_retry_prebuild_boundary_unverified")
+    arts = api(test, TEST, "/actions/runs/" + str(old) + "/artifacts?per_page=100")
+    require(arts.get("total_count") == 0 and arts.get("artifacts") == [],
+            "checkout_retry_original_artifacts_exist")
+    require(entry.get("testRetries", 0) == 0, "checkout_retry_limit_reached")
+    # Dispatched workflow_dispatch on main must still be this exact original source.
+    tokens = (env.get("TEST_SOURCE_READ_TOKEN", ""), test,
+              env.get("TEST_RUNNER_READ_TOKEN", ""), env.get("TEST_BILLING_READ_TOKEN", ""))
+    require(current_source(tokens) == source, "checkout_retry_source_no_longer_main")
+    check_idle(TEST, TEST_WORKFLOW, test_account, env)
+    require(runner_ready(TEST, env["_test_runner_name"], test_account, env),
+            "checkout_retry_windows_runner_not_ready")
+    state, blob = json_file(pub, STATE_PATH)
+    row = state.get("builds", {}).get(source)
+    require(row == entry, "checkout_retry_record_changed_no_repeat")
+    row.update(phase="test_retry_reserved", testRetries=1,
+               failedTestRunIds=[old], updatedAt=datetime.now(timezone.utc).isoformat())
+    payload = {"branch": "main", "sha": blob,
+               "message": "Reserve one same-SHA Android pre-build network recovery",
+               "content": base64.b64encode((json.dumps(state, indent=2, sort_keys=True)+"\\n").encode()).decode()}
+    response = api(pub, RUNNER, "/contents/" + STATE_PATH, method="PUT", payload=payload)
+    require(bool(response.get("commit", {}).get("sha")), "checkout_retry_reservation_uncertain")
+    confirmed, _ = json_file(pub, STATE_PATH)
+    require(confirmed == state, "checkout_retry_reservation_unconfirmed")
+    fresh = dispatch(test, TEST, TEST_WORKFLOW, {})
+    put_state(pub, source, "test_started", test_run_id=fresh)
+    record_public(source, "test_checkout_recovered", previousTestRunId=old,
+                  testRunId=fresh, retryCount=1, publication="not_authorized")
+    return fresh
+
 def verify_execution_runner(token, repo, rid, expected):
     """A successful job must actually have run on the approved private service."""
     response = api(token, repo, "/actions/runs/" + str(rid) + "/jobs?per_page=100")
@@ -480,8 +541,19 @@ def run(env, *, execute=False, resume=False, requested_sha=""):
     if entry["phase"] == "test_started":
         test_run = entry.get("testRunId")
         require(type(test_run) is int and test_run > 0, "unknown_test_dispatch_no_retry")
-        wait_recorded(pub, source, "test", test, TEST,
-                      source_workflow, test_run, source)
+        try:
+            wait_recorded(pub, source, "test", test, TEST,
+                          source_workflow, test_run, source)
+        except Hold as failure:
+            if str(failure) != "network_retry_exhausted_same_run_no_publication":
+                raise
+            latest, _ = json_file(pub, STATE_PATH)
+            recorded = latest["builds"].get(source, {})
+            retry_env = dict(env, _test_runner_name=task["runnerName"])
+            test_run = retry_checkout_before_business(pub, test, source, recorded,
+                                                      test_account, retry_env, source_workflow)
+            wait_recorded(pub, source, "test", test, TEST,
+                          source_workflow, test_run, source)
         if route == "hosted":
             verify_hosted_execution(test, TEST, test_run)
         else:
