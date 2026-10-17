@@ -16,7 +16,8 @@ import time
 import urllib.error
 import urllib.request
 
-from scheduler.probes import existing_attempt, runner_for_repo
+from scheduler.probes import existing_attempt, runner_for_repo, account_usage
+from scheduler.android_route import choose as choose_route, workflow as workflow_for, artifact as artifact_for, HOSTED_WORKFLOW
 
 RUNNER = "chaonpu/Runner"
 TEST = "anwpustudent-lab/Test"
@@ -135,12 +136,14 @@ def put_state(public_token, source, phase, *, test_run_id=None, signing_run_id=N
     require(bool(result.get("commit", {}).get("sha")), "state_write_unknown")
 
 
-def reserve(public_token, source):
+def reserve(public_token, source, route="windows"):
     record, blob = json_file(public_token, STATE_PATH)
     require(record.get("version") == 1 and isinstance(record.get("builds"), dict),
             "state_schema_invalid")
     require(source not in record["builds"], "source_already_registered_no_redispatch")
+    require(route in ("hosted", "windows"), "unknown_android_route")
     record["builds"][source] = {
+        "route": route,
         "phase": "reserved",
         "sourceSha": source,
         "createdAt": datetime.now(timezone.utc).isoformat(),
@@ -200,7 +203,7 @@ def runner_ready(repo, name, account, env):
 
 def dispatch(token, repo, workflow, inputs):
     path = "/actions/workflows/" + workflow + "/dispatches"
-    require((repo, workflow) in ((TEST, TEST_WORKFLOW), (SIGNER, SIGN_WORKFLOW)),
+    require((repo, workflow) in ((TEST, TEST_WORKFLOW), (TEST, HOSTED_WORKFLOW), (SIGNER, SIGN_WORKFLOW)),
             "dispatch_target_not_allowlisted")
     response = api(token, repo, path, method="POST",
                    payload={"ref": "main", "return_run_details": True, "inputs": inputs})
