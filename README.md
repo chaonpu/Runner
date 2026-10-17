@@ -11,6 +11,8 @@
 
 ## 当前状态
 
+**任务额度门槛已部署（2026-10-17）**：[线上检查 #38990217463](https://github.com/chaonpu/Runner/actions/runs/38990217463) 成功，**168 项测试通过**。云端推荐现要求经独立核实的 `remainingFreeMinutes` 足够覆盖任务 `estimatedMinutes + reserveMinutes`，证据 `observedAt` 为带时区时间、距检查时刻不超过 300 秒且不在未来，`period` 必须是当前 UTC 年月。不足只表示本任务预算不足，不把账户判为耗尽；未知、过期、跨月、负数、非有限数及缺字段均不推荐云端。可用和耗尽证据均受时效检查；耗尽还要求余额确为零。当前 Billing Usage 适配器仍不提供该独立余额证据，因此不因新门槛而启用云端派发。计费 GET 已显式传入当前 UTC year/month，并验证返回的 timePeriod；两个账户线上 `reportingPeriodVerified=true`、用量可读，但剩余额度继续 `unknown`。Windows Runner 在线空闲，A/US 无活跃运行，生产开关保持关闭。
+
 **Runner 令牌修复已线上验收（2026-10-17 09:12 北京时间）**：[安全检查 #38989843184](https://github.com/chaonpu/Runner/actions/runs/38989843184) 成功，代码提交 `4356c58` 将 Stock 所属账号的 `runnerSecret` 改为用户已核对的 `RUNNER_READ_TOKEN`；`CHAONPU_BILLING_READ_TOKEN` 继续只读计费用量，`CHAONPU_ACTIONS_READ_TOKEN` 用于 Actions 查询。**159 项测试通过**。实际只读结果：A/US 的 `runnerRead=readable`、`windowsOnlineAndLabelsVerified=true`（指定 Runner 在线、空闲且标签匹配），两个工作流均 `no_active_run`。两账号 Billing Usage 可读，但剩余免费分钟仍未核实；Stock 的 Windows 生产工作流尚未完成业务验收，因此仍未加入调度白名单。生产派发、登记写入、database 写入及自动重试全部关闭。Test 的 Runner 凭据映射本次未改。
 
 **最新线上联通结果（2026-10-17）**：[RUNNER #38974929403](https://github.com/chaonpu/Runner/actions/runs/38974929403) 已通过现有安全 CI 完成一次性**真实 GitHub Contents API 只读读取**，`registryApiRead=true`、生产任务 `0`、A/美股自动候选日期均为 `2026-10-16`、路由建议均 `deferred`，生产派发/任务写入/账本读取/自动重试均为 `false`。同轮 **125 项测试通过**。临时线上联通步骤已移除，后续代码提交不会持续检查业务状态。[移除后 CI #38974990095](https://github.com/chaonpu/Runner/actions/runs/38974990095) 成功。注意此次是借助原本 `validate.yml` 执行的真实在线只读验收，并非 `production-dispatch.yml` 手动启动的完整验收。正式策略开关持续关闭。
