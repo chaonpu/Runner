@@ -116,5 +116,14 @@ class Tests(unittest.TestCase):
                     with self.assertRaisesRegex(a.Hold, "source_sha_required"):
                         a.run({"GH_TOKEN": "public"}, execute=True)
 
+    def test_signing_must_reserve_intent_before_dispatch(self):
+        sha = "b" * 40
+        entry = {"version": 1, "builds": {sha: {
+            "sourceSha": sha, "phase": "test_verified", "testRunId": 123}}}
+        with patch.object(a, "json_file", return_value=(entry, "blob")):
+            with patch.object(a, "api", side_effect=AssertionError("unexpected write")):
+                with self.assertRaisesRegex(a.Hold, "state_transition_not_allowed"):
+                    a.put_state("token", sha, "signer_started")
+
 if __name__ == "__main__":
     unittest.main()
