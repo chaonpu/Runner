@@ -16,16 +16,16 @@
     },
     "ce0be22bf758f2621235a165bfc07c059cca5de1": {
       "createdAt": "2026-10-17T14:13:49.824463+00:00",
-      "phase": "sign_retry_reserved",
+      "phase": "signer_started",
       "recoveryFromSigningRunId": 39043072529,
       "signingRecoveryHistory": [
         39041021094,
         39043072529
       ],
-      "signingRunId": 39043072529,
+      "signingRunId": 39043329939,
       "sourceSha": "ce0be22bf758f2621235a165bfc07c059cca5de1",
       "testRunId": 39039852886,
-      "updatedAt": "2026-10-17T15:02:44.539947+00:00"
+      "updatedAt": "2026-10-17T15:02:47.032448+00:00"
     }
   },
   "version": 1
