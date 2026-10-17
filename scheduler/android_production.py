@@ -176,7 +176,8 @@ def dispatch(token, repo, workflow, inputs):
 def validate_run(item, repo, workflow, rid, source=None):
     """Reject different workflow, branch, SHA, attempts or trigger."""
     require(isinstance(item, dict) and item.get("id") == rid
-            and item.get("repository", {}).get("full_name") == repo
+            and isinstance(item.get("repository"), dict)
+            and item["repository"].get("full_name") == repo
             and item.get("event") == "workflow_dispatch"
             and item.get("head_branch") == "main"
             and item.get("run_attempt") == 1
@@ -226,10 +227,12 @@ def run(env, *, execute=False, resume=False, requested_sha=""):
             and task.get("windowsWorkflow") == TEST_WORKFLOW
             and task.get("signingWindowsWorkflow") == SIGN_WORKFLOW,
             "android_workflow_configuration_changed")
-    source = current_source(test)
-    if requested_sha:
-        require(bool(SHA.fullmatch(requested_sha)) and source == requested_sha,
-                "requested_sha_not_current_test_main")
+    # A resumed exact-source run may be older than current Test/main.
+    # New builds, however, must always start from the current main SHA.
+    source = requested_sha if resume and requested_sha else current_source(test)
+    require(bool(SHA.fullmatch(source)), "invalid_source_sha")
+    if requested_sha and not resume:
+        require(source == requested_sha, "requested_sha_not_current_test_main")
     state, _ = json_file(pub, STATE_PATH)
     require(state.get("version") == 1 and isinstance(state.get("builds"), dict),
             "state_schema_invalid")
