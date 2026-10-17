@@ -2,12 +2,12 @@
   "builds": {
     "538b3ded770fdf7b54885ca773755fd7587ffae5": {
       "createdAt": "2026-10-17T16:49:57.822450+00:00",
-      "phase": "signer_started",
+      "phase": "signed_verified",
       "route": "windows",
       "signingRunId": 39051666258,
       "sourceSha": "538b3ded770fdf7b54885ca773755fd7587ffae5",
       "testRunId": 39051122647,
-      "updatedAt": "2026-10-17T16:57:45.734116+00:00"
+      "updatedAt": "2026-10-17T17:05:54.277857+00:00"
     },
     "6c13735a6d2dbb0f432a6115b79a9ab5a3fcf4d9": {
       "createdAt": "2026-10-17T13:10:21.079228+00:00",
