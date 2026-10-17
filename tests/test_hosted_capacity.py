@@ -18,9 +18,9 @@ def evidence(**changes):
 
 
 class HostedCapacityTests(unittest.TestCase):
-    def test_exact_task_plus_reserve_boundary(self):
-        for minutes, expected in [(379.99, "insufficient"), (380, "available"),
-                                  (381, "available"), (0, "insufficient")]:
+    def test_fixed_100_minute_boundary(self):
+        for minutes, expected in [(99.99, "insufficient"), (100, "available"),
+                                  (101, "available"), (0, "insufficient")]:
             data = evidence()
             data["remainingFreeMinutes"] = minutes
             self.assertEqual(hosted_capacity(data, TASK, now=NOW), expected)
@@ -46,7 +46,7 @@ class HostedCapacityTests(unittest.TestCase):
         self.assertEqual(hosted_capacity(data, TASK, now=next_month), "unknown")
 
     def test_non_numeric_or_nonfinite_values_block(self):
-        for field in ("remainingFreeMinutes", "estimatedMinutes", "reserveMinutes"):
+        for field in ("remainingFreeMinutes",):
             for invalid in (True, "380", None, -1, float("inf"), float("nan")):
                 data, task = evidence(), copy.deepcopy(TASK)
                 (data if field == "remainingFreeMinutes" else task)[field] = invalid

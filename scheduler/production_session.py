@@ -103,9 +103,11 @@ def readiness(ports, config, state, task, day, clock):
     billing, runners = audit.get("billing"), audit.get("runners")
     need(isinstance(billing, dict) and isinstance(runners, dict),
          "session_capacity_evidence_invalid")
-    if hosted_capacity(billing.get("chaonpu"), spec, now=now) == "available":
+    capacity = hosted_capacity(billing.get("chaonpu"), spec, now=now)
+    if capacity == "available":
         route = "cloud"
-    elif (spec.get("windowsWorkflow") == WORKFLOWS[task]
+    elif (capacity in ("insufficient", "exhausted")
+          and spec.get("windowsWorkflow") == WORKFLOWS[task]
           and runner_available(runners.get(spec["repo"]), spec.get("runnerName"))):
         route = "windows"
     else:

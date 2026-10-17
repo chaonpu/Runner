@@ -85,7 +85,8 @@ class PortsTests(unittest.TestCase):
 
     def ports(self, cls=ProductionPorts, active=None):
         return cls(env(), requester=self.backend.request, reader_factory=self.backend.reader,
-            bill=lambda *args: {"status": "unknown", "independentlyVerified": False},
+            bill=lambda *args: {"status": "exhausted", "independentlyVerified": True,
+                "remainingFreeMinutes": 0, "period": "2026-10", "observedAt": "2026-10-17T06:00:00+00:00"},
             runner=lambda *args: {"name": "ziwuxilv-stock-win", "status": "online",
                                   "busy": False, "labelsVerified": True},
             active=active or (lambda *args: {"status": "no_active_run"}), clock=self.clock)

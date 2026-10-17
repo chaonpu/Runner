@@ -1,5 +1,6 @@
 """Fail-closed routing tests for hosted Android quota reporting."""
 import unittest
+from datetime import datetime, timezone
 from unittest.mock import patch
 from scheduler import android_route as r
 from scheduler import android_production as p
@@ -8,6 +9,7 @@ from scheduler import android_production as p
 def report(remaining=1200, *, period="2026-10"):
     return {
         "read": "readable", "period": period,
+        "observedAt": datetime.now(timezone.utc).isoformat(), "reportingPeriodVerified": True,
         "allowanceEstimate": {
             "read": "readable", "period": period,
             "conversionSupported": True,
@@ -23,7 +25,7 @@ class RouteTests(unittest.TestCase):
     def setUp(self):
         self.task = {"reserveMinutes": 200}
 
-    def test_large_conservative_estimate_prefers_hosted(self):
+    def test_valid_estimate_prefers_hosted(self):
         selection = r.choose(self.task, report(1200))
         self.assertEqual(selection["route"], "hosted")
         self.assertFalse(selection["hostedQuotaGuaranteed"])
@@ -31,11 +33,11 @@ class RouteTests(unittest.TestCase):
         self.assertEqual(r.artifact("hosted"), "cloud-test-verified")
 
     def test_insufficient_estimated_allowance_uses_windows(self):
-        for remaining in (0, 10, 699):
+        for remaining in (0, 10, 99):
             self.assertEqual(r.choose(self.task, report(remaining))["route"], "windows")
-        self.assertEqual(r.choose(self.task, report(700))["route"], "hosted")
+        self.assertEqual(r.choose(self.task, report(100))["route"], "hosted")
 
-    def test_stale_unknown_or_mixed_runner_usage_falls_back(self):
+    def test_stale_unknown_or_mixed_runner_usage_pauses(self):
         for bad in (
             {},
             {"read": "permission_denied"},
@@ -48,7 +50,7 @@ class RouteTests(unittest.TestCase):
             {**report(), "allowanceEstimate": {
                 **report()["allowanceEstimate"], "remainingMinutesEstimate": 1200.4}},
         ):
-            self.assertEqual(r.choose(self.task, bad)["route"], "windows")
+            self.assertEqual(r.choose(self.task, bad)["route"], "hold")
 
     def test_sku_different_route_names_never_accepted(self):
         for x in ("other", "", "cloud", "published"):

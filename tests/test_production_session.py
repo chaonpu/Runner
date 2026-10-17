@@ -46,7 +46,8 @@ class MemoryPorts:
             "calendarCoverageCurrent": True, "scheduledSessionClosed": True,
             "exchangeSessionVerified": True, "marketDataReady": True,
             "sourceSha": SOURCE, "observedAt": "2026-10-17T06:00:00+00:00",
-            "billing": {}, "runners": {"chaonpu/Stock": {
+            "billing": {"chaonpu": {"status": "exhausted", "independentlyVerified": True,
+                "remainingFreeMinutes": 0, "period": "2026-10", "observedAt": "2026-10-17T06:00:00+00:00"}}, "runners": {"chaonpu/Stock": {
                 "name": "ziwuxilv-stock-win", "status": "online",
                 "busy": False, "labelsVerified": True}},
         }
@@ -308,7 +309,7 @@ class ProductionSessionTests(unittest.TestCase):
     def test_cloud_requires_verified_fresh_task_budget(self):
         self.ports.audit_value["billing"] = {"chaonpu": {
             "status": "available", "independentlyVerified": True,
-            "remainingFreeMinutes": 380, "period": "2026-10",
+            "remainingFreeMinutes": 100, "period": "2026-10",
             "observedAt": "2026-10-17T06:00:00+00:00"}}
         self.begin()
         self.assertEqual(self.ports.dispatches[0][2]["inputs"]["runner_mode"], "ubuntu")
@@ -317,7 +318,7 @@ class ProductionSessionTests(unittest.TestCase):
     def test_unknown_or_insufficient_cloud_budget_never_implies_available(self):
         for budget in ({"status": "available", "remainingFreeMinutes": 2000},
                        {"status": "available", "independentlyVerified": True,
-                        "remainingFreeMinutes": 379, "period": "2026-10",
+                        "remainingFreeMinutes": 99, "period": "2026-10",
                         "observedAt": "2026-10-17T06:00:00+00:00"}):
             self.setUp()
             self.ports.audit_value["runners"] = {}

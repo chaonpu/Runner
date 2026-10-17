@@ -1,8 +1,8 @@
 """Repository-separated estimate of the user's confirmed monthly allowance.
 
-No raw billing records or repository names are returned. An estimate does not
-authorize dispatch: current visibility is not historical visibility, reporting
-can lag, and private discounts may include free Pages/Dependabot usage.
+No raw billing records or repository names are returned. Supported estimates feed the user-selected 100-minute routing threshold. They
+remain estimates: reporting can lag and current visibility is not historical
+visibility. Public standard-runner usage is excluded from the allowance.
 """
 from datetime import date
 import math

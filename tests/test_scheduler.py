@@ -65,9 +65,9 @@ class RouteTests(unittest.TestCase):
         task = CONFIG["tasks"]["android"]
         runners = {task["repo"]: online("ziwuxilv-test-win"),
                    task["signingRepo"]: online("ziwuxilv-sign-win")}
-        self.assertEqual(decide("android", task, {}, runners).route, "windows-chain")
+        self.assertEqual(decide("android", task, {"anwpustudent-lab": quota("exhausted")}, runners).route, "windows-chain")
         runners[task["signingRepo"]]["busy"] = True
-        self.assertEqual(decide("android", task, {}, runners).route, "deferred")
+        self.assertEqual(decide("android", task, {"anwpustudent-lab": quota("exhausted")}, runners).route, "deferred")
 
     def test_database_and_public_release_are_not_dispatchable_tasks(self):
         self.assertNotIn("ZIWUXILV", CONFIG["accounts"])

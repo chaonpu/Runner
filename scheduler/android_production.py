@@ -334,14 +334,14 @@ def run(env, *, execute=False, resume=False, requested_sha=""):
         plan = {"route": route, "reason": "registered_original_route",
                 "hostedQuotaGuaranteed": False}
     else:
-        # Billing reports may lag; unknown or conservative shortfall goes to
-        # Windows BEFORE any hosted dispatch. Never infer exact remaining funds.
+        # Use the shared 100-minute threshold before any dispatch. Unknown
+        # billing pauses execution rather than assuming self-hosted eligibility.
         billing = (account_usage("anwpustudent-lab", test_account, env)
                    if test_account.get("billingSecret") else {})
         plan = choose_route(task, billing)
         route = plan["route"]
-    source_workflow = workflow_for(route)
-    source_artifact = artifact_for(route)
+    source_workflow = workflow_for(route) if route in ("windows", "hosted") else None
+    source_artifact = artifact_for(route) if route in ("windows", "hosted") else None
     if not execute:
         test_probe = runner_for_repo(TEST, task["runnerName"],
                                        runner_account(TEST, test_account, env), env)
@@ -369,6 +369,7 @@ def run(env, *, execute=False, resume=False, requested_sha=""):
                           TEST, HOSTED_WORKFLOW, test_account, env).get("status"))
         return
 
+    require(route in ("windows", "hosted"), "hosted_allowance_unverified_dispatch_paused")
     if resume:
         require(bool(requested_sha) and SHA.fullmatch(requested_sha),
                 "resume_requires_original_source_sha")

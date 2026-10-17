@@ -18,7 +18,7 @@ RUNNER 仅保留以下 **4 个手动工作流**，均从 Actions → 选择工�
 3. 首次运行 `resume=false`。可先不勾选 `execute` 检查；真实构建勾选 `execute` 后运行。
 4. 成功后 [构建登记](state/android-production.json) 中该 SHA 的 `phase` 应为 `signed_verified`，同时登记 `testRunId`、`signingRunId`。签名包保存在私有签名仓库 `windows-signed-release`，保留 3 天，请及时发布。
 
-额度证据满足保守门槛时 Test 优先云端构建；否则回退 Windows。私有签名始终使用 `ziwuxilv-sign-win`。走 Windows 时 Test 还需 `ziwuxilv-test-win` 在线且空闲。云端任务启动后失败不会自动换机重建。
+剩余额度 **≥100 分钟使用云端，<100 分钟才转自托管**，APK 构建、A股和美股策略采用同一门槛，不再叠加预计耗时或预留分钟数。公开标准运行器用量不扣减私有仓库免费额度；额度无法读取、证据过期或口径无法核实时暂停派发，不当作低余额。私有签名始终使用 `ziwuxilv-sign-win`。走 Windows 时 Test 还需 `ziwuxilv-test-win` 在线且空闲。云端任务启动后失败不会自动换机重建。
 
 已有未完成任务只有 `test_started`、`test_verified`、`signer_started` 可使用原 `source_sha` + `resume=true` + `execute=true` 继续。`reserved`、`signer_reserved` 或不确定失败需核对原 Run，不能清空登记后重试。已成功的同一 SHA 不重复构建。
 
@@ -60,7 +60,7 @@ RUNNER 仅保留以下 **4 个手动工作流**，均从 Actions → 选择工�
 
 正常收盘后运行选择 `formal`；周末、跨过市场当地日期或补算历史选择 `theoretical_catchup`。补算推进理论持仓、快照与账本，不冒充当日正式报告、不发送正式策略邮件。美股日期按纽约当地交易日，不按北京时间换日。
 
-运行前需 Windows `ziwuxilv-stock-win` 在线且空闲，以完成私有实时就绪检查；这项检查目前即使云端额度充足也需要 Windows。业务计算再按已核实账户额度选云端或 Windows。两市场共用串行锁，避免同时改账本。运行结束关闭本次临时许可，日常配置保持 OFF；这是手动执行模式，不表示功能禁用。
+运行前需 Windows `ziwuxilv-stock-win` 在线且空闲，以完成私有实时就绪检查；这项检查目前即使云端额度充足也需要 Windows。业务计算再按账户额度选择：≥100 分钟使用云端，<100 分钟使用 Windows。两市场共用串行锁，避免同时改账本。运行结束关闭本次临时许可，日常配置保持 OFF；这是手动执行模式，不表示功能禁用。
 
 同一市场、同一日期已有登记会停止，不能重复调仓/入账。遇到 `hold` 或失败，先核对日志中的原 Run ID 和 [任务登记](state/tasks.json)，不要删除记录或盲目 Re-run。成功以**下游业务成功 + 数据库回执核验成功**为准。
 

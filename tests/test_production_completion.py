@@ -55,7 +55,8 @@ class CompletionTests(unittest.TestCase):
     def setup_ports(self):
         backend=LifecycleBackend(); clock=Clock()
         ports=ProductionPorts(env(),requester=backend.request,reader_factory=backend.reader,
-            bill=lambda *args:{'status':'unknown'},
+            bill=lambda *args:{'status':'exhausted','independentlyVerified':True,
+                'remainingFreeMinutes':0,'period':'2026-10','observedAt':'2026-10-17T06:00:00+00:00'},
             runner=lambda *args:{'name':'ziwuxilv-stock-win','status':'online','busy':False,'labelsVerified':True},
             active=lambda *args:{'status':'no_active_run'},clock=clock)
         return backend,ports,clock

@@ -1,7 +1,7 @@
 """Pure, fail-closed routing for the public Runner coordinator.
 
-Actions usage is not remaining included minutes. Only independently verified
-account allowance information may set billing status to available/exhausted.
+Raw Actions usage alone is not remaining included minutes. Supported allowance
+estimates and independently verified balances use the same 100-minute rule.
 Never infer Windows executable compatibility merely from a Runner online status.
 """
 from __future__ import annotations
@@ -29,34 +29,60 @@ def billing_state(value: Any) -> str:
         return state
     return "unknown"
 
-def hosted_capacity(value: Any, task: dict, *, now=None) -> str:
-    """Apply a fresh, verified free balance to THIS task's Linux minute budget.
+SELF_HOSTED_BELOW_MINUTES = 100
 
-    Usage totals, startup canaries and paid budgets are never free balances.
-    'insufficient' means below the task budget, not an exhausted account.
+
+def hosted_remaining(value: Any, *, now=None):
+    """Fresh account balance or supported private-Linux allowance estimate.
+
+    Estimates exclude public standard-runner usage and are not a guarantee of
+    realtime billing. Raw usage totals alone never establish remaining minutes.
     """
-    state = billing_state(value)
-    if state not in ("available", "exhausted"):
-        return "unknown"
-    remaining = value.get("remainingFreeMinutes")
-    estimate, reserve = task.get("estimatedMinutes"), task.get("reserveMinutes")
-    if any(type(n) not in (int, float) or not math.isfinite(n) or n < 0
-           for n in (remaining, estimate, reserve)) or estimate <= 0:
-        return "unknown"
+    if not isinstance(value, dict):
+        return None
     instant = datetime.now(timezone.utc) if now is None else now
     try:
         observed = datetime.fromisoformat(value["observedAt"])
         if instant.tzinfo is None or observed.tzinfo is None:
-            return "unknown"
+            return None
         instant = instant.astimezone(timezone.utc)
-        age = (instant - observed).total_seconds()
-        if not 0 <= age <= 300 or value.get("period") != instant.strftime("%Y-%m"):
-            return "unknown"
+        if not 0 <= (instant - observed).total_seconds() <= 300:
+            return None
+        if value.get("period") != instant.strftime("%Y-%m"):
+            return None
     except (KeyError, TypeError, ValueError, AttributeError):
+        return None
+    state = billing_state(value)
+    if state in ("available", "exhausted"):
+        remaining = value.get("remainingFreeMinutes")
+        if (type(remaining) not in (int, float) or not math.isfinite(remaining)
+                or remaining < 0 or (state == "exhausted" and remaining != 0)):
+            return None
+        return remaining
+    estimate = value.get("allowanceEstimate")
+    if (value.get("read") != "readable" or value.get("reportingPeriodVerified") is not True
+            or not isinstance(estimate, dict) or estimate.get("read") != "readable"
+            or estimate.get("period") != value["period"]
+            or estimate.get("conversionSupported") is not True
+            or estimate.get("estimateStatus") != "private_standard_linux_only"
+            or estimate.get("publicStandardUsageExcluded") is not True):
+        return None
+    remaining = estimate.get("remainingMinutesEstimate")
+    return remaining if type(remaining) is int and remaining >= 0 else None
+
+
+def hosted_capacity(value: Any, task: dict, *, now=None) -> str:
+    """User rule: cloud at >=100 minutes; self-hosted only below 100.
+
+    Task runtime estimates and reserve minutes do not change this threshold.
+    Missing, stale or unsupported billing evidence is unknown, never low quota.
+    """
+    remaining = hosted_remaining(value, now=now)
+    if remaining is None:
         return "unknown"
-    if state == "exhausted":
-        return "exhausted" if remaining == 0 else "unknown"
-    return "available" if remaining >= estimate + reserve else "insufficient"
+    if remaining == 0 and billing_state(value) == "exhausted":
+        return "exhausted"
+    return "available" if remaining >= SELF_HOSTED_BELOW_MINUTES else "insufficient"
 
 def runner_available(obj: Any, name: str | None) -> bool:
     if not isinstance(obj, dict) or not name:
@@ -105,7 +131,7 @@ def decide(task_name: str, task: dict, account_states: dict,
 
     if kind == "android":
         if main_quota == "available":
-            return Decision("cloud", "Test hosted quota independently verified available",
+            return Decision("cloud", "Test reported allowance at least 100 minutes",
                             repo, task["cloudWorkflow"])
         signing_repo = task["signingRepo"]
         signing_owner = signing_repo.split("/")[0]
@@ -114,21 +140,21 @@ def decide(task_name: str, task: dict, account_states: dict,
                 and signing_source_verified):
             return Decision("cloud-signing", "Test hosted exhausted; verified source permits signing hosted",
                             signing_repo, task["signingCloudWorkflow"])
-        # Unknown hosted quota never equals exhausted. Conservative local routing
-        # is possible, but it requires both independent Windows runner services.
-        if (runner_available(runner_states.get(repo), task.get("runnerName"))
+        # Only a known balance below 100 permits self-hosted fallback.
+        if (main_quota in ("exhausted", "insufficient")
+                and runner_available(runner_states.get(repo), task.get("runnerName"))
                 and runner_available(runner_states.get(signing_repo), task.get("signingRunnerName"))):
-            return Decision("windows-chain", "Hosted capacity unconfirmed/unavailable; isolated Windows builder and signer ready",
+            return Decision("windows-chain", "Remaining allowance below 100 minutes; Windows builder and signer ready",
                             repo, task["windowsWorkflow"])
         return Decision("deferred", "No verified cloud capacity and full Windows build/sign chain unavailable")
 
     if main_quota == "available" and task.get("cloudWorkflow"):
-        return Decision("cloud", "Independent hosted allowance is available",
+        return Decision("cloud", "Reported allowance at least 100 minutes",
                         repo, task["cloudWorkflow"])
 
-    if (task.get("windowsWorkflow")
+    if (main_quota in ("exhausted", "insufficient") and task.get("windowsWorkflow")
             and runner_available(runner_states.get(repo), task.get("runnerName"))):
-        return Decision("windows", "Hosted allowance unavailable/unknown; verified Windows workflow available",
+        return Decision("windows", "Remaining allowance below 100 minutes; verified Windows workflow available",
                         repo, task["windowsWorkflow"])
 
     # Stock Linux steps require an explicit, tested Windows workflow; adding a
