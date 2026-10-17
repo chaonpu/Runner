@@ -42,7 +42,17 @@ jobs:
           set -euo pipefail
           args=(--task "$TASK")
           if [[ "$EXECUTE" == 'true' ]]; then args+=(--execute); fi
-          python3 -m scheduler.production_coordinator "${args[@]}"
+          python3 -m scheduler.production_coordinator "${args[@]}" 2>&1 | tee "$RUNNER_TEMP/entry-result.jsonl"
       - name: Close only this coordinator's temporary permit
         if: always() && inputs.execute == true
         run: python3 -m scheduler.production_lease
+
+      - name: Show authoritative entry outcome (not GitHub green alone)
+        if: always()
+        env:
+          JOB_RESULT: ${{ job.status }}
+          ENTRY_PREVIEW: ${{ inputs.execute != true }}
+        run: |
+          python3 -m scheduler.entry_result --entry stock_us \
+            --result "$JOB_RESULT" --preview "$ENTRY_PREVIEW" \
+            --log "$RUNNER_TEMP/entry-result.jsonl"
