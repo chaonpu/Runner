@@ -71,3 +71,5 @@ RUNNER 仅保留以下 **4 个手动工作流**，均从 Actions → 选择工�
 维护者在本地运行：`python3 -m unittest discover -s tests -p 'test_*.py' -v`。当前交易所日历覆盖 2026 年，跨年需先更新 `config/exchange_schedule_2026.json`，覆盖不足时系统停止执行。
 
 旧的部署、演练及阶段性说明保留作历史记录；**当前使用以本 README 为准**。
+
+本次验证证据及实际运行边界见 [2026-10-18 手动入口验收](docs/manual-workflows-acceptance-20261018.md)。

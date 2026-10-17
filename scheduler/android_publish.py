@@ -38,7 +38,7 @@ def public_api(path, token="", *, payload=None):
                   "/actions/workflows/" + WORKFLOW + "/dispatches")
          or re.fullmatch(r"/actions/runs/[1-9][0-9]*", path), "public_endpoint_forbidden")
     headers = {"Accept": "application/vnd.github+json", "User-Agent": "ziwuxilv-manual-publish",
-               "X-GitHub-Api-Version": "2026-03-10"}
+               "X-GitHub-Api-Version": "2026-03-10", "Content-Type": "application/json"}
     if token:
         headers["Authorization"] = "Bearer " + token
     req = urllib.request.Request("https://api.github.com/repos/" + REPO + path,
