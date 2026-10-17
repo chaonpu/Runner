@@ -1,20 +1,5 @@
 {
   "description": "Public-safe task metadata only. No source code, positions, customer details or secrets.",
   "schema": 1,
-  "tasks": [
-    {
-      "coordinatorRunId": 39027933024,
-      "createdAt": "2026-10-17T11:22:22.023553+00:00",
-      "id": "stock_us:2026-10-16",
-      "publicationMode": "theoretical_catchup",
-      "repo": "chaonpu/Stock",
-      "route": "windows",
-      "runId": 39028473442,
-      "sourceSha": "1ea6ad3472633141f269001fb1aa6755467deb98",
-      "status": "hold",
-      "task": "stock_us",
-      "updatedAt": "2026-10-17T11:27:05.206826+00:00",
-      "workflow": "run-us.yml"
-    }
-  ]
+  "tasks": []
 }
