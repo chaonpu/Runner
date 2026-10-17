@@ -255,6 +255,19 @@ def verify_execution_runner(token, repo, rid, expected):
     require(len(completed) == 1, "expected_private_runner_not_verified")
 
 
+def verify_hosted_execution(token, repo, rid):
+    """Cloud results must be from exactly one successful standard Ubuntu job."""
+    response = api(token, repo, "/actions/runs/" + str(rid) + "/jobs?per_page=100")
+    jobs = response.get("jobs")
+    require(response.get("total_count") == 1 and isinstance(jobs, list)
+            and len(jobs) == 1, "hosted_run_jobs_ambiguous")
+    job = jobs[0]
+    labels = job.get("labels")
+    require(job.get("conclusion") == "success" and isinstance(labels, list)
+            and "ubuntu-24.04" in labels and "self-hosted" not in labels,
+            "hosted_standard_ubuntu_not_verified")
+
+
 def verify_artifact(token, repo, rid, expected):
     response = api(token, repo, "/actions/runs/" + str(rid) + "/artifacts?per_page=100")
     artifacts = response.get("artifacts")
