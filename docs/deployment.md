@@ -1,5 +1,13 @@
 # 统一调度中心部署与迁移计划（2026-10-17）
 
+## 2026-10-17 Git 远端写入 ACK 不确定性处理与 Windows 回执来源匹配（生产仍锁闭）
+
+- 私有 Stock 新增 `private_push_confirmation.py` 和 8 项合成测试；**仅带 coordinator task_id 的 A/US 正式工作流**使用。必须先生成正式行情结果、安全通过本次运行日期和覆盖校验、计算并提交同一次账本与私有回执，然后核对身份、任务日期、数据库唯一允许的 origin、同一 Git commit 的市场效应与私有 receipt。随后仅允许 **一次** `git push origin HEAD:main`，并单独通过**只读** `git ls-remote` 验证远端 main SHA 与本次拟提交 SHA 完全相同。如果客户端 push 响应丢失但 GitHub 已写入同一 commit，可以确认“提交存在”，但不会再次推送；如果远端无法读取或不等，则返回 HOLD，绝不执行第二次业务或第二次 Git push，也不授予 `verified`。
+- [Stock Windows #38984600065](https://github.com/chaonpu/Stock/actions/runs/38984600065) **Success**：完整隔离环境与本地临时裸 Git 8 种模拟，**Python 117/117 OK、Node 18/18 PASS**。该环境曾在一轮出现检出异常，因此另外独立以准确私有 GitHub API 获取文件，不依赖 Git 检出；[#38984800849](https://github.com/chaonpu/Stock/actions/runs/38984800849) **Success，8 项合成单测通过**，并校验 A/US 都仅在协调任务中使用新 push 回查器。
+- `private_coordinator_link.py` 原仅认 `cloud/ubuntu`，现在可在**公开 registry 路线为 windows 且配置明确设置相同 Stock 工作流的 `windowsWorkflow`**时，核对 `receiptRunnerMode=windows` 和实际 workflow_dispatch 的 `runner_mode`（如存在）。无 allowlist 或模式不一致即拒绝，永远只输出 `identities_linked_read_only`，不会确认业务完结或授权自动补偿。**目前公开 config 的 A/US `windowsWorkflow=null`，故 Windows 回执仍未被允许用于生产；总派发开关和所有任务开关均 false。**
+- [Stock #38985112517](https://github.com/chaonpu/Stock/actions/runs/38985112517) **Success**：使用只读私有 GitHub API 校验真实 A/US 发布步骤，并执行 **19 项合成回归**，包括 Windows 路线显式 allowlist、运行器模式、回执来源一致性及 Git 推送丢 ACK 回读。无真实 database 写入、无策略执行、无重试、无公开私有文件。
+- **当前界限**：能安全确认一个已写入的 Git commit，不等于核对了生产真实业务的交易日收益和来源行情，更不等于 RUNNER 可以在远端响应不确定时自动再派任务。剩余阻断包括私有完整 Git 检出与未来推送在 Windows 上的网络稳定性、真实完整源交易数据、RUNNER 任务登记与实际 Stock Run 绑定和独立回执认证。生产工作流仍只读，不能仅凭模拟测试改成自动写账。
+
 ## 2026-10-17 Windows Python/Node 账本合成实测通过（仍非真实 GitHub 入账）
 
 - 最新 [Stock Windows Run #38983987118](https://github.com/chaonpu/Stock/actions/runs/38983987118) 完整 **Success**。在私有 Windows Runner 第一次成功检出 Stock 源码，使用 Windows 隔离 venv 安装实际 `requirements.txt` 和 `tzdata`，核实 A股/纽约时区，运行现有真实账本/回执代码的**合成数据**测试，日志 `Ran 109 tests in 10.193s / OK`；Node 22 四组收益贡献和历史回补测试 **18 pass / 0 fail**；退出后成功删除临时源码和 venv。
