@@ -40,6 +40,7 @@ jobs:
       TEST_RUNNER_READ_TOKEN: ${{ secrets.TEST_RUNNER_READ_TOKEN }}
       RUNNER_READ_TOKEN: ${{ secrets.RUNNER_READ_TOKEN }}
       TEST_BILLING_READ_TOKEN: ${{ secrets.TEST_BILLING_READ_TOKEN }}
+      CHAONPU_BILLING_READ_TOKEN: ${{ secrets.CHAONPU_BILLING_READ_TOKEN }}
       CHAONPU_ACTIONS_READ_TOKEN: ${{ secrets.CHAONPU_ACTIONS_READ_TOKEN }}
       EXECUTE: ${{ inputs.execute }}
       RESUME: ${{ inputs.resume }}
