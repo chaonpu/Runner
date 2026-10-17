@@ -32,6 +32,7 @@ PUBLIC_REPO = "chaonpu/Runner"
 CERT = "bef3f5cbb2989734f20740eddaac3e105dfecb6c63ea9275e178eedd892ec105"
 SOURCE_WORKFLOW = ".github/workflows/test-self-hosted.yml"
 SIGN_WORKFLOW = ".github/workflows/windows-signing-verified-handoff.yml"
+CLOUD_SIGN_WORKFLOW = ".github/workflows/cloud-signing-verified-handoff.yml"
 HEX40 = re.compile(r"^[0-9a-f]{40}$")
 HEX64 = re.compile(r"^[0-9a-f]{64}$")
 VERSION = re.compile(r"^[0-9]+\.[0-9]+\.[0-9]+$")
@@ -123,7 +124,10 @@ def verify_provenance(req: dict, signer_token: str, test_token: str) -> None:
     signing = api_json(
         f"/repos/{SIGN_REPO}/actions/runs/{req['signingRunId']}", signer_token
     )
-    validate_run(signing, SIGN_REPO, SIGN_WORKFLOW, req["signingRunId"])
+    signing_origin = str(signing.get("path", "")).split("@")[0]
+    if signing_origin not in (SIGN_WORKFLOW, CLOUD_SIGN_WORKFLOW):
+        raise GuardError("signing_workflow_not_allowlisted")
+    validate_run(signing, SIGN_REPO, signing_origin, req["signingRunId"])
     source = api_json(
         f"/repos/{SOURCE_REPO}/actions/runs/{req['testRunId']}", test_token
     )
