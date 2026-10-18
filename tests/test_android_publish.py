@@ -40,7 +40,8 @@ class Tests(unittest.TestCase):
                 with self.assertRaisesRegex(p.build.Hold,'not_verified_signed'):
                     p.signed_request(ENV,SOURCE,'2.3.5',118,'Log')
 
-    def invoke(self, state=None, mode='prepare', execute=False, token=False, fail_stage=False, bad_response=False):
+    def invoke(self, state=None, mode='prepare', execute=False, token=False, fail_stage=False, bad_response=False,
+               fail_verify=False, fail_cleanup=False):
         registry={'version':1,'releases':{}}
         if state: registry['releases']['118']=deepcopy(state)
         self.events=[]
@@ -48,7 +49,7 @@ class Tests(unittest.TestCase):
         def save(env,key,row,previous):
             self.assertEqual(registry['releases'].get(key),previous)
             registry['releases'][key]=deepcopy(row)
-            self.events.append(row['phase'])
+            self.events.append('cleanup_recorded' if 'stagingCleanup' in row else row['phase'])
         def api(*args,**kwargs):
             self.assertEqual(args[1],'fake-chaonpu-actions')
             self.events.append('POST')
@@ -58,6 +59,11 @@ class Tests(unittest.TestCase):
             self.events.append('STAGE')
             if fail_stage: raise p.build.Hold('stage_failed')
             return PUBLISH
+        def cleanup(env, row):
+            self.assertGreater(verify.call_count, 0)
+            self.assertEqual(row['phase'], 'published')
+            if fail_cleanup: raise p.build.Hold('staging_cleanup_api_unavailable')
+            return {'status':'deleted','releaseId':999}
         env=dict(ENV)
         if token:env['CHAONPU_ACTIONS_READ_TOKEN']='fake-chaonpu-actions'
         with tempfile.TemporaryDirectory() as directory:
@@ -68,7 +74,10 @@ class Tests(unittest.TestCase):
                 with patch.object(p,'signed_request',return_value=REQ),patch.object(p.build,'json_file',side_effect=document),\
                      patch.object(p,'public_version',return_value=117),patch.object(p,'save',side_effect=save),\
                      patch.object(p,'stage',side_effect=stage),patch.object(p,'public_api',side_effect=api),\
-                     patch.object(p,'wait_public') as wait,patch.object(p,'verify_public') as verify:
+                     patch.object(p,'wait_public') as wait,\
+                     patch.object(p,'verify_public',side_effect=p.build.Hold('bad_public_hash') if fail_verify else None) as verify,\
+                     patch.object(p,'cleanup_published_staging',side_effect=cleanup) as clean:
+                    self.cleanup_mock=clean
                     result=p.run(env,source=SOURCE,version='2.3.5',code=118,log='Test update',mode=mode,execute=execute)
                     self.wait_count=wait.call_count
                     self.verify_count=verify.call_count
@@ -101,7 +110,7 @@ class Tests(unittest.TestCase):
         result=self.invoke(mode='publish',execute=True,token=True)
         self.assertTrue(result['published'])
         self.assertEqual(result['publicRunId'],789)
-        self.assertEqual(self.events,['staging_reserved','STAGE','prepared','dispatch_reserved','POST','publishing','published'])
+        self.assertEqual(self.events,['staging_reserved','STAGE','prepared','dispatch_reserved','POST','publishing','published','cleanup_recorded'])
         self.assertEqual(self.wait_count,1)
 
     def test_unknown_dispatch_never_succeeds_or_repeats(self):
@@ -115,13 +124,33 @@ class Tests(unittest.TestCase):
     def test_original_publishing_resumes_without_redispatch_or_restage(self):
         result=self.invoke(state=dict(REQ,phase='publishing',publishRequest=PUBLISH,publicRunId=789),execute=True)
         self.assertTrue(result['published'])
-        self.assertEqual(self.events,['published'])
+        self.assertEqual(self.events,['published','cleanup_recorded'])
         self.assertEqual(self.wait_count,1)
 
     def test_prepared_request_reusable_after_manual_backend_release(self):
         result=self.invoke(state=dict(REQ,phase='prepared',publishRequest=PUBLISH),mode='verify',execute=True)
         self.assertTrue(result['published'])
-        self.assertEqual(self.events,['published'])
+        self.assertEqual(self.events,['published','cleanup_recorded'])
+
+    def test_failed_public_hash_never_cleans_staging(self):
+        with self.assertRaisesRegex(p.build.Hold,'bad_public_hash'):
+            self.invoke(state=dict(REQ,phase='publishing',publishRequest=PUBLISH,publicRunId=789),
+                        execute=True,fail_verify=True)
+        self.cleanup_mock.assert_not_called()
+
+    def test_cleanup_failure_keeps_publication_successful_and_repeat_does_not_dispatch(self):
+        state=dict(REQ,phase='published',publishRequest=PUBLISH,publicRunId=789)
+        result=self.invoke(state=state,execute=True,fail_cleanup=True)
+        self.assertTrue(result['published'])
+        self.assertEqual(result['stagingCleanup']['status'],'pending')
+        self.assertEqual(self.events,[])
+        result=self.invoke(state=state,execute=True)
+        self.assertEqual(result['stagingCleanup']['status'],'deleted')
+        self.assertEqual(self.events,['cleanup_recorded'])
+
+    def test_preview_of_published_version_never_cleans(self):
+        self.invoke(state=dict(REQ,phase='published',publishRequest=PUBLISH),execute=False)
+        self.cleanup_mock.assert_not_called()
 
     def test_unknown_stage_cannot_be_repeated(self):
         with self.assertRaises(p.build.Hold):self.invoke(execute=True,fail_stage=True)
@@ -137,3 +166,4 @@ class Tests(unittest.TestCase):
 
 
 if __name__=='__main__':unittest.main()
+

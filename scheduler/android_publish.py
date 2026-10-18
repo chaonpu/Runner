@@ -17,6 +17,7 @@ import sys
 import tempfile
 import time
 import urllib.request
+import urllib.error
 
 from scheduler import android_production as build
 from scheduler import apk_stage
@@ -288,6 +289,66 @@ def wait_public(rid, token=""):
     raise build.Hold("publication_deadline_resume_original_run_only")
 
 
+def staging_release_api(env, path, *, method="GET"):
+    """Only the coordinator's own generated staging releases can be removed."""
+    need(method in ("GET", "DELETE") and (
+        re.fullmatch(r"/releases/[1-9][0-9]*", path) or
+        (method == "GET" and re.fullmatch(
+            r"/releases/tags/staged-apk-v[0-9]+\.[0-9]+\.[0-9]+-signrun-[1-9][0-9]*", path))),
+        "staging_cleanup_endpoint_forbidden")
+    need(bool(env.get("GH_TOKEN")), "staging_cleanup_token_missing")
+    request = urllib.request.Request("https://api.github.com/repos/" + build.RUNNER + path,
+        method=method, headers={"Authorization": "Bearer " + env["GH_TOKEN"],
+            "Accept": "application/vnd.github+json", "X-GitHub-Api-Version": "2026-03-10",
+            "User-Agent": "ziwuxilv-published-staging-cleanup", "Cache-Control": "no-cache"})
+    try:
+        with urllib.request.build_opener(build.NoRedirect()).open(request, timeout=25) as response:
+            if method == "DELETE":
+                need(response.status == 204, "staging_cleanup_delete_unconfirmed")
+                return None
+            raw = response.read(2_000_001)
+        need(len(raw) <= 2_000_000, "staging_cleanup_response_too_large")
+        value = json.loads(raw)
+        need(isinstance(value, dict), "staging_cleanup_response_invalid")
+        return value
+    except urllib.error.HTTPError as exc:
+        if exc.code == 404:
+            return None
+        raise build.Hold("staging_cleanup_api_unavailable") from None
+    except build.Hold:
+        raise
+    except (OSError, ValueError):
+        raise build.Hold("staging_cleanup_api_unavailable") from None
+
+
+def cleanup_published_staging(env, row):
+    # Caller has just verified the formal manifest AND downloaded APK hash.
+    need(row.get("phase") == "published", "staging_cleanup_requires_published")
+    req = row["publishRequest"]
+    version, signing = row["versionName"], row["signingRunId"]
+    need(bool(VERSION.fullmatch(version)) and type(signing) is int and signing > 0,
+         "staging_cleanup_identity_invalid")
+    tag = "staged-apk-v" + version + "-signrun-" + str(signing)
+    archive = "ziwuxilv-verified-v" + version + ".zip"
+    url = "https://github.com/" + build.RUNNER + "/releases/download/" + tag + "/" + archive
+    need(req.get("sourceUrl") == url, "staging_cleanup_source_url_mismatch")
+    release = staging_release_api(env, "/releases/tags/" + tag)
+    if release is None:
+        return {"status": "already_absent", "tag": tag}
+    rid, assets = release.get("id"), release.get("assets")
+    need(type(rid) is int and rid > 0 and release.get("tag_name") == tag
+         and release.get("prerelease") is True and release.get("draft") is False
+         and isinstance(assets, list) and len(assets) == 2
+         and all(isinstance(a, dict) for a in assets)
+         and {a.get("name") for a in assets} == {archive, "staging-receipt.json"}
+         and any(a.get("name") == archive and a.get("browser_download_url") == url for a in assets),
+         "staging_cleanup_release_identity_mismatch")
+    staging_release_api(env, "/releases/" + str(rid), method="DELETE")
+    need(staging_release_api(env, "/releases/" + str(rid)) is None,
+         "staging_cleanup_delete_unconfirmed")
+    return {"status": "deleted", "tag": tag, "releaseId": rid}
+
+
 def run(env, *, source, version, code, log, mode="prepare", execute=False):
     validate_context(env)
     need(mode in ("prepare", "publish", "verify"), "invalid_publication_mode")
@@ -352,13 +413,32 @@ def run(env, *, source, version, code, log, mode="prepare", execute=False):
     if row["phase"] == "published" and not publication_verified:
         verify_public(publish_request, env.get("CHAONPU_ACTIONS_READ_TOKEN", ""))
     published = row["phase"] == "published"
+    cleanup = None
+    if published:
+        try:
+            cleanup = cleanup_published_staging(env, row)
+            if row.get("stagingCleanup") != cleanup:
+                next_row = dict(row, stagingCleanup=cleanup)
+                save(env, key, next_row, row)
+                row = next_row
+        except Exception as exc:
+            # A cleanup problem must never erase a verified publication or cause
+            # it to be staged/dispatched again. A later manual run can retry.
+            cleanup = {"status": "pending", "reason": str(exc) if isinstance(exc, build.Hold)
+                       else "staging_cleanup_unavailable"}
+            print("::warning::正式发布已核验，但 Runner 中转 Release 清理待重试。", flush=True)
     result = {"status": row["phase"], "published": published,
               "publicRunId": row.get("publicRunId"), "versionName": version, "versionCode": code}
+    if cleanup is not None:
+        result["stagingCleanup"] = cleanup
     if env.get("GITHUB_STEP_SUMMARY"):
         with open(env["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as out:
             out.write("### APK 发布结果\n\n" + ("正式发布、更新清单和下载哈希已核验。" if published else
                 "已准备公开签名包，**尚未正式发布**。下载本次 `apk-publication-request`，将 JSON 完整粘贴到"
                 " [发布仓库手动入口](https://github.com/chaonpu/ziwuxilv/actions/workflows/publish-android-release.yml) 的 `publish_request` 后运行。") + "\n")
+            if cleanup is not None:
+                out.write("\n" + ("Runner 本次中转 Release 已清除。" if cleanup["status"] != "pending"
+                                  else "Runner 本次中转 Release 清理待重试；正式发布已完成。") + "\n")
     print(json.dumps(result))
     return result
 
@@ -378,3 +458,4 @@ def main():
 
 if __name__ == "__main__":
     sys.exit(main())
+
