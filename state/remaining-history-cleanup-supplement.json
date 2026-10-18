@@ -17,10 +17,11 @@
     {
       "repository": "anwpustudent-lab/Test",
       "requested": 123,
-      "deleted": 100,
+      "deleted": 123,
       "alreadyAbsent": 0,
       "blocked": [],
-      "verifiedAbsent": false
+      "verifiedAbsent": true,
+      "remainingSelectedRunIds": []
     }
   ]
 }
