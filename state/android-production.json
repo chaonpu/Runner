@@ -56,6 +56,12 @@
     },
     "7531c299ba2154771d955e037c25a186c0b28bbf": {
       "createdAt": "2026-10-18T07:10:42.196190+00:00",
+      "lastFailure": {
+        "code": "source_checkout_unverified_manual_review",
+        "recordedAt": "2026-10-18T07:26:57.969101+00:00",
+        "runId": 39106690375,
+        "stage": "test"
+      },
       "phase": "test_started",
       "route": "windows",
       "sourceSha": "7531c299ba2154771d955e037c25a186c0b28bbf",
