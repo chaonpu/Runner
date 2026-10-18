@@ -2,9 +2,11 @@
   "builds": {
     "24a0f2102b6dd8b18d8cc693f0d824c994522cee": {
       "createdAt": "2026-10-18T06:45:53.325270+00:00",
-      "phase": "reserved",
+      "phase": "test_started",
       "route": "windows",
-      "sourceSha": "24a0f2102b6dd8b18d8cc693f0d824c994522cee"
+      "sourceSha": "24a0f2102b6dd8b18d8cc693f0d824c994522cee",
+      "testRunId": 39105201020,
+      "updatedAt": "2026-10-18T06:45:55.561302+00:00"
     },
     "538b3ded770fdf7b54885ca773755fd7587ffae5": {
       "createdAt": "2026-10-17T16:49:57.822450+00:00",
