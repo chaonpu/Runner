@@ -8,10 +8,11 @@
     {
       "repository": "chaonpu/ziwuxilv-android",
       "requested": 51,
-      "deleted": 50,
+      "deleted": 51,
       "alreadyAbsent": 0,
       "blocked": [],
-      "verifiedAbsent": false
+      "verifiedAbsent": true,
+      "remainingSelectedRunIds": []
     }
   ]
 }
