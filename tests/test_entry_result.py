@@ -48,6 +48,28 @@ class EntryResultTests(unittest.TestCase):
         self.assertEqual(status, "仅检查")
         self.assertFalse(ran)
 
+    def test_apk_preview_is_real_runner_staging_not_formal_publication(self):
+        status, detail, ran = summarize("android_publish", [{
+            "status":"prepared", "previewStored":True, "stagedNow":True,
+            "published":False}], "success", False)
+        self.assertEqual(status, "已执行")
+        self.assertIn("Runner", detail)
+        self.assertIn("未推送", detail)
+        self.assertTrue(ran)
+
+    def test_existing_apk_preview_is_skipped_without_redispatch(self):
+        status, detail, ran = summarize("android_publish", [{
+            "status":"prepared", "previewStored":True, "stagedNow":False,
+            "published":False}], "success", False)
+        self.assertEqual(status, "已跳过")
+        self.assertFalse(ran)
+
+    def test_unverified_prepared_state_is_not_success(self):
+        status, _, ran = summarize("android_publish", [{
+            "status":"prepared", "published":False}], "success", False)
+        self.assertEqual(status, "失败")
+        self.assertFalse(ran)
+
     def test_failed_job_cannot_pass_from_stale_success(self):
         status, _, ran = summarize("android_publish", [
             {"status":"published","published":True},
