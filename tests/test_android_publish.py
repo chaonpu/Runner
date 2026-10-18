@@ -41,7 +41,7 @@ class Tests(unittest.TestCase):
                     p.signed_request(ENV,SOURCE,'2.3.5',118,'Log')
 
     def invoke(self, state=None, mode='prepare', execute=False, token=False, fail_stage=False, bad_response=False,
-               fail_verify=False, fail_cleanup=False):
+               fail_verify=False, fail_cleanup=False, fail_preview=False):
         registry={'version':1,'releases':{}}
         if state: registry['releases']['118']=deepcopy(state)
         self.events=[]
@@ -76,8 +76,12 @@ class Tests(unittest.TestCase):
                      patch.object(p,'stage',side_effect=stage),patch.object(p,'public_api',side_effect=api),\
                      patch.object(p,'wait_public') as wait,\
                      patch.object(p,'verify_public',side_effect=p.build.Hold('bad_public_hash') if fail_verify else None) as verify,\
-                     patch.object(p,'cleanup_published_staging',side_effect=cleanup) as clean:
+                     patch.object(p,'cleanup_published_staging',side_effect=cleanup) as clean,\
+                     patch.object(p,'verify_staged_preview',
+                                  side_effect=p.build.Hold('runner_preview_zip_hash_mismatch')
+                                  if fail_preview else None) as preview_check:
                     self.cleanup_mock=clean
+                    self.preview_mock=preview_check
                     result=p.run(env,source=SOURCE,version='2.3.5',code=118,log='Test update',mode=mode,execute=execute)
                     self.wait_count=wait.call_count
                     self.verify_count=verify.call_count
@@ -128,6 +132,15 @@ class Tests(unittest.TestCase):
         self.assertFalse(result['published'])
         self.assertEqual(self.events,[])
         self.assertEqual(self.verify_count,0)
+        self.preview_mock.assert_called_once()
+        self.cleanup_mock.assert_not_called()
+
+    def test_reused_preview_must_reverify_runner_archive_hash(self):
+        with self.assertRaisesRegex(p.build.Hold,'runner_preview_zip_hash_mismatch'):
+            self.invoke(state=dict(REQ,phase='prepared',publishRequest=PUBLISH),
+                        mode='prepare',execute=True,fail_preview=True)
+        self.preview_mock.assert_called_once()
+        self.assertEqual(self.events,[])
         self.cleanup_mock.assert_not_called()
 
     def test_formal_release_reuses_prepared_preview_without_restaging(self):
