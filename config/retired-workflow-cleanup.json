@@ -1,0 +1,284 @@
+{
+  "schemaVersion": 1,
+  "approval": "DELETE-RETIRED-WORKFLOW-HISTORY-20261018",
+  "repositories": [
+    {
+      "repository": "chaonpu/ziwuxilv-android",
+      "retiredWorkflows": [
+        ".github/workflows/actions-billing-read-check.yml",
+        ".github/workflows/android-quota-preflight-tests.yml",
+        ".github/workflows/android-route-observer.yml",
+        ".github/workflows/policy-ci.yml",
+        ".github/workflows/quote-adapter-check.yml",
+        ".github/workflows/release-from-test-v1.5.8.yml",
+        ".github/workflows/source-probe.yml",
+        ".github/workflows/test-workflow-dispatch-preflight.yml",
+        ".github/workflows/v1.4.2-patch.yml",
+        ".github/workflows/v1.4.2-probes.yml",
+        ".github/workflows/v1.4.3-crypto-exact.yml",
+        ".github/workflows/v1.4.3-industry-exact2.yml",
+        ".github/workflows/v1.4.3-metadata-exact.yml",
+        ".github/workflows/v1.4.3-probes.yml",
+        ".github/workflows/v1.4.4-hxc.yml",
+        ".github/workflows/v1.4.5-market-audit.yml"
+      ],
+      "runs": [
+        {
+          "id": 38945670172,
+          "path": ".github/workflows/android-quota-preflight-tests.yml",
+          "workflowId": 386946812
+        },
+        {
+          "id": 38939887617,
+          "path": ".github/workflows/android-quota-preflight-tests.yml",
+          "workflowId": 386946812
+        },
+        {
+          "id": 38938592440,
+          "path": ".github/workflows/test-workflow-dispatch-preflight.yml",
+          "workflowId": 386937772
+        },
+        {
+          "id": 38937771478,
+          "path": ".github/workflows/android-route-observer.yml",
+          "workflowId": 386744513
+        },
+        {
+          "id": 38937510073,
+          "path": ".github/workflows/actions-billing-read-check.yml",
+          "workflowId": 386930641
+        },
+        {
+          "id": 38935242552,
+          "path": ".github/workflows/android-route-observer.yml",
+          "workflowId": 386744513
+        },
+        {
+          "id": 38934787870,
+          "path": ".github/workflows/android-route-observer.yml",
+          "workflowId": 386744513
+        },
+        {
+          "id": 38934766555,
+          "path": ".github/workflows/android-route-observer.yml",
+          "workflowId": 386744513
+        },
+        {
+          "id": 38934216928,
+          "path": ".github/workflows/android-route-observer.yml",
+          "workflowId": 386744513
+        },
+        {
+          "id": 38911186358,
+          "path": ".github/workflows/android-route-observer.yml",
+          "workflowId": 386744513
+        },
+        {
+          "id": 37292323164,
+          "path": ".github/workflows/policy-ci.yml",
+          "workflowId": 375268203
+        },
+        {
+          "id": 36807207775,
+          "path": ".github/workflows/release-from-test-v1.5.8.yml",
+          "workflowId": 371754555
+        },
+        {
+          "id": 36807081019,
+          "path": ".github/workflows/release-from-test-v1.5.8.yml",
+          "workflowId": 371754555
+        },
+        {
+          "id": 36562967828,
+          "path": ".github/workflows/quote-adapter-check.yml",
+          "workflowId": 370089442
+        },
+        {
+          "id": 36562829301,
+          "path": ".github/workflows/quote-adapter-check.yml",
+          "workflowId": 370089442
+        },
+        {
+          "id": 36352530811,
+          "path": ".github/workflows/v1.4.5-market-audit.yml",
+          "workflowId": 368589600
+        },
+        {
+          "id": 36352373699,
+          "path": ".github/workflows/v1.4.5-market-audit.yml",
+          "workflowId": 368589600
+        },
+        {
+          "id": 36352350182,
+          "path": ".github/workflows/v1.4.5-market-audit.yml",
+          "workflowId": 368589600
+        },
+        {
+          "id": 36352116722,
+          "path": ".github/workflows/v1.4.5-market-audit.yml",
+          "workflowId": 368589600
+        },
+        {
+          "id": 36351894914,
+          "path": ".github/workflows/v1.4.5-market-audit.yml",
+          "workflowId": 368589600
+        },
+        {
+          "id": 36351662896,
+          "path": ".github/workflows/v1.4.5-market-audit.yml",
+          "workflowId": 368589600
+        },
+        {
+          "id": 36351456760,
+          "path": ".github/workflows/v1.4.5-market-audit.yml",
+          "workflowId": 368589600
+        },
+        {
+          "id": 36347231052,
+          "path": ".github/workflows/v1.4.4-hxc.yml",
+          "workflowId": 368556098
+        },
+        {
+          "id": 36342876153,
+          "path": ".github/workflows/v1.4.3-probes.yml",
+          "workflowId": 368512766
+        },
+        {
+          "id": 36342874052,
+          "path": ".github/workflows/v1.4.3-probes.yml",
+          "workflowId": 368512766
+        },
+        {
+          "id": 36342872285,
+          "path": ".github/workflows/v1.4.3-probes.yml",
+          "workflowId": 368512766
+        },
+        {
+          "id": 36342840095,
+          "path": ".github/workflows/v1.4.3-probes.yml",
+          "workflowId": 368512766
+        },
+        {
+          "id": 36342795274,
+          "path": ".github/workflows/v1.4.3-industry-exact2.yml",
+          "workflowId": 368518169
+        },
+        {
+          "id": 36342794546,
+          "path": ".github/workflows/v1.4.3-probes.yml",
+          "workflowId": 368512766
+        },
+        {
+          "id": 36342760751,
+          "path": ".github/workflows/v1.4.3-probes.yml",
+          "workflowId": 368512766
+        },
+        {
+          "id": 36342721776,
+          "path": ".github/workflows/v1.4.3-metadata-exact.yml",
+          "workflowId": 368517582
+        },
+        {
+          "id": 36342720836,
+          "path": ".github/workflows/v1.4.3-probes.yml",
+          "workflowId": 368512766
+        },
+        {
+          "id": 36342695097,
+          "path": ".github/workflows/v1.4.3-probes.yml",
+          "workflowId": 368512766
+        },
+        {
+          "id": 36342670566,
+          "path": ".github/workflows/v1.4.3-probes.yml",
+          "workflowId": 368512766
+        },
+        {
+          "id": 36342603245,
+          "path": ".github/workflows/v1.4.3-crypto-exact.yml",
+          "workflowId": 368516494
+        },
+        {
+          "id": 36342602596,
+          "path": ".github/workflows/v1.4.3-probes.yml",
+          "workflowId": 368512766
+        },
+        {
+          "id": 36342457973,
+          "path": ".github/workflows/v1.4.3-probes.yml",
+          "workflowId": 368512766
+        },
+        {
+          "id": 36342402179,
+          "path": ".github/workflows/v1.4.3-probes.yml",
+          "workflowId": 368512766
+        },
+        {
+          "id": 36342369195,
+          "path": ".github/workflows/v1.4.3-probes.yml",
+          "workflowId": 368512766
+        },
+        {
+          "id": 36342311843,
+          "path": ".github/workflows/v1.4.3-probes.yml",
+          "workflowId": 368512766
+        },
+        {
+          "id": 36342270670,
+          "path": ".github/workflows/v1.4.3-probes.yml",
+          "workflowId": 368512766
+        },
+        {
+          "id": 36339354790,
+          "path": ".github/workflows/v1.4.2-patch.yml",
+          "workflowId": 368486068
+        },
+        {
+          "id": 36339302493,
+          "path": ".github/workflows/v1.4.2-patch.yml",
+          "workflowId": 368486068
+        },
+        {
+          "id": 36338529662,
+          "path": ".github/workflows/v1.4.2-probes.yml",
+          "workflowId": 368477632
+        },
+        {
+          "id": 36338458493,
+          "path": ".github/workflows/v1.4.2-probes.yml",
+          "workflowId": 368477632
+        },
+        {
+          "id": 36338364784,
+          "path": ".github/workflows/v1.4.2-probes.yml",
+          "workflowId": 368477632
+        },
+        {
+          "id": 36335743885,
+          "path": ".github/workflows/source-probe.yml",
+          "workflowId": 368447927
+        },
+        {
+          "id": 36335686779,
+          "path": ".github/workflows/source-probe.yml",
+          "workflowId": 368447927
+        },
+        {
+          "id": 36335191500,
+          "path": ".github/workflows/source-probe.yml",
+          "workflowId": 368447927
+        },
+        {
+          "id": 36335095610,
+          "path": ".github/workflows/source-probe.yml",
+          "workflowId": 368447927
+        },
+        {
+          "id": 36334999522,
+          "path": ".github/workflows/source-probe.yml",
+          "workflowId": 368447927
+        }
+      ]
+    }
+  ]
+}
