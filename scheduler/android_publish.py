@@ -355,6 +355,40 @@ def staging_release_api(env, path, *, method="GET"):
         raise build.Hold("staging_cleanup_api_unavailable") from None
 
 
+def verify_staged_preview(env, req, publish_request):
+    """Read back an existing Runner preview; registry state alone is not proof."""
+    tag = "staged-apk-v" + req["versionName"] + "-signrun-" + str(req["signingRunId"])
+    archive = "ziwuxilv-verified-v" + req["versionName"] + ".zip"
+    url = "https://github.com/" + build.RUNNER + "/releases/download/" + tag + "/" + archive
+    need(publish_request.get("sourceUrl") == url
+         and isinstance(publish_request.get("artifactSha256"), str)
+         and bool(apk_stage.HEX64.fullmatch(publish_request["artifactSha256"])),
+         "preview_source_identity_unverified")
+    release = staging_release_api(env, "/releases/tags/" + tag)
+    need(isinstance(release, dict) and release.get("tag_name") == tag
+         and release.get("prerelease") is True and release.get("draft") is False,
+         "runner_preview_release_missing_or_changed")
+    assets = release.get("assets")
+    need(isinstance(assets, list) and len(assets) == 2
+         and {a.get("name") for a in assets if isinstance(a, dict)} ==
+             {archive, "staging-receipt.json"}
+         and any(a.get("name") == archive and a.get("browser_download_url") == url
+                 for a in assets if isinstance(a, dict)), "runner_preview_assets_changed")
+    digest = hashlib.sha256()
+    size = 0
+    try:
+        request = urllib.request.Request(url, headers={"Cache-Control": "no-cache"})
+        with urllib.request.urlopen(request, timeout=90) as response:
+            while block := response.read(1024 * 1024):
+                size += len(block)
+                need(size <= apk_stage.MAX_ARCHIVE_BYTES, "runner_preview_zip_oversized")
+                digest.update(block)
+    except (OSError, ValueError):
+        raise build.Hold("runner_preview_download_unavailable") from None
+    need(size >= 1024 and digest.hexdigest() == publish_request["artifactSha256"],
+         "runner_preview_zip_hash_mismatch")
+
+
 def cleanup_published_staging(env, row):
     # Caller has just verified the formal manifest AND downloaded APK hash.
     need(row.get("phase") == "published", "staging_cleanup_requires_published")
@@ -428,6 +462,8 @@ def run(env, *, source, version, code, log, mode="prepare", execute=False):
         # A real Runner Release now holds the signed APK transport ZIP.
         # Do not call the formal-release API, dispatch, or cleanup in preview.
         need(row["phase"] == "prepared", "preview_unverified_staging")
+        if not staged_now:
+            verify_staged_preview(env, req, publish_request)
         need(isinstance(publish_request.get("sourceUrl"), str)
              and publish_request["sourceUrl"].startswith(
                  "https://github.com/" + build.RUNNER + "/releases/download/staged-apk-v"),
