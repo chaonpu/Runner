@@ -1,12 +1,6 @@
 name: 私有仓库历史清理（每日）
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - '.github/workflows/private-history-cleanup.yml'
-      - 'tools/private_history_cleanup.py'
-      - 'tests/test_private_history_cleanup.py'
   schedule:
     # Daily 04:30 Asia/Shanghai = previous day 20:30 UTC.
     - cron: '30 20 * * *'
