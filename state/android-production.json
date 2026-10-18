@@ -104,6 +104,12 @@
     },
     "ee966d876952b4601fb316094caa66d1fdb86375": {
       "createdAt": "2026-10-18T05:54:52.930521+00:00",
+      "lastFailure": {
+        "code": "source_local_worktree_failed_manual_review",
+        "recordedAt": "2026-10-18T05:56:28.461911+00:00",
+        "runId": 39102186765,
+        "stage": "test"
+      },
       "phase": "test_started",
       "route": "windows",
       "sourceSha": "ee966d876952b4601fb316094caa66d1fdb86375",
