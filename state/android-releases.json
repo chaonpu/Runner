@@ -68,6 +68,16 @@
         "forceUpdate": false
       },
       "publicRunId": 39071417405
+    },
+    "121": {
+      "sourceCommit": "efde2087d0286be33aa9fd7d3c05f70ed219306c",
+      "versionName": "2.3.8",
+      "versionCode": 121,
+      "testRunId": 39073550203,
+      "signingRunId": 39074251326,
+      "updateLog": "\u66f4\u65b0\u81f3 2.3.8\uff08121\uff09\u3002",
+      "forceUpdate": false,
+      "phase": "staging_reserved"
     }
   }
 }
