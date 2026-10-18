@@ -5,11 +5,11 @@ RUNNER 保留以下 **4 个手动业务工作流**，另有 **1 个每日历史�
 | 工作流 | 作用 | 入口 |
 | --- | --- | --- |
 | APK 构建与签名（手动） | Test 全量验证、构建 APK、私有隔离签名 | [运行](https://github.com/chaonpu/Runner/actions/workflows/android-production.yml) |
-| APK 正式发布（手动） | 验证已签名 APK、准备发布请求或派发正式发布、核验更新清单 | [运行](https://github.com/chaonpu/Runner/actions/workflows/android-publish.yml) |
+| APK 发布（手动） | 选择预览仅暂存 Runner，或正式推送 ziwuxilv 并核验 | [运行](https://github.com/chaonpu/Runner/actions/workflows/android-publish.yml) |
 | A股策略（手动） | 预检、运行 A股策略、推进快照与账本、核验回执 | [运行](https://github.com/chaonpu/Runner/actions/workflows/production-dispatch.yml) |
 | 美股策略（手动） | 预检、运行美股策略、推进快照与账本、核验回执 | [运行](https://github.com/chaonpu/Runner/actions/workflows/stock-us.yml) |
 
-四个业务入口默认 `execute=false`，只读检查；需要真实执行时勾选 `execute`。执行期间留在同一个任务中跟踪，完成后结束；不依赖五分钟定时检查。
+策略与 APK 构建入口默认 `execute=false`，可先只读检查，再勾选实际执行。**APK 发布入口改为「预览 / 正式」二选一，默认预览，两者都会真实执行选定模式**。执行期间留在同一个任务中跟踪，完成后结束；不依赖五分钟定时检查。
 
 ## APK 构建与签名
 
@@ -22,26 +22,26 @@ RUNNER 保留以下 **4 个手动业务工作流**，另有 **1 个每日历史�
 
 已有未完成任务只有 `test_started`、`test_verified`、`signer_started` 可使用原 `source_sha` + `resume=true` + `execute=true` 继续。`reserved`、`signer_reserved` 或不确定失败需核对原 Run，不能清空登记后重试。已成功的同一 SHA 不重复构建。
 
-## APK 正式发布
+## APK 发布（预览 / 正式）
 
-打开「APK 正式发布」，只需两项：
+打开「APK 发布」，只需两项：
 
 | 输入 | 用法 |
 | --- | --- |
-| `update_log` | 可选的用户可见更新说明；留空读取所选源码对应版本的具体更新说明 |
-| `execute` | 不勾选仅检查；勾选后正式发布并核验下载 |
+| `release_mode` | **预览（默认）**：在 `chaonpu/Runner` 创建已验证签名 APK 传输 ZIP 的预发布 Release，**绝不推送** `chaonpu/ziwuxilv`。**正式**：复用已暂存包或首次暂存后推送 `ziwuxilv` 并核验正式 APK。 |
+| `update_log` | 可选的用户可见更新说明；留空读取已签名源码对应版本的具体更新说明 |
 
-1. 先完成「APK 构建与签名」。
-2. 打开发布工作流，分支 `main`，按需填写更新说明，勾选 `execute` 后运行。
-3. 等待摘要显示正式发布成功；不需要输入 SHA、版本号、Code 或选择模式。
+1. 先完成「APK 构建与签名」，确保源码 SHA 达到 `signed_verified`。
+2. 打开发布工作流，选择 `main` 和 **预览** 或 **正式**。不需要再勾选 `execute`，也不需要输入 SHA 或版本号。
+3. **预览**成功后到 Runner 的 Releases 下载 `ziwuxilv-verified-vX.Y.Z.zip`，解压获得已签名 APK；它是**公开 Runner 仓库的预发布资源**，可被其他人下载，但不触发 APP 更新。**正式**成功后到 `ziwuxilv` 的 Release 下载正式 APK，且更新清单已核验。
 
 自动使用最新登记的构建，必须已达到 `signed_verified`；最新构建尚未完成时停止，不退回旧包。源码 SHA 和准确 Test／签名 Run 从登记读取，版本号和 Code 从该签名产物读取，并核验 APK 实际包名、版本、原生产证书和 SHA-256。选中的版本、源码与 Run 会显示在摘要中。只读取私有签名产物及运行元数据，不读取 Test 源码。
 
-有唯一的已准备或发布中的任务时，自动继续原任务；更新说明留空即可沿用原文。`staging_reserved`、`dispatch_reserved` 表示结果不确定，仍需核对原 Run，不能盲目重试。相同版本不会重复暂存或派发；已完成的重复运行只核验已有发布。未完成任务超过一个时停止供人工核对。
+有唯一的已准备或发布中的任务时，自动继续原任务；更新说明留空即可沿用原文。预览重复运行只复核原 Runner ZIP 的 Release 身份和 SHA256，不重复上传；已进入正式派发或正式发布状态的版本不能再执行预览。`staging_reserved`、`dispatch_reserved` 表示结果不确定，仍需核对原 Run，不能盲目重试。相同版本不会重复暂存或派发；正式模式重复运行只核验已有发布，正式验证成功后可清理 Runner 中转包。未完成任务超过一个时停止供人工核对。
 
 复用现有 `CHAONPU_ACTIONS_READ_TOKEN`，需包含公开仓库 `chaonpu/ziwuxilv` 的 **Actions: Read and write**；无需新令牌。公开 Release 和更新清单由发布仓库自身的 `GITHUB_TOKEN` 写入。发布后核验正式清单、准确版本、证书、更新说明、下载地址及 APK 哈希，只有 `published=true` 才代表成功。请新建手动运行，不用旧 Run 的 Re-run。
 
-底层保留 `prepare`／`verify` 接口供维护核对，日常发布界面不再展示这些模式。
+底层保留 `prepare`／`verify` 接口供维护核对，用户界面只展示「预览」与「正式」。
 
 ## A股与美股策略
 
