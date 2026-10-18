@@ -1,6 +1,9 @@
 name: APK 构建与签名（手动）
 
 on:
+  push:
+    branches: [main]
+    paths: [config/retired-workflow-cleanup.json]
   workflow_dispatch:
     inputs:
       execute:
@@ -24,10 +27,31 @@ permissions:
   actions: read
 
 concurrency:
-  group: runner-controlled-android-private-build
+  group: ${{ github.event_name == 'push' && 'runner-retired-history-cleanup' || 'runner-controlled-android-private-build' }}
   cancel-in-progress: false
 
 jobs:
+  prune-retired-history:
+    name: Delete only reviewed retired private workflow runs
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && github.actor == 'chaonpu'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    env:
+      GH_TOKEN: ${{ github.token }}
+      CHAONPU_ACTIONS_READ_TOKEN: ${{ secrets.CHAONPU_ACTIONS_READ_TOKEN }}
+      TEST_ACTIONS_READ_TOKEN: ${{ secrets.TEST_ACTIONS_READ_TOKEN }}
+      GITHUB_EVENT_BEFORE: ${{ github.event.before }}
+      CLEANUP_PLAN_SHA256: 7e489a38a0c26e046e649a37e6744b43274ac244ad9c451e9128e9ed1d69acef
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 2
+          persist-credentials: false
+      - name: Verify exact retired-history scope and negative guard tests
+        run: python3 -m unittest discover -s tests -p test_retired_workflow_history.py -v
+      - name: Delete reviewed completed runs and verify remaining inventory
+        run: python3 tools/prune_retired_workflow_history.py --execute
   android:
     name: Verify Test source then isolated Windows APK signing
     if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && github.actor == 'chaonpu'
