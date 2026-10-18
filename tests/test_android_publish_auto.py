@@ -80,12 +80,22 @@ class AutomaticPublicationTests(unittest.TestCase):
         with self.assertRaisesRegex(p.build.Hold,'identity_conflict'):
             self.request(releases={'118':dict(row,signingRunId=999)})
 
-    def test_automatic_preview_and_publish_use_same_identity(self):
-        for execute in (False,True):
-            with patch.object(p,'automatic_request',return_value=REQ),patch.object(p,'run') as run:
-                p.run_automatic(ENV,execute=execute)
+    def test_explicit_release_mode_preserves_identity_but_changes_destination(self):
+        for release_mode, target in (('preview','prepare'),('formal','publish')):
+            with self.subTest(release_mode=release_mode), \
+                 patch.object(p,'automatic_request',return_value=REQ), \
+                 patch.object(p,'run') as run:
+                p.run_automatic(ENV,execute=True,release_mode=release_mode)
                 run.assert_called_once_with(ENV,source=SOURCE,version='2.3.5',code=118,
-                                            log='Test update',mode='publish',execute=execute)
+                                            log='Test update',mode=target,execute=True)
+
+    def test_invalid_release_mode_never_selects_or_dispatches(self):
+        with patch.object(p,'automatic_request') as select, \
+             patch.object(p,'run') as run, \
+             self.assertRaisesRegex(p.build.Hold,'invalid_release_mode'):
+            p.run_automatic(ENV,execute=True,release_mode='anything')
+        select.assert_not_called()
+        run.assert_not_called()
 
     def candidate(self, tamper=None):
         env=dict(ENV,CHAONPU_ACTIONS_READ_TOKEN='sign-token',TEST_ACTIONS_READ_TOKEN='test-token')
