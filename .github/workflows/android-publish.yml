@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       release_mode:
-        description: "发布方式（预览仅保存 Runner；正式推送 ziwuxilv）"
+        description: "预览存Runner；正式发ziwuxilv"
         type: choice
         required: true
         default: "预览"
@@ -12,7 +12,7 @@ on:
           - "预览"
           - "正式"
       update_log:
-        description: "更新说明（留空采用本次源码的具体更新）"
+        description: "留空自动读取本版更新内容"
         type: string
         required: false
         default: ""
