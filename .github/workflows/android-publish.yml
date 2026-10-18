@@ -1,12 +1,16 @@
-name: APK 正式发布（手动）
+name: APK 发布（手动）
 
 on:
   workflow_dispatch:
     inputs:
-      execute:
-        description: "正式发布（不勾选仅检查）"
-        type: boolean
-        default: false
+      release_mode:
+        description: "发布方式（预览仅保存 Runner；正式推送 ziwuxilv）"
+        type: choice
+        required: true
+        default: "预览"
+        options:
+          - "预览"
+          - "正式"
       update_log:
         description: "更新说明（留空采用本次源码的具体更新）"
         type: string
@@ -32,7 +36,7 @@ jobs:
       TEST_ACTIONS_READ_TOKEN: ${{ secrets.TEST_ACTIONS_READ_TOKEN }}
       TEST_SOURCE_READ_TOKEN: ${{ secrets.TEST_SOURCE_READ_TOKEN }}
       UPDATE_LOG: ${{ inputs.update_log }}
-      EXECUTE: ${{ inputs.execute }}
+      RELEASE_MODE: ${{ inputs.release_mode }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -40,15 +44,18 @@ jobs:
           persist-credentials: false
       - name: Verify publication guard regressions
         run: python3 -m unittest discover -s tests -p 'test_*publish*.py' -v
-      - name: Automatically select and verify signed APK, then publish or preview
+      - name: Verify signed APK and execute selected release mode
         shell: bash
         run: |
           set -euo pipefail
-          args=()
-          if [[ "$EXECUTE" == 'true' ]]; then args+=(--execute); fi
-          python3 -m scheduler.android_publish "${args[@]}" 2>&1 | tee "$RUNNER_TEMP/entry-result.jsonl"
+          case "$RELEASE_MODE" in
+            "预览") mode=preview ;;
+            "正式") mode=formal ;;
+            *) echo "::error::无效的 APK 发布方式"; exit 2 ;;
+          esac
+          python3 -m scheduler.android_publish --release-mode "$mode" 2>&1 | tee "$RUNNER_TEMP/entry-result.jsonl"
       - name: Downloadable public release request
-        if: always() && inputs.execute == true
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: apk-publication-request
@@ -60,8 +67,7 @@ jobs:
         if: always()
         env:
           JOB_RESULT: ${{ job.status }}
-          ENTRY_PREVIEW: ${{ inputs.execute != true }}
         run: |
           python3 -m scheduler.entry_result --entry android_publish \
-            --result "$JOB_RESULT" --preview "$ENTRY_PREVIEW" \
+            --result "$JOB_RESULT" \
             --log "$RUNNER_TEMP/entry-result.jsonl"
