@@ -7,6 +7,7 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 WORKFLOWS = ROOT / '.github/workflows'
 MANUAL_ONLY = {'android-production.yml','android-publish.yml','production-dispatch.yml','stock-us.yml'}
+MAINTENANCE_ONLY = {'private-history-cleanup.yml'}
 
 
 def event_keys(text):
@@ -20,8 +21,11 @@ def event_keys(text):
 class WorkflowContractTests(unittest.TestCase):
     def test_exactly_four_manual_workflows(self):
         files = {p.name:p for p in WORKFLOWS.glob('*.yml')}
-        self.assertEqual(set(files), MANUAL_ONLY)
-        for path in files.values():
+        # One independently gated daily maintenance job is allowed alongside
+        # the four owner-initiated business workflows; no other entrypoints.
+        self.assertEqual(set(files), MANUAL_ONLY | MAINTENANCE_ONLY)
+        for name in sorted(MANUAL_ONLY):
+            path = files[name]
             text = path.read_text()
             self.assertEqual(event_keys(text), {'workflow_dispatch'})
             self.assertIn("github.actor == 'chaonpu'", text)
@@ -37,6 +41,22 @@ class WorkflowContractTests(unittest.TestCase):
                 self.assertIn('default: false', text)
             self.assertNotIn('pull_request_target', text)
             self.assertNotIn('actions: write', text)
+
+    def test_maintenance_is_the_only_scheduled_entry(self):
+        text = (WORKFLOWS/'private-history-cleanup.yml').read_text()
+        self.assertEqual(event_keys(text), {'schedule', 'workflow_dispatch'})
+        self.assertIn("cron: '30 20 * * *'", text)
+        self.assertIn("github.actor == 'chaonpu'", text)
+        self.assertIn("github.ref == 'refs/heads/main'", text)
+        self.assertIn('contents: read', text)
+        self.assertNotIn('contents: write', text)
+        self.assertNotIn('actions: write', text)
+        self.assertIn('cancel-in-progress: false', text)
+        self.assertIn('tools/private_history_cleanup.py', text)
+        self.assertIn('test_private_history_cleanup.py', text)
+        self.assertNotIn('scheduler.android_publish', text)
+        self.assertNotIn('scheduler.production_coordinator', text)
+        self.assertNotIn('scheduler.android_production', text)
 
     def test_strategy_market_and_cleanup(self):
         for name, task in (('production-dispatch.yml','stock_a'),('stock-us.yml','stock_us')):
