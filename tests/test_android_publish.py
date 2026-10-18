@@ -15,7 +15,7 @@ ENV={'GITHUB_REPOSITORY':'chaonpu/Runner','GITHUB_ACTOR':'chaonpu',
      'GITHUB_WORKFLOW_REF':p.WORKFLOW_REF,'GITHUB_RUN_ATTEMPT':'1','GH_TOKEN':'fake'}
 REQ={'sourceCommit':SOURCE,'versionName':'2.3.5','versionCode':118,
      'testRunId':123,'signingRunId':456,'updateLog':'Test update','forceUpdate':False}
-PUBLISH=dict(REQ,sourceUrl='https://example.invalid/signed.zip',artifactSha256='b'*64,
+PUBLISH=dict(REQ,sourceUrl='https://github.com/chaonpu/Runner/releases/download/staged-apk-v2.3.5-signrun-456/ziwuxilv-verified-v2.3.5.zip',artifactSha256='b'*64,
              apkSha256='c'*64,signingCertificateSha256=p.CERT)
 
 class Tests(unittest.TestCase):
