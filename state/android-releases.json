@@ -89,7 +89,12 @@
         "updateLog": "\u66f4\u65b0\u81f3 2.3.8\uff08121\uff09\u3002",
         "forceUpdate": false
       },
-      "publicRunId": 39099350653
+      "publicRunId": 39099350653,
+      "stagingCleanup": {
+        "status": "deleted",
+        "tag": "staged-apk-v2.3.8-signrun-39074251326",
+        "releaseId": 416246138
+      }
     }
   }
 }
