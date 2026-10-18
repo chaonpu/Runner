@@ -207,7 +207,8 @@ def automatic_request(env, log=""):
     return req
 
 
-def run_automatic(env, *, log="", execute=False):
+def run_automatic(env, *, log="", execute=False, release_mode="formal"):
+    need(release_mode in ("preview", "formal"), "invalid_release_mode")
     req = automatic_request(env, log)
     if env.get("GITHUB_STEP_SUMMARY"):
         with open(env["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as out:
@@ -215,10 +216,13 @@ def run_automatic(env, *, log="", execute=False):
                       str(req["versionCode"]) + "）\n\n源码：`" + req["sourceCommit"] +
                       "`\n\nTest Run：" + str(req["testRunId"]) + "；签名 Run：" +
                       str(req["signingRunId"]) + "。\n\n" +
-                      ("本次执行正式发布。" if execute else "本次仅检查，不公开 APK。") +
+                      ("本次仅检查，不公开 APK。" if not execute else
+                       "预览：仅在 Runner 保存签名验证包，不推送正式仓库。" if release_mode == "preview" else
+                       "正式：核验 Runner 预览包并推送至 ziwuxilv。") +
                       "\n\n更新说明：\n\n" + req["updateLog"] + "\n")
     return run(env, source=req["sourceCommit"], version=req["versionName"],
-               code=req["versionCode"], log=req["updateLog"], mode="publish", execute=execute)
+               code=req["versionCode"], log=req["updateLog"],
+               mode="prepare" if release_mode == "preview" else "publish", execute=execute)
 
 
 def save(env, key, row, previous):
@@ -390,6 +394,10 @@ def run(env, *, source, version, code, log, mode="prepare", execute=False):
         need(all(row.get(k) == req[k] for k in req), "version_publication_identity_conflict")
     if mode == "publish" and execute:
         need(bool(env.get("CHAONPU_ACTIONS_READ_TOKEN")), "chaonpu_actions_token_missing_use_prepare")
+    if mode == "prepare" and execute:
+        # Preview never operates on an already dispatched/published release.
+        need(row is None or row.get("phase") == "prepared",
+             "preview_requires_unpublished_prepared_version")
     if not row:
         need(mode != "verify", "no_prepared_publication_to_verify")
         need(code > public_version(), "publication_requires_newer_version")
@@ -400,6 +408,7 @@ def run(env, *, source, version, code, log, mode="prepare", execute=False):
                   "signedRunVerified": True, "published": False}
         print(json.dumps(result))
         return result
+    staged_now = False
     if row is None:
         row = dict(req, phase="staging_reserved")
         save(env, key, row, None)  # A partial stage must never be blindly repeated.
@@ -407,6 +416,7 @@ def run(env, *, source, version, code, log, mode="prepare", execute=False):
         next_row = dict(row, phase="prepared", publishRequest=publish_request)
         save(env, key, next_row, row)
         row = next_row
+        staged_now = True
     need(row["phase"] in ("prepared", "dispatch_reserved", "publishing", "published"),
          "staging_outcome_unknown_review_before_any_retry")
     publish_request = row["publishRequest"]
@@ -414,6 +424,26 @@ def run(env, *, source, version, code, log, mode="prepare", execute=False):
     Path("publication-output").mkdir(exist_ok=True)
     Path("publication-output/android-publish-request.json").write_text(
         json.dumps(publish_request, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    if mode == "prepare":
+        # A real Runner Release now holds the signed APK transport ZIP.
+        # Do not call the formal-release API, dispatch, or cleanup in preview.
+        need(row["phase"] == "prepared", "preview_unverified_staging")
+        need(isinstance(publish_request.get("sourceUrl"), str)
+             and publish_request["sourceUrl"].startswith(
+                 "https://github.com/" + build.RUNNER + "/releases/download/staged-apk-v"),
+             "preview_staging_url_unverified")
+        result = {"status": "prepared", "previewStored": True, "stagedNow": staged_now,
+                  "published": False, "stagingUrl": publish_request["sourceUrl"],
+                  "versionName": version, "versionCode": code}
+        if env.get("GITHUB_STEP_SUMMARY"):
+            with open(env["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as out:
+                out.write("### APK 预览结果\n\n签名 APK 的核验传输包仅保存在 "
+                          "[Runner 预发布 Release](" + publish_request["sourceUrl"] +
+                          ")（ZIP 内含 APK）；**未向 ziwuxilv 派发正式发布**。\n\n" +
+                          ("本次已新建 Runner 预览包。\n" if staged_now else
+                           "复用已有的 Runner 预览包，没有重复暂存。\n"))
+        print(json.dumps(result, ensure_ascii=False))
+        return result
     if row["phase"] == "prepared" and mode == "verify":
         verify_public(publish_request, env.get("CHAONPU_ACTIONS_READ_TOKEN", ""))
         publication_verified = True
@@ -475,10 +505,11 @@ def run(env, *, source, version, code, log, mode="prepare", execute=False):
 
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument("--execute", action="store_true")
+    p.add_argument("--release-mode", choices=("preview", "formal"), required=True)
     a = p.parse_args()
     try:
-        run_automatic(os.environ, log=os.environ.get("UPDATE_LOG", ""), execute=a.execute)
+        run_automatic(os.environ, log=os.environ.get("UPDATE_LOG", ""),
+                      release_mode=a.release_mode, execute=True)
         return 0
     except Exception as exc:
         reason = str(exc) if isinstance(exc, (build.Hold, GuardError)) else "publication_stopped_manual_review"
