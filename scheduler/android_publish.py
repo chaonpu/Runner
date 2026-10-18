@@ -117,6 +117,35 @@ def candidate_version(env, row):
         return version, code
 
 
+def source_release_notes(env, source, version, code):
+    """Read only release metadata at the exact signed source commit."""
+    need(isinstance(source, str) and bool(build.SHA.fullmatch(source)),
+         "release_notes_source_invalid")
+    token = env.get("TEST_SOURCE_READ_TOKEN") or env.get("TEST_ACTIONS_READ_TOKEN")
+    need(bool(token), "release_notes_read_credential_missing")
+    item = build.api(token, build.TEST,
+                     "/contents/release/version.json?ref=" + source)
+    need(item.get("type") == "file" and item.get("path") == "release/version.json"
+         and item.get("encoding") == "base64", "release_notes_document_invalid")
+    try:
+        raw = base64.b64decode(item["content"].replace("\n", "").replace("\r", ""), validate=True)
+        need(len(raw) <= 32768, "release_notes_document_too_large")
+        digest = hashlib.sha1(b"blob " + str(len(raw)).encode() + b"\0" + raw).hexdigest()
+        need(item.get("sha") == digest, "release_notes_blob_mismatch")
+        manifest = json.loads(raw.decode("utf-8-sig"))
+    except (KeyError, ValueError, TypeError, AttributeError, UnicodeError):
+        raise build.Hold("release_notes_document_invalid") from None
+    need(isinstance(manifest, dict) and manifest.get("versionName") == version
+         and type(manifest.get("versionCode")) is int and manifest["versionCode"] == code,
+         "release_notes_version_mismatch")
+    notes = manifest.get("updateLog")
+    need(isinstance(notes, str) and 1 <= len(notes.strip()) <= 6000,
+         "release_notes_missing_or_invalid")
+    need(re.fullmatch(r"更新至\s*" + re.escape(version) + r"\s*（" + str(code) + r"）[。.]?",
+                      notes.strip()) is None, "release_notes_require_specific_changes")
+    return notes.strip()
+
+
 def automatic_request(env, log=""):
     """Resume one known publication, otherwise use the newest registered build.
 
@@ -164,8 +193,8 @@ def automatic_request(env, log=""):
         previous = matches[0] if matches else None
         if previous is None:
             version, code = candidate_version(env, row)
-            req = signed_request(env, row["sourceSha"], version, code,
-                                 log.strip() or f"更新至 {version}（{code}）。")
+            notes = log.strip() or source_release_notes(env, row["sourceSha"], version, code)
+            req = signed_request(env, row["sourceSha"], version, code, notes)
             need(all(req[k] == row[k] for k in ("testRunId", "signingRunId")),
                  "signed_build_changed_during_selection")
             return req
@@ -186,7 +215,8 @@ def run_automatic(env, *, log="", execute=False):
                       str(req["versionCode"]) + "）\n\n源码：`" + req["sourceCommit"] +
                       "`\n\nTest Run：" + str(req["testRunId"]) + "；签名 Run：" +
                       str(req["signingRunId"]) + "。\n\n" +
-                      ("本次执行正式发布。" if execute else "本次仅检查，不公开 APK。") + "\n")
+                      ("本次执行正式发布。" if execute else "本次仅检查，不公开 APK。") +
+                      "\n\n更新说明：\n\n" + req["updateLog"] + "\n")
     return run(env, source=req["sourceCommit"], version=req["versionName"],
                code=req["versionCode"], log=req["updateLog"], mode="publish", execute=execute)
 
@@ -458,4 +488,3 @@ def main():
 
 if __name__ == "__main__":
     sys.exit(main())
-
