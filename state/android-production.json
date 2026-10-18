@@ -70,6 +70,12 @@
     },
     "9f9234e9443b321570d3154173b2bc01dc9b8c44": {
       "createdAt": "2026-10-18T08:58:36.822883+00:00",
+      "lastFailure": {
+        "code": "android_compile_failed_manual_review",
+        "recordedAt": "2026-10-18T09:03:13.130458+00:00",
+        "runId": 39113514928,
+        "stage": "test"
+      },
       "phase": "test_started",
       "route": "windows",
       "sourceSha": "9f9234e9443b321570d3154173b2bc01dc9b8c44",
