@@ -17,7 +17,7 @@
     {
       "repository": "anwpustudent-lab/Test",
       "requested": 123,
-      "deleted": 0,
+      "deleted": 25,
       "alreadyAbsent": 0,
       "blocked": [],
       "verifiedAbsent": false
