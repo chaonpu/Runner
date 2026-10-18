@@ -65,7 +65,7 @@ RUNNER 保留以下 **4 个手动业务工作流**，另有 **1 个每日历史�
 
 每日维护入口：[私有仓库历史清理（每日）](https://github.com/chaonpu/Runner/actions/workflows/private-history-cleanup.yml)。计划为北京时间每天 **04:30**（UTC cron：`30 20 * * *`），在公开 Runner 的 GitHub 云端执行，电脑关机不影响。
 
-范围固定为 `chaonpu/Stock`、`anwpustudent-lab/Test`、`chaonpu/ziwuxilv-android`。先用现有令牌读取每仓 main 的准确工作流文件列表，只删除文件已移除的已完成运行。现用 10 个下游另有固定保护，新增工作流也受当前文件列表保护；排队、运行中的任务不删除。每次删除前复核运行身份与 main 未变化；读取失败时不授权删除。不会修改源码、账本、Release 或现用工作流的历史与产物。删除旧运行时，其关联日志及 Actions artifacts 随运行删除。
+范围固定为 `chaonpu/Stock`、`anwpustudent-lab/Test`、`chaonpu/ziwuxilv-android`。仅使用现有 Actions 令牌，读取完整工作流注册状态，删除已移除工作流的已完成运行。现用 10 个下游另有固定保护，新增、停用及所有尚未标记删除的工作流都受保护；排队、运行中的任务不删除。每次删除前复核运行身份、原工作流注册状态，再刷新完整工作流名单；名单不完整或读取失败时不授权删除。不需要读取私有源码的权限。不会修改源码、账本、Release 或现用工作流的历史与产物。删除旧运行时，其关联日志及 Actions artifacts 随运行删除。
 
 手动运行默认 `dry_run=true` 仅预览，取消勾选才删除；定时运行自动执行。每仓每次最多删除 500 条，余量留到下一次。摘要显示各仓扫描、待删、已删及延后数量，计数报告保留 7 天；某仓失败仍检查其余仓库，并将本次维护标记为失败。database 与公开发布仓不在此维护范围。
 

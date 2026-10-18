@@ -41,7 +41,6 @@ jobs:
         env:
           CHAONPU_ACTIONS_READ_TOKEN: ${{ secrets.CHAONPU_ACTIONS_READ_TOKEN }}
           TEST_ACTIONS_READ_TOKEN: ${{ secrets.TEST_ACTIONS_READ_TOKEN }}
-          TEST_SOURCE_READ_TOKEN: ${{ secrets.TEST_SOURCE_READ_TOKEN }}
           EXECUTE: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && !inputs.dry_run) }}
         shell: bash
         run: |
