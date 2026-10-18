@@ -63,3 +63,13 @@
 ## 当前限制
 - 公开工作流能否实际派发取决于 RUNNER Secrets：`TEST_ACTIONS_READ_TOKEN`、`CHAONPU_ACTIONS_READ_TOKEN` 需 Actions 写与运行只读；`TEST_RUNNER_READ_TOKEN`、`RUNNER_READ_TOKEN` 已在实时只读预检中确认可分别读取两个 Windows Runner 的状态。可选 `TEST_SOURCE_READ_TOKEN` 只需精确限定私有 Test 仓库 `Contents: Read`，用于自动读取 `main` SHA；不配置时手动指定 SHA 即可保持源码权限隔离。某个必要权限缺失会保守停止。
 - 本次 Windows 私有链已通过真实 Run 和 Artifact 验收；若后续换机器、更新工具或接入云端路径，仍需重新验证。共享缓存仅在两台自托管 Runner 运行于同一 Windows 主机时适用，缺失或不匹配时会安全停止或走官方 API 并完整校验。
+
+## 构建后实时行情验证（2026-10-18）
+
+- Runner「APK 构建与签名（手动）」新增 `live_smoke`，默认勾选，手机显示“构建后验证实时行情（失败则停止签名）”。仍须勾选 `execute` 才会执行构建。
+- 新任务预约时固定验证选项，并传给私有 Test 的 Windows/云端工作流。源码构建后，单元测试进程显式接收 `STOCK_CHART_LIVE_SMOKE=1` 和 `ALL_MARKET_CHART_LIVE_SMOKE=1`；禁用这次实测的 Gradle 测试缓存与跳过优化。
+- 每次先清除旧 XML 与报告。测试后校验 `StockChartLiveTest` 源码中所有测试方法均出现在本次 JUnit XML，且非零执行、无失败、无错误、无跳过。全市场目录测试还要求至少成功检查一个标的周期。
+- 私有 Test Run 摘要显示数量；`live-chart-validation` 私有产物保存绑定源码 SHA、Run ID 的 JSON 与原始 JUnit XML（含供应商输出），保留 7 天。失败时也尽量保存诊断证据。
+- 仅成功后才生成可签名 handoff，其中附加验证报告。Runner 在进入签名前另外核验报告检查步骤确实成功、报告产物存在；只读元数据，实时数据和详细日志仍留在私有 Test。
+- 取消勾选会明确记录 `not_requested`，不能算实时行情已验证。恢复与限次网络恢复始终沿用原任务选项，不受当前表单默认值影响；不会把旧版已签名任务补标为验证成功。
+- 旧 SHA 已构建但未实测时，应使用包含此功能的新 Test/main SHA。此改动不自动派发构建或正式发布，仍由原四个手动入口控制。

@@ -8,6 +8,11 @@ on:
         type: boolean
         required: true
         default: false
+      live_smoke:
+        description: "构建后验证实时行情（失败则停止签名）"
+        type: boolean
+        required: true
+        default: true
       resume:
         description: "继续旧任务（新构建勿选，需填原 SHA）"
         type: boolean
@@ -43,6 +48,7 @@ jobs:
       CHAONPU_BILLING_READ_TOKEN: ${{ secrets.CHAONPU_BILLING_READ_TOKEN }}
       CHAONPU_ACTIONS_READ_TOKEN: ${{ secrets.CHAONPU_ACTIONS_READ_TOKEN }}
       EXECUTE: ${{ inputs.execute }}
+      LIVE_SMOKE: ${{ inputs.live_smoke }}
       RESUME: ${{ inputs.resume }}
       SOURCE_SHA: ${{ inputs.source_sha }}
     steps:
@@ -52,7 +58,9 @@ jobs:
           ref: ${{ github.sha }}
           persist-credentials: false
       - name: Offline safety regressions
-        run: python3 -m unittest discover -s tests -p test_android_production.py -v
+        run: |
+          python3 -m unittest discover -s tests -p test_android_production.py -v
+          python3 -m unittest discover -s tests -p test_android_live_validation.py -v
       - name: Coordinate exact Test and private signer runs
         id: coordinate
         shell: bash
@@ -60,6 +68,7 @@ jobs:
           set -euo pipefail
           args=(--source-sha "$SOURCE_SHA")
           if [[ "$EXECUTE" == 'true' ]]; then args+=(--execute); fi
+          if [[ "$LIVE_SMOKE" == 'true' ]]; then args+=(--live-smoke); fi
           if [[ "$RESUME" == 'true' ]]; then args+=(--resume); fi
           python3 -m scheduler.android_production "${args[@]}" 2>&1 | tee "$RUNNER_TEMP/entry-result.jsonl"
       - name: Explain next manual step
@@ -73,6 +82,9 @@ jobs:
               echo '原始 Test 与签名 Run ID 请见上方已登记结果；未发生新的下游派发。' >> "$GITHUB_STEP_SUMMARY"
             else
               echo '源码校验、编译、签名链和受控产物验证已全部通过。' >> "$GITHUB_STEP_SUMMARY"
+              if grep -q '"liveValidation": "passed"' "$RUNNER_TEMP/entry-result.jsonl"; then
+                echo '实时行情验证已在私有 Test 执行并通过；数量与详细报告见对应 Test Run。' >> "$GITHUB_STEP_SUMMARY"
+              fi
               echo '可以打开「APK 正式发布」，由发布工作流再次验证私有来源和 APK 证书。' >> "$GITHUB_STEP_SUMMARY"
             fi
           elif [[ "$EXECUTE" != 'true' ]]; then

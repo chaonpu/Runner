@@ -143,7 +143,7 @@ def put_state(public_token, source, phase, *, test_run_id=None, signing_run_id=N
     require(bool(result.get("commit", {}).get("sha")), "state_write_unknown")
 
 
-def reserve(public_token, source, route="windows"):
+def reserve(public_token, source, route="windows", *, live_smoke=False):
     record, blob = json_file(public_token, STATE_PATH)
     require(record.get("version") == 1 and isinstance(record.get("builds"), dict),
             "state_schema_invalid")
@@ -151,6 +151,7 @@ def reserve(public_token, source, route="windows"):
     require(route in ("hosted", "windows"), "unknown_android_route")
     record["builds"][source] = {
         "route": route,
+        "liveSmoke": live_smoke,
         "phase": "reserved",
         "sourceSha": source,
         "createdAt": datetime.now(timezone.utc).isoformat(),
@@ -274,6 +275,8 @@ def classify_failed_run(token, repo, rid):
     if any(x.startswith("SOURCE_CHECKOUT_UNVERIFIED") for x in failures):
         return "source_checkout_unverified_manual_review"
     if repo == TEST:
+        if any(x.startswith("Verify live chart execution evidence") for x in failures):
+            return "android_live_validation_failed_or_skipped"
         if any(x.startswith("Build unsigned Release APK") for x in failures):
             return "android_compile_failed_manual_review"
         if any(x.startswith(("Run unit tests", "Verify release and debug",
@@ -387,7 +390,7 @@ def retry_checkout_before_business(pub, test, source, entry, test_account, env, 
     require(bool(response.get("commit", {}).get("sha")), "checkout_retry_reservation_uncertain")
     confirmed, _ = json_file(pub, STATE_PATH)
     require(confirmed == state, "checkout_retry_reservation_unconfirmed")
-    fresh = dispatch(test, TEST, TEST_WORKFLOW, {})
+    fresh = dispatch(test, TEST, TEST_WORKFLOW, test_inputs(entry.get("liveSmoke", False)))
     put_state(pub, source, "test_started", test_run_id=fresh)
     record_public(source, "test_checkout_recovered", previousTestRunId=old,
                   testRunId=fresh, retryCount=1, publication="not_authorized")
@@ -458,7 +461,26 @@ def record_public(source, phase, **extra):
     print(json.dumps({"sourceSha": source, "phase": phase, **extra}, sort_keys=True), flush=True)
 
 
-def run(env, *, execute=False, resume=False, requested_sha=""):
+def test_inputs(live_smoke):
+    require(type(live_smoke) is bool, "invalid_live_validation_option")
+    return {"live_smoke": "true" if live_smoke else "false"}
+
+
+def verify_live_execution(token, rid):
+    """Read only step/artifact metadata; evidence details stay in private Test."""
+    value = api(token, TEST, "/actions/runs/" + str(rid) + "/jobs?per_page=100")
+    jobs = value.get("jobs")
+    require(value.get("total_count") == 1 and isinstance(jobs, list)
+            and len(jobs) == 1 and jobs[0].get("conclusion") == "success",
+            "live_validation_job_unverified")
+    steps = [x for x in jobs[0].get("steps", [])
+             if x.get("name") == "Verify live chart execution evidence"]
+    require(len(steps) == 1 and steps[0].get("conclusion") == "success",
+            "live_validation_execution_missing_or_skipped")
+    verify_artifact(token, TEST, rid, "live-chart-validation")
+
+
+def run(env, *, execute=False, resume=False, requested_sha="", live_smoke=False):
     pub = env.get("GH_TOKEN", "")
     test = env.get("TEST_ACTIONS_READ_TOKEN", "")
     sign = env.get("CHAONPU_ACTIONS_READ_TOKEN", "")
@@ -501,6 +523,14 @@ def run(env, *, execute=False, resume=False, requested_sha=""):
     require(state.get("version") == 1 and isinstance(state.get("builds"), dict),
             "state_schema_invalid")
     entry = state["builds"].get(source)
+    # Resume/recovery always uses the original reserved option, never the new UI default.
+    if entry is not None:
+        registered_live = entry.get("liveSmoke", False)
+        require(type(registered_live) is bool, "registered_live_validation_option_invalid")
+        if execute and not resume and live_smoke and not registered_live:
+            raise Hold("registered_build_without_live_validation_use_new_source")
+        live_smoke = registered_live
+    test_inputs(live_smoke)
     test_account = config["accounts"]["anwpustudent-lab"]
     sign_account = config["accounts"]["chaonpu"]
     if entry is not None:
@@ -529,6 +559,7 @@ def run(env, *, execute=False, resume=False, requested_sha=""):
                       priorPhase=entry.get("phase") if entry else None,
                       branchShaVerified=branch_verified,
                       manualSourceShaRequired=not bool(source),
+                      liveValidationRequested=live_smoke,
                       route=route, routeReason=plan["reason"],
                       hostedQuotaGuaranteed=False,
                       testRunnerReady=is_ready(test_probe),
@@ -576,12 +607,13 @@ def run(env, *, execute=False, resume=False, requested_sha=""):
         require(route == "hosted" or runner_ready(
                     TEST, task["runnerName"], test_account, env),
                 "required_private_test_runner_not_ready")
-        reserve(pub, source, route=route)
+        reserve(pub, source, route=route, live_smoke=live_smoke)
         # This exact route is fixed before the first potentially irreversible POST.
         # A failed cloud job must NOT be redispatched to Windows after it starts.
-        test_run = dispatch(test, TEST, source_workflow, {})
+        test_run = dispatch(test, TEST, source_workflow, test_inputs(live_smoke))
         put_state(pub, source, "test_started", test_run_id=test_run)
         record_public(source, "test_started", testRunId=test_run,
+                      liveValidationRequested=live_smoke,
                       route=route, quotaBasis=plan["reason"])
         entry = {"phase": "test_started", "testRunId": test_run, "route": route}
 
@@ -606,8 +638,11 @@ def run(env, *, execute=False, resume=False, requested_sha=""):
         else:
             verify_execution_runner(test, TEST, test_run, task["runnerName"])
         verify_artifact(test, TEST, test_run, source_artifact)
+        if live_smoke:
+            verify_live_execution(test, test_run)
         put_state(pub, source, "test_verified")
-        record_public(source, "test_verified", testRunId=test_run)
+        record_public(source, "test_verified", testRunId=test_run,
+                      liveValidation="passed" if live_smoke else "not_requested")
         entry = {"phase": "test_verified", "testRunId": test_run}
 
     if entry["phase"] == "test_verified":
@@ -616,6 +651,8 @@ def run(env, *, execute=False, resume=False, requested_sha=""):
         wait_recorded(pub, source, "test", test, TEST,
                       source_workflow, test_run, source)
         verify_artifact(test, TEST, test_run, source_artifact)
+        if live_smoke:
+            verify_live_execution(test, test_run)
         check_idle(SIGNER, SIGN_WORKFLOW, sign_account, env)
         check_idle(SIGNER, CLOUD_SIGN_WORKFLOW, sign_account, env)
         signing_route, signing_workflow = choose_signer_route(task, sign_account, env)
@@ -651,12 +688,13 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--execute", action="store_true")
     parser.add_argument("--resume", action="store_true")
+    parser.add_argument("--live-smoke", action="store_true")
     parser.add_argument("--source-sha", default="")
     args = parser.parse_args()
     try:
         require(not args.resume or args.execute, "resume_requires_execute")
         run(os.environ, execute=args.execute, resume=args.resume,
-            requested_sha=args.source_sha)
+            requested_sha=args.source_sha, live_smoke=args.live_smoke)
         return 0
     except Hold as exc:
         reason = str(exc)
