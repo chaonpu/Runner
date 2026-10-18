@@ -77,7 +77,7 @@
       "signingRunId": 39074251326,
       "updateLog": "\u66f4\u65b0\u81f3 2.3.8\uff08121\uff09\u3002",
       "forceUpdate": false,
-      "phase": "dispatch_reserved",
+      "phase": "publishing",
       "publishRequest": {
         "sourceUrl": "https://github.com/chaonpu/Runner/releases/download/staged-apk-v2.3.8-signrun-39074251326/ziwuxilv-verified-v2.3.8.zip",
         "artifactSha256": "6002b048749a69c172fae242a138f9d0575ae80a1d0db3d58049a2e9f004a045",
@@ -88,7 +88,8 @@
         "signingCertificateSha256": "bef3f5cbb2989734f20740eddaac3e105dfecb6c63ea9275e178eedd892ec105",
         "updateLog": "\u66f4\u65b0\u81f3 2.3.8\uff08121\uff09\u3002",
         "forceUpdate": false
-      }
+      },
+      "publicRunId": 39099350653
     }
   }
 }
