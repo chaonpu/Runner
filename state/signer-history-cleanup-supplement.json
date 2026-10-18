@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "runId": 39105290500,
   "sourceCommit": "a0f6ce2422284a0090887ce50ae05302b625b5b8",
-  "status": "running",
+  "status": "completed",
   "requestedRuns": 51,
   "repositories": [
     {
