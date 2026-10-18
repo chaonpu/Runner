@@ -4,5 +4,14 @@
   "sourceCommit": "fbc450a2f4ab2abd34dfd359c5b4c2c9af1ce5f0",
   "status": "running",
   "requestedRuns": 126,
-  "repositories": []
+  "repositories": [
+    {
+      "repository": "chaonpu/Stock",
+      "requested": 3,
+      "deleted": 0,
+      "alreadyAbsent": 0,
+      "blocked": [],
+      "verifiedAbsent": false
+    }
+  ]
 }
