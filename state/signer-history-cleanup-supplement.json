@@ -4,5 +4,14 @@
   "sourceCommit": "a0f6ce2422284a0090887ce50ae05302b625b5b8",
   "status": "running",
   "requestedRuns": 51,
-  "repositories": []
+  "repositories": [
+    {
+      "repository": "chaonpu/ziwuxilv-android",
+      "requested": 51,
+      "deleted": 0,
+      "alreadyAbsent": 0,
+      "blocked": [],
+      "verifiedAbsent": false
+    }
+  ]
 }
