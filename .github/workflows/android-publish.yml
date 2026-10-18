@@ -42,8 +42,11 @@ jobs:
         with:
           ref: ${{ github.sha }}
           persist-credentials: false
-      - name: Verify publication guard regressions
-        run: python3 -m unittest discover -s tests -p 'test_*publish*.py' -v
+      - name: Verify publication guard and mode-selection regressions
+        run: |
+          python3 -m unittest discover -s tests -p 'test_*publish*.py' -v
+          python3 -m unittest discover -s tests -p 'test_entry_result.py' -v
+          python3 -m unittest discover -s tests -p 'test_workflow_contract.py' -v
       - name: Verify signed APK and execute selected release mode
         shell: bash
         run: |
