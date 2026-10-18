@@ -8,10 +8,11 @@
     {
       "repository": "chaonpu/Stock",
       "requested": 3,
-      "deleted": 0,
+      "deleted": 3,
       "alreadyAbsent": 0,
       "blocked": [],
-      "verifiedAbsent": false
+      "verifiedAbsent": true,
+      "remainingSelectedRunIds": []
     }
   ]
 }
