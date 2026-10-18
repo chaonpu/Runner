@@ -11,7 +11,7 @@ from pathlib import Path
 
 NAMES = {
     "stock_a": "A股策略", "stock_us": "美股策略",
-    "android_build": "APK 构建与签名", "android_publish": "APK 正式发布",
+    "android_build": "APK 构建与签名", "android_publish": "APK 发布",
 }
 REASONS = {
     "previously_verified_task_no_redispatch": "该交易日已有经核验的结果，本次未运行策略。",
@@ -36,7 +36,7 @@ def read_rows(path):
         except (ValueError, TypeError):
             continue
         if isinstance(value, dict) and (
-                value.get("status") in ("verified", "skipped", "published", "read_only", "hold")
+                value.get("status") in ("verified", "skipped", "prepared", "published", "read_only", "hold")
                 or value.get("phase") in ("signed_verified", "read_only", "test_checkout_recovered")):
             rows.append(value)
     return rows
@@ -49,6 +49,17 @@ def summarize(kind, rows, job_result, preview):
         return "失败", REASONS.get(reason, "工作流或下游校验未成功；不得将其视为已执行。"), False
     if preview:
         return "仅检查", "仅查看当前条件，没有执行策略、签名或正式发布。", False
+    if kind == "android_publish":
+        staged = next((r for r in reversed(rows)
+                       if r.get("status") == "prepared"
+                       and r.get("previewStored") is True
+                       and r.get("published") is False), None)
+        if staged:
+            if staged.get("stagedNow") is True:
+                return ("已执行", "已在 Runner 预发布 Release 保存可下载的签名 APK "
+                        "ZIP 包；未推送至 ziwuxilv。", True)
+            return ("已跳过", "该签名 APK 已暂存在 Runner，未重复暂存，"
+                    "也未推送至 ziwuxilv。", False)
     last = next((r for r in reversed(rows) if r.get("status") in ("verified", "skipped", "published")
                  or r.get("phase") == "signed_verified"), {})
     if last.get("status") == "skipped":
