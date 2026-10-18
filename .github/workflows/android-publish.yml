@@ -8,7 +8,7 @@ on:
         type: boolean
         default: false
       update_log:
-        description: "更新说明（可留空，自动填写）"
+        description: "更新说明（留空采用本次源码的具体更新）"
         type: string
         required: false
         default: ""
@@ -30,6 +30,7 @@ jobs:
       GH_TOKEN: ${{ github.token }}
       CHAONPU_ACTIONS_READ_TOKEN: ${{ secrets.CHAONPU_ACTIONS_READ_TOKEN }}
       TEST_ACTIONS_READ_TOKEN: ${{ secrets.TEST_ACTIONS_READ_TOKEN }}
+      TEST_SOURCE_READ_TOKEN: ${{ secrets.TEST_SOURCE_READ_TOKEN }}
       UPDATE_LOG: ${{ inputs.update_log }}
       EXECUTE: ${{ inputs.execute }}
     steps:
