@@ -103,8 +103,47 @@ class Tests(unittest.TestCase):
     def test_prepare_without_extra_token_is_not_publication(self):
         result=self.invoke(execute=True)
         self.assertEqual(result['status'],'prepared')
+        self.assertTrue(result['previewStored'])
+        self.assertTrue(result['stagedNow'])
+        self.assertTrue(result['stagingUrl'].startswith('https://'))
         self.assertFalse(result['published'])
         self.assertEqual(self.events,['staging_reserved','STAGE','prepared'])
+        self.assertEqual(self.wait_count,0)
+        self.assertEqual(self.verify_count,0)
+        self.cleanup_mock.assert_not_called()
+
+    def test_preview_with_formal_token_only_stages_in_runner(self):
+        result=self.invoke(mode='prepare',execute=True,token=True)
+        self.assertTrue(result['previewStored'])
+        self.assertFalse(result['published'])
+        self.assertEqual(self.events,['staging_reserved','STAGE','prepared'])
+        self.assertEqual(self.wait_count,0)
+        self.cleanup_mock.assert_not_called()
+
+    def test_repeated_preview_reuses_only_runner_staging(self):
+        result=self.invoke(state=dict(REQ,phase='prepared',publishRequest=PUBLISH),
+                           mode='prepare',execute=True,token=True)
+        self.assertTrue(result['previewStored'])
+        self.assertFalse(result['stagedNow'])
+        self.assertFalse(result['published'])
+        self.assertEqual(self.events,[])
+        self.assertEqual(self.verify_count,0)
+        self.cleanup_mock.assert_not_called()
+
+    def test_formal_release_reuses_prepared_preview_without_restaging(self):
+        result=self.invoke(state=dict(REQ,phase='prepared',publishRequest=PUBLISH),
+                           mode='publish',execute=True,token=True)
+        self.assertTrue(result['published'])
+        self.assertEqual(self.events,['dispatch_reserved','POST','publishing','published','cleanup_recorded'])
+        self.assertEqual(self.wait_count,1)
+
+    def test_preview_cannot_operate_on_publishing_or_published_version(self):
+        for phase in ('staging_reserved','dispatch_reserved','publishing','published'):
+            with self.subTest(phase=phase),self.assertRaisesRegex(
+                    p.build.Hold,'preview_requires_unpublished_prepared_version'):
+                self.invoke(state=dict(REQ,phase=phase,publishRequest=PUBLISH),
+                            mode='prepare',execute=True,token=True)
+            self.assertEqual(self.events,[])
 
     def test_single_dispatch_exact_run_verified(self):
         result=self.invoke(mode='publish',execute=True,token=True)
