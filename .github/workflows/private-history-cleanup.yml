@@ -1,0 +1,59 @@
+name: 私有仓库历史清理（每日）
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/private-history-cleanup.yml'
+      - 'tools/private_history_cleanup.py'
+      - 'tests/test_private_history_cleanup.py'
+  schedule:
+    # Daily 04:30 Asia/Shanghai = previous day 20:30 UTC.
+    - cron: '30 20 * * *'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: '仅预览，不删除运行记录'
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: private-history-cleanup
+  cancel-in-progress: false
+
+jobs:
+  cleanup:
+    if: github.repository == 'chaonpu/Runner' && github.ref == 'refs/heads/main' && github.actor == 'chaonpu'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - name: Checkout trusted cleanup policy
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Verify deletion boundaries
+        run: python3 -m unittest discover -s tests -p test_private_history_cleanup.py -v
+      - name: Clean retired workflow history or preview
+        env:
+          CHAONPU_ACTIONS_READ_TOKEN: ${{ secrets.CHAONPU_ACTIONS_READ_TOKEN }}
+          TEST_ACTIONS_READ_TOKEN: ${{ secrets.TEST_ACTIONS_READ_TOKEN }}
+          TEST_SOURCE_READ_TOKEN: ${{ secrets.TEST_SOURCE_READ_TOKEN }}
+          EXECUTE: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && !inputs.dry_run) }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          args=()
+          if [[ "$EXECUTE" == 'true' ]]; then args+=(--execute); fi
+          python3 tools/private_history_cleanup.py "${args[@]}"
+      - name: Preserve cleanup counts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: private-history-cleanup-result
+          path: private-history-cleanup-result.json
+          if-no-files-found: ignore
+          retention-days: 7
