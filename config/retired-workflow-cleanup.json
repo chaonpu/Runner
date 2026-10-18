@@ -1,0 +1,697 @@
+{
+  "schemaVersion": 1,
+  "approval": "DELETE-RETIRED-WORKFLOW-HISTORY-20261018",
+  "repositories": [
+    {
+      "repository": "chaonpu/Stock",
+      "retiredWorkflows": [
+        ".github/workflows/rebuild-etf-ledger-once.yml",
+        ".github/workflows/strategy-ci.yml"
+      ],
+      "runs": [
+        {
+          "id": 39067443322,
+          "path": ".github/workflows/rebuild-etf-ledger-once.yml",
+          "workflowId": 387956750
+        },
+        {
+          "id": 39067313983,
+          "path": ".github/workflows/rebuild-etf-ledger-once.yml",
+          "workflowId": 387956750
+        },
+        {
+          "id": 37291776618,
+          "path": ".github/workflows/strategy-ci.yml",
+          "workflowId": 375262045
+        }
+      ]
+    },
+    {
+      "repository": "anwpustudent-lab/Test",
+      "retiredWorkflows": [
+        ".github/workflows/all-quote-time-audit.yml",
+        ".github/workflows/export-source-aca30.yml",
+        ".github/workflows/finscope-detail-probe.yml",
+        ".github/workflows/finscope-request-fingerprint.yml",
+        ".github/workflows/finscope-ssr-probe.yml",
+        ".github/workflows/hxc-sina-probe.yml",
+        ".github/workflows/market-smoke.yml",
+        ".github/workflows/one-shot-adaptive-quotes-verify-20260930.yml",
+        ".github/workflows/one-shot-apk-20260930.yml",
+        ".github/workflows/one-shot-drag-reorder-apk-20260930.yml",
+        ".github/workflows/one-shot-drag-reorder-check-20260930.yml",
+        ".github/workflows/one-shot-final-quotes-apk-20260930.yml",
+        ".github/workflows/one-shot-finscope-open-probe-20260930.yml",
+        ".github/workflows/one-shot-finscope-opening-final-verify-20260930.yml",
+        ".github/workflows/one-shot-finscope-opening-fix-verify-20260930.yml",
+        ".github/workflows/one-shot-finscope-opening-verify-20260930.yml",
+        ".github/workflows/one-shot-finscope-sensex-delay-20260930.yml",
+        ".github/workflows/one-shot-finscope-sensex-probe-20260930.yml",
+        ".github/workflows/one-shot-gate-beijing-ohlc-apk-20260930.yml",
+        ".github/workflows/one-shot-latest-apk.yml",
+        ".github/workflows/one-shot-latest-main-apk-20260930.yml",
+        ".github/workflows/one-shot-performance-apk-20260930.yml",
+        ".github/workflows/one-shot-pinned-background-apk-20260930.yml",
+        ".github/workflows/one-shot-preview.yml",
+        ".github/workflows/one-shot-quhe-domestic-apk-20260930.yml",
+        ".github/workflows/one-shot-quhe-domestic-code-probe-20260930.yml",
+        ".github/workflows/one-shot-quote-cadence-benchmark-20260930.yml",
+        ".github/workflows/one-shot-quote-search-probe-20260930.yml",
+        ".github/workflows/one-shot-regression-probe-20260930.yml",
+        ".github/workflows/one-shot-responsive-apk-20260930.yml",
+        ".github/workflows/one-shot-saudi-eastmoney-verify-20260930.yml",
+        ".github/workflows/one-shot-saudi-india-probe-20261001.yml",
+        ".github/workflows/one-shot-search-behavior-probe-20260930.yml",
+        ".github/workflows/one-shot-search-type-probe-20260930.yml",
+        ".github/workflows/one-shot-sina-global-delay-audit-20260930.yml",
+        ".github/workflows/one-shot-universal-search-verify-20260930.yml",
+        ".github/workflows/one-shot-universal-watch-apk-20260930.yml",
+        ".github/workflows/one-shot-universal-watch-verify-20260930.yml",
+        ".github/workflows/one-shot-watchlist-apk-20260930.yml",
+        ".github/workflows/one-shot-watchlist-polish-apk-20260930.yml",
+        ".github/workflows/probe-ndx.yml",
+        ".github/workflows/quote-source-probe.yml",
+        ".github/workflows/remove-abandoned-branches.yml",
+        ".github/workflows/sina-delayed-time-probe.yml",
+        ".github/workflows/sina-futures-probe.yml"
+      ],
+      "runs": [
+        {
+          "id": 37304230839,
+          "path": ".github/workflows/market-smoke.yml",
+          "workflowId": 375268984
+        },
+        {
+          "id": 37292394472,
+          "path": ".github/workflows/market-smoke.yml",
+          "workflowId": 375268984
+        },
+        {
+          "id": 36923369780,
+          "path": ".github/workflows/one-shot-latest-apk.yml",
+          "workflowId": 372546952
+        },
+        {
+          "id": 36923345359,
+          "path": ".github/workflows/one-shot-latest-apk.yml",
+          "workflowId": 372546952
+        },
+        {
+          "id": 36916415459,
+          "path": ".github/workflows/remove-abandoned-branches.yml",
+          "workflowId": 372502571
+        },
+        {
+          "id": 36841998714,
+          "path": ".github/workflows/probe-ndx.yml",
+          "workflowId": 371992778
+        },
+        {
+          "id": 36826408569,
+          "path": ".github/workflows/one-shot-saudi-india-probe-20261001.yml",
+          "workflowId": 371876200
+        },
+        {
+          "id": 36826162621,
+          "path": ".github/workflows/one-shot-saudi-india-probe-20261001.yml",
+          "workflowId": 371876200
+        },
+        {
+          "id": 36826062509,
+          "path": ".github/workflows/one-shot-saudi-india-probe-20261001.yml",
+          "workflowId": 371876200
+        },
+        {
+          "id": 36807144611,
+          "path": ".github/workflows/export-source-aca30.yml",
+          "workflowId": 371754917
+        },
+        {
+          "id": 36692176045,
+          "path": ".github/workflows/one-shot-sina-global-delay-audit-20260930.yml",
+          "workflowId": 370955742
+        },
+        {
+          "id": 36691898853,
+          "path": ".github/workflows/one-shot-sina-global-delay-audit-20260930.yml",
+          "workflowId": 370955742
+        },
+        {
+          "id": 36691732581,
+          "path": ".github/workflows/one-shot-sina-global-delay-audit-20260930.yml",
+          "workflowId": 370955742
+        },
+        {
+          "id": 36691507429,
+          "path": ".github/workflows/one-shot-sina-global-delay-audit-20260930.yml",
+          "workflowId": 370955742
+        },
+        {
+          "id": 36689379897,
+          "path": ".github/workflows/one-shot-latest-main-apk-20260930.yml",
+          "workflowId": 370939802
+        },
+        {
+          "id": 36687736547,
+          "path": ".github/workflows/one-shot-saudi-eastmoney-verify-20260930.yml",
+          "workflowId": 370928532
+        },
+        {
+          "id": 36686781808,
+          "path": ".github/workflows/one-shot-finscope-opening-verify-20260930.yml",
+          "workflowId": 370922184
+        },
+        {
+          "id": 36685368861,
+          "path": ".github/workflows/one-shot-finscope-opening-final-verify-20260930.yml",
+          "workflowId": 370912446
+        },
+        {
+          "id": 36685114183,
+          "path": ".github/workflows/one-shot-finscope-opening-fix-verify-20260930.yml",
+          "workflowId": 370909381
+        },
+        {
+          "id": 36684906937,
+          "path": ".github/workflows/one-shot-finscope-opening-fix-verify-20260930.yml",
+          "workflowId": 370909381
+        },
+        {
+          "id": 36683863008,
+          "path": ".github/workflows/one-shot-finscope-open-probe-20260930.yml",
+          "workflowId": 370899817
+        },
+        {
+          "id": 36683734200,
+          "path": ".github/workflows/one-shot-finscope-open-probe-20260930.yml",
+          "workflowId": 370899817
+        },
+        {
+          "id": 36683598661,
+          "path": ".github/workflows/one-shot-finscope-open-probe-20260930.yml",
+          "workflowId": 370899817
+        },
+        {
+          "id": 36680868232,
+          "path": ".github/workflows/one-shot-quhe-domestic-apk-20260930.yml",
+          "workflowId": 370880287
+        },
+        {
+          "id": 36680187406,
+          "path": ".github/workflows/one-shot-quhe-domestic-code-probe-20260930.yml",
+          "workflowId": 370872401
+        },
+        {
+          "id": 36680006373,
+          "path": ".github/workflows/one-shot-quhe-domestic-code-probe-20260930.yml",
+          "workflowId": 370872401
+        },
+        {
+          "id": 36679915546,
+          "path": ".github/workflows/one-shot-quhe-domestic-code-probe-20260930.yml",
+          "workflowId": 370872401
+        },
+        {
+          "id": 36679827495,
+          "path": ".github/workflows/one-shot-quhe-domestic-code-probe-20260930.yml",
+          "workflowId": 370872401
+        },
+        {
+          "id": 36678955167,
+          "path": ".github/workflows/one-shot-quote-search-probe-20260930.yml",
+          "workflowId": 370861521
+        },
+        {
+          "id": 36678687801,
+          "path": ".github/workflows/one-shot-quote-search-probe-20260930.yml",
+          "workflowId": 370861521
+        },
+        {
+          "id": 36678642369,
+          "path": ".github/workflows/one-shot-regression-probe-20260930.yml",
+          "workflowId": 370858124
+        },
+        {
+          "id": 36678386485,
+          "path": ".github/workflows/one-shot-quote-search-probe-20260930.yml",
+          "workflowId": 370861521
+        },
+        {
+          "id": 36678363738,
+          "path": ".github/workflows/one-shot-regression-probe-20260930.yml",
+          "workflowId": 370858124
+        },
+        {
+          "id": 36678228945,
+          "path": ".github/workflows/one-shot-regression-probe-20260930.yml",
+          "workflowId": 370858124
+        },
+        {
+          "id": 36678074200,
+          "path": ".github/workflows/one-shot-regression-probe-20260930.yml",
+          "workflowId": 370858124
+        },
+        {
+          "id": 36677919919,
+          "path": ".github/workflows/one-shot-regression-probe-20260930.yml",
+          "workflowId": 370858124
+        },
+        {
+          "id": 36676931411,
+          "path": ".github/workflows/one-shot-gate-beijing-ohlc-apk-20260930.yml",
+          "workflowId": 370850856
+        },
+        {
+          "id": 36676003754,
+          "path": ".github/workflows/one-shot-search-type-probe-20260930.yml",
+          "workflowId": 370841807
+        },
+        {
+          "id": 36675599523,
+          "path": ".github/workflows/one-shot-search-type-probe-20260930.yml",
+          "workflowId": 370841807
+        },
+        {
+          "id": 36674960558,
+          "path": ".github/workflows/one-shot-universal-watch-apk-20260930.yml",
+          "workflowId": 370837358
+        },
+        {
+          "id": 36674855754,
+          "path": ".github/workflows/one-shot-search-behavior-probe-20260930.yml",
+          "workflowId": 370836611
+        },
+        {
+          "id": 36673930443,
+          "path": ".github/workflows/one-shot-universal-search-verify-20260930.yml",
+          "workflowId": 370830530
+        },
+        {
+          "id": 36673392598,
+          "path": ".github/workflows/one-shot-universal-watch-verify-20260930.yml",
+          "workflowId": 370823800
+        },
+        {
+          "id": 36673299122,
+          "path": ".github/workflows/one-shot-universal-watch-verify-20260930.yml",
+          "workflowId": 370823800
+        },
+        {
+          "id": 36673076647,
+          "path": ".github/workflows/one-shot-universal-watch-verify-20260930.yml",
+          "workflowId": 370823800
+        },
+        {
+          "id": 36672917745,
+          "path": ".github/workflows/one-shot-universal-watch-verify-20260930.yml",
+          "workflowId": 370823800
+        },
+        {
+          "id": 36670988124,
+          "path": ".github/workflows/one-shot-finscope-sensex-delay-20260930.yml",
+          "workflowId": 370811666
+        },
+        {
+          "id": 36670321545,
+          "path": ".github/workflows/one-shot-final-quotes-apk-20260930.yml",
+          "workflowId": 370807376
+        },
+        {
+          "id": 36670007824,
+          "path": ".github/workflows/one-shot-finscope-sensex-probe-20260930.yml",
+          "workflowId": 370804059
+        },
+        {
+          "id": 36669850450,
+          "path": ".github/workflows/one-shot-finscope-sensex-probe-20260930.yml",
+          "workflowId": 370804059
+        },
+        {
+          "id": 36669324702,
+          "path": ".github/workflows/one-shot-adaptive-quotes-verify-20260930.yml",
+          "workflowId": 370795897
+        },
+        {
+          "id": 36669152605,
+          "path": ".github/workflows/one-shot-adaptive-quotes-verify-20260930.yml",
+          "workflowId": 370795897
+        },
+        {
+          "id": 36668952175,
+          "path": ".github/workflows/one-shot-adaptive-quotes-verify-20260930.yml",
+          "workflowId": 370795897
+        },
+        {
+          "id": 36668873494,
+          "path": ".github/workflows/one-shot-adaptive-quotes-verify-20260930.yml",
+          "workflowId": 370795897
+        },
+        {
+          "id": 36668752131,
+          "path": ".github/workflows/one-shot-adaptive-quotes-verify-20260930.yml",
+          "workflowId": 370795897
+        },
+        {
+          "id": 36668631747,
+          "path": ".github/workflows/one-shot-adaptive-quotes-verify-20260930.yml",
+          "workflowId": 370795897
+        },
+        {
+          "id": 36666127994,
+          "path": ".github/workflows/one-shot-quote-cadence-benchmark-20260930.yml",
+          "workflowId": 370779899
+        },
+        {
+          "id": 36665538187,
+          "path": ".github/workflows/one-shot-drag-reorder-apk-20260930.yml",
+          "workflowId": 370776099
+        },
+        {
+          "id": 36665347496,
+          "path": ".github/workflows/one-shot-drag-reorder-check-20260930.yml",
+          "workflowId": 370774720
+        },
+        {
+          "id": 36664163046,
+          "path": ".github/workflows/one-shot-pinned-background-apk-20260930.yml",
+          "workflowId": 370765258
+        },
+        {
+          "id": 36661303082,
+          "path": ".github/workflows/one-shot-responsive-apk-20260930.yml",
+          "workflowId": 370746126
+        },
+        {
+          "id": 36657204428,
+          "path": ".github/workflows/one-shot-watchlist-polish-apk-20260930.yml",
+          "workflowId": 370716249
+        },
+        {
+          "id": 36648429413,
+          "path": ".github/workflows/one-shot-watchlist-apk-20260930.yml",
+          "workflowId": 370659572
+        },
+        {
+          "id": 36630849732,
+          "path": ".github/workflows/one-shot-performance-apk-20260930.yml",
+          "workflowId": 370559540
+        },
+        {
+          "id": 36626576454,
+          "path": ".github/workflows/one-shot-apk-20260930.yml",
+          "workflowId": 370533570
+        },
+        {
+          "id": 36617200298,
+          "path": ".github/workflows/one-shot-preview.yml",
+          "workflowId": 370208777
+        },
+        {
+          "id": 36616210176,
+          "path": ".github/workflows/sina-delayed-time-probe.yml",
+          "workflowId": 370460021
+        },
+        {
+          "id": 36616189299,
+          "path": ".github/workflows/sina-delayed-time-probe.yml",
+          "workflowId": 370460021
+        },
+        {
+          "id": 36616180256,
+          "path": ".github/workflows/sina-delayed-time-probe.yml",
+          "workflowId": 370460021
+        },
+        {
+          "id": 36616167395,
+          "path": ".github/workflows/sina-delayed-time-probe.yml",
+          "workflowId": 370460021
+        },
+        {
+          "id": 36615756918,
+          "path": ".github/workflows/sina-delayed-time-probe.yml",
+          "workflowId": 370460021
+        },
+        {
+          "id": 36615501767,
+          "path": ".github/workflows/sina-delayed-time-probe.yml",
+          "workflowId": 370460021
+        },
+        {
+          "id": 36613953296,
+          "path": ".github/workflows/hxc-sina-probe.yml",
+          "workflowId": 370449393
+        },
+        {
+          "id": 36610741738,
+          "path": ".github/workflows/one-shot-preview.yml",
+          "workflowId": 370208777
+        },
+        {
+          "id": 36609871581,
+          "path": ".github/workflows/all-quote-time-audit.yml",
+          "workflowId": 370419227
+        },
+        {
+          "id": 36609823733,
+          "path": ".github/workflows/all-quote-time-audit.yml",
+          "workflowId": 370419227
+        },
+        {
+          "id": 36609805656,
+          "path": ".github/workflows/all-quote-time-audit.yml",
+          "workflowId": 370419227
+        },
+        {
+          "id": 36609463579,
+          "path": ".github/workflows/all-quote-time-audit.yml",
+          "workflowId": 370419227
+        },
+        {
+          "id": 36609432048,
+          "path": ".github/workflows/all-quote-time-audit.yml",
+          "workflowId": 370419227
+        },
+        {
+          "id": 36609296778,
+          "path": ".github/workflows/all-quote-time-audit.yml",
+          "workflowId": 370419227
+        },
+        {
+          "id": 36606696574,
+          "path": ".github/workflows/sina-futures-probe.yml",
+          "workflowId": 370399517
+        },
+        {
+          "id": 36606661527,
+          "path": ".github/workflows/quote-source-probe.yml",
+          "workflowId": 370389913
+        },
+        {
+          "id": 36606543520,
+          "path": ".github/workflows/sina-futures-probe.yml",
+          "workflowId": 370399517
+        },
+        {
+          "id": 36606391043,
+          "path": ".github/workflows/sina-futures-probe.yml",
+          "workflowId": 370399517
+        },
+        {
+          "id": 36606270231,
+          "path": ".github/workflows/quote-source-probe.yml",
+          "workflowId": 370389913
+        },
+        {
+          "id": 36605752540,
+          "path": ".github/workflows/quote-source-probe.yml",
+          "workflowId": 370389913
+        },
+        {
+          "id": 36605402932,
+          "path": ".github/workflows/quote-source-probe.yml",
+          "workflowId": 370389913
+        },
+        {
+          "id": 36604982559,
+          "path": ".github/workflows/quote-source-probe.yml",
+          "workflowId": 370389913
+        },
+        {
+          "id": 36595516057,
+          "path": ".github/workflows/one-shot-preview.yml",
+          "workflowId": 370208777
+        },
+        {
+          "id": 36578991358,
+          "path": ".github/workflows/one-shot-preview.yml",
+          "workflowId": 370208777
+        },
+        {
+          "id": 36578516347,
+          "path": ".github/workflows/finscope-ssr-probe.yml",
+          "workflowId": 370194935
+        },
+        {
+          "id": 36578179082,
+          "path": ".github/workflows/finscope-ssr-probe.yml",
+          "workflowId": 370194935
+        },
+        {
+          "id": 36578179034,
+          "path": ".github/workflows/finscope-request-fingerprint.yml",
+          "workflowId": 370189022
+        },
+        {
+          "id": 36578110571,
+          "path": ".github/workflows/finscope-ssr-probe.yml",
+          "workflowId": 370194935
+        },
+        {
+          "id": 36578110511,
+          "path": ".github/workflows/finscope-request-fingerprint.yml",
+          "workflowId": 370189022
+        },
+        {
+          "id": 36577806186,
+          "path": ".github/workflows/finscope-request-fingerprint.yml",
+          "workflowId": 370189022
+        },
+        {
+          "id": 36577806169,
+          "path": ".github/workflows/finscope-ssr-probe.yml",
+          "workflowId": 370194935
+        },
+        {
+          "id": 36577704860,
+          "path": ".github/workflows/finscope-request-fingerprint.yml",
+          "workflowId": 370189022
+        },
+        {
+          "id": 36577704778,
+          "path": ".github/workflows/finscope-ssr-probe.yml",
+          "workflowId": 370194935
+        },
+        {
+          "id": 36577564529,
+          "path": ".github/workflows/finscope-request-fingerprint.yml",
+          "workflowId": 370189022
+        },
+        {
+          "id": 36577564283,
+          "path": ".github/workflows/finscope-ssr-probe.yml",
+          "workflowId": 370194935
+        },
+        {
+          "id": 36577110757,
+          "path": ".github/workflows/finscope-ssr-probe.yml",
+          "workflowId": 370194935
+        },
+        {
+          "id": 36577110593,
+          "path": ".github/workflows/finscope-request-fingerprint.yml",
+          "workflowId": 370189022
+        },
+        {
+          "id": 36576917606,
+          "path": ".github/workflows/finscope-request-fingerprint.yml",
+          "workflowId": 370189022
+        },
+        {
+          "id": 36576885463,
+          "path": ".github/workflows/finscope-request-fingerprint.yml",
+          "workflowId": 370189022
+        },
+        {
+          "id": 36576554980,
+          "path": ".github/workflows/finscope-request-fingerprint.yml",
+          "workflowId": 370189022
+        },
+        {
+          "id": 36576330722,
+          "path": ".github/workflows/finscope-request-fingerprint.yml",
+          "workflowId": 370189022
+        },
+        {
+          "id": 36574420792,
+          "path": ".github/workflows/finscope-detail-probe.yml",
+          "workflowId": 370148136
+        },
+        {
+          "id": 36573649168,
+          "path": ".github/workflows/finscope-detail-probe.yml",
+          "workflowId": 370148136
+        },
+        {
+          "id": 36573533029,
+          "path": ".github/workflows/finscope-detail-probe.yml",
+          "workflowId": 370148136
+        },
+        {
+          "id": 36573165090,
+          "path": ".github/workflows/finscope-detail-probe.yml",
+          "workflowId": 370148136
+        },
+        {
+          "id": 36572852451,
+          "path": ".github/workflows/finscope-detail-probe.yml",
+          "workflowId": 370148136
+        },
+        {
+          "id": 36572587884,
+          "path": ".github/workflows/finscope-detail-probe.yml",
+          "workflowId": 370148136
+        },
+        {
+          "id": 36572439097,
+          "path": ".github/workflows/finscope-detail-probe.yml",
+          "workflowId": 370148136
+        },
+        {
+          "id": 36572170265,
+          "path": ".github/workflows/finscope-detail-probe.yml",
+          "workflowId": 370148136
+        },
+        {
+          "id": 36571896547,
+          "path": ".github/workflows/finscope-detail-probe.yml",
+          "workflowId": 370148136
+        },
+        {
+          "id": 36571719398,
+          "path": ".github/workflows/finscope-detail-probe.yml",
+          "workflowId": 370148136
+        },
+        {
+          "id": 36571591172,
+          "path": ".github/workflows/finscope-detail-probe.yml",
+          "workflowId": 370148136
+        },
+        {
+          "id": 36571435865,
+          "path": ".github/workflows/finscope-detail-probe.yml",
+          "workflowId": 370148136
+        },
+        {
+          "id": 36571300180,
+          "path": ".github/workflows/finscope-detail-probe.yml",
+          "workflowId": 370148136
+        },
+        {
+          "id": 36571173127,
+          "path": ".github/workflows/finscope-detail-probe.yml",
+          "workflowId": 370148136
+        },
+        {
+          "id": 36571049806,
+          "path": ".github/workflows/finscope-detail-probe.yml",
+          "workflowId": 370148136
+        },
+        {
+          "id": 36570669348,
+          "path": ".github/workflows/finscope-detail-probe.yml",
+          "workflowId": 370148136
+        }
+      ]
+    }
+  ]
+}
