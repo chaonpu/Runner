@@ -157,11 +157,11 @@ class Tests(unittest.TestCase):
             self.invoke(mode='publish',execute=True,token=True,bad_response=True)
         self.assertEqual(self.events[-2:],['dispatch_reserved','POST'])
         with self.assertRaisesRegex(p.build.Hold,'dispatch_unknown'):
-            self.invoke(state=dict(REQ,phase='dispatch_reserved',publishRequest=PUBLISH),execute=True)
+            self.invoke(state=dict(REQ,phase='dispatch_reserved',publishRequest=PUBLISH),mode='publish',execute=True,token=True)
         self.assertEqual(self.events,[])
 
     def test_original_publishing_resumes_without_redispatch_or_restage(self):
-        result=self.invoke(state=dict(REQ,phase='publishing',publishRequest=PUBLISH,publicRunId=789),execute=True)
+        result=self.invoke(state=dict(REQ,phase='publishing',publishRequest=PUBLISH,publicRunId=789),mode='publish',execute=True,token=True)
         self.assertTrue(result['published'])
         self.assertEqual(self.events,['published','cleanup_recorded'])
         self.assertEqual(self.wait_count,1)
@@ -174,16 +174,16 @@ class Tests(unittest.TestCase):
     def test_failed_public_hash_never_cleans_staging(self):
         with self.assertRaisesRegex(p.build.Hold,'bad_public_hash'):
             self.invoke(state=dict(REQ,phase='publishing',publishRequest=PUBLISH,publicRunId=789),
-                        execute=True,fail_verify=True)
+                        mode='publish',execute=True,token=True,fail_verify=True)
         self.cleanup_mock.assert_not_called()
 
     def test_cleanup_failure_keeps_publication_successful_and_repeat_does_not_dispatch(self):
         state=dict(REQ,phase='published',publishRequest=PUBLISH,publicRunId=789)
-        result=self.invoke(state=state,execute=True,fail_cleanup=True)
+        result=self.invoke(state=state,mode='publish',execute=True,token=True,fail_cleanup=True)
         self.assertTrue(result['published'])
         self.assertEqual(result['stagingCleanup']['status'],'pending')
         self.assertEqual(self.events,[])
-        result=self.invoke(state=state,execute=True)
+        result=self.invoke(state=state,mode='publish',execute=True,token=True)
         self.assertEqual(result['stagingCleanup']['status'],'deleted')
         self.assertEqual(self.events,['cleanup_recorded'])
 
@@ -195,7 +195,7 @@ class Tests(unittest.TestCase):
         with self.assertRaises(p.build.Hold):self.invoke(execute=True,fail_stage=True)
         self.assertEqual(self.events,['staging_reserved','STAGE'])
         with self.assertRaisesRegex(p.build.Hold,'staging_outcome_unknown'):
-            self.invoke(state=dict(REQ,phase='staging_reserved'),execute=True)
+            self.invoke(state=dict(REQ,phase='staging_reserved'),mode='publish',execute=True,token=True)
         self.assertEqual(self.events,[])
 
     def test_version_identity_conflict_stops_before_effects(self):
