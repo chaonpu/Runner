@@ -52,7 +52,7 @@ def request(token, method, path, body=None, *, opener=bounded_open):
         re.escape(PUBLIC) + r"/contents/(config/repositories\.json|config/launch-request\.json|state/tasks\.json)\?ref=[0-9a-f]{40}", path))
     public_put = path in (PUBLIC + "/contents/" + REGISTRY, PUBLIC + "/contents/" + CONFIG)
     private_post = path in {PRIVATE + "/actions/workflows/" + wf + "/dispatches"
-                            for wf in (*WORKFLOWS.values(), "production-readiness-a.yml", "production-readiness-us.yml")}
+                            for wf in (*WORKFLOWS.values(), *READY_WINDOWS.values(), *CLOUD_WORKFLOWS.values())}
     public_launch = path == PUBLIC + "/actions/workflows/production-dispatch.yml/dispatches"
     need((method == "GET" and public_get and body is None)
          or (method == "PUT" and public_put and isinstance(body, dict))
@@ -324,3 +324,4 @@ def main():
 
 if __name__ == "__main__":
     raise SystemExit(main())
+

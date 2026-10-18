@@ -225,6 +225,17 @@ class PortsTests(unittest.TestCase):
             request("synthetic", "POST", PRIVATE+"/actions/workflows/run-us.yml/dispatches", {}, opener=opener)
         opener.assert_called_once()
 
+    def test_all_retained_private_readiness_routes_reach_the_request_adapter(self):
+        for workflow in ("production-readiness-a.yml", "production-readiness-us.yml",
+                         "production-readiness-cloud-a.yml", "production-readiness-cloud-us.yml"):
+            with self.subTest(workflow=workflow):
+                # Reaching the opener proves the route passed the allowlist.
+                opener = Mock(side_effect=TimeoutError("synthetic transport stop"))
+                with self.assertRaisesRegex(RegistryGuard, "response_uncertain_no_retry"):
+                    request("synthetic", "POST", PRIVATE+"/actions/workflows/"+workflow+"/dispatches",
+                            {"ref":"main","inputs":{}}, opener=opener)
+                opener.assert_called_once()
+
     def test_writer_cannot_be_constructed_from_push_or_other_workflow(self):
         for change in ({"GITHUB_EVENT_NAME":"push"}, {"GITHUB_WORKFLOW_REF":"other"},
                        {"GITHUB_RUN_ATTEMPT":"2"}):
@@ -252,3 +263,4 @@ class PortsTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+

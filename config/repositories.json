@@ -41,21 +41,10 @@
       "idempotencyScope": "trade-date",
       "enabledForDispatch": false
     },
-    "stock_etf": {
-      "kind": "strategy",
-      "repo": "chaonpu/Stock",
-      "cloudWorkflow": "run-etf.yml",
-      "windowsWorkflow": null,
-      "runnerName": "ziwuxilv-stock-win",
-      "estimatedMinutes": 90,
-      "reserveMinutes": 200,
-      "idempotencyScope": "date",
-      "enabledForDispatch": false
-    },
     "android": {
       "kind": "android",
       "repo": "anwpustudent-lab/Test",
-      "cloudWorkflow": "android.yml",
+      "cloudWorkflow": "android-cloud-verified.yml",
       "windowsWorkflow": "test-self-hosted.yml",
       "runnerName": "ziwuxilv-test-win",
       "signingRepo": "chaonpu/ziwuxilv-android",
@@ -69,3 +58,4 @@
     }
   }
 }
+
