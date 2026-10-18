@@ -2,6 +2,12 @@
   "builds": {
     "24a0f2102b6dd8b18d8cc693f0d824c994522cee": {
       "createdAt": "2026-10-18T06:45:53.325270+00:00",
+      "lastFailure": {
+        "code": "source_local_worktree_failed_manual_review",
+        "recordedAt": "2026-10-18T06:47:27.911012+00:00",
+        "runId": 39105201020,
+        "stage": "test"
+      },
       "phase": "test_started",
       "route": "windows",
       "sourceSha": "24a0f2102b6dd8b18d8cc693f0d824c994522cee",
