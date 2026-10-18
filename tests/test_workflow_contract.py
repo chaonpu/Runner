@@ -28,8 +28,13 @@ class WorkflowContractTests(unittest.TestCase):
             self.assertIn("github.ref == 'refs/heads/main'", text)
             self.assertIn('cancel-in-progress: false', text)
             self.assertIn('ref: ${{ github.sha }}', text)
-            self.assertIn('execute:', text)
-            self.assertIn('default: false', text)
+            if path.name == 'android-publish.yml':
+                self.assertIn('release_mode:', text)
+                self.assertIn('default: "预览"', text)
+                self.assertNotIn('      execute:', text)
+            else:
+                self.assertIn('execute:', text)
+                self.assertIn('default: false', text)
             self.assertNotIn('pull_request_target', text)
             self.assertNotIn('actions: write', text)
 
@@ -48,7 +53,12 @@ class WorkflowContractTests(unittest.TestCase):
         text = (WORKFLOWS/'android-publish.yml').read_text()
         self.assertIn('scheduler.android_publish', text)
         inputs = text.split('    inputs:\n', 1)[1].split('\npermissions:', 1)[0]
-        self.assertEqual(set(re.findall(r'(?m)^      (\w+):', inputs)), {'update_log', 'execute'})
+        self.assertEqual(set(re.findall(r'(?m)^      (\w+):', inputs)), {'update_log', 'release_mode'})
+        self.assertIn('type: choice', inputs)
+        self.assertIn('          - "预览"', inputs)
+        self.assertIn('          - "正式"', inputs)
+        self.assertIn('RELEASE_MODE: ${{ inputs.release_mode }}', text)
+        self.assertIn('--release-mode "$mode"', text)
         self.assertNotIn('inputs.mode', text)
         self.assertNotIn('inputs.source_sha', text)
         self.assertIn('CHAONPU_ACTIONS_READ_TOKEN: ${{ secrets.CHAONPU_ACTIONS_READ_TOKEN }}', text)
