@@ -138,7 +138,8 @@ def inspect(reader, task, day, now, publication_mode="formal", *, expected_run_i
                 or (light_ready and inputs.get("readiness_profile") == "auto"
                     and not SHA.fullmatch(str(inputs.get("previous_verified_sha", ""))))):
             return hold("hold_evidence_run_inputs_conflict")
-        if inputs is not None and already_current and inputs.get("readiness_profile", "full") not in ("light", "full"):
+        if (isinstance(inputs, dict) and already_current
+                and inputs.get("readiness_profile", "full") not in ("light", "full", "auto")):
             return hold("hold_evidence_run_inputs_conflict")
         if already_current:
             return {"evidenceStatus": "private_existing_state_run_and_dated_job_match",
