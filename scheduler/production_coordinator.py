@@ -17,7 +17,7 @@ from scheduler.production_watch import watch
 from scheduler.probes import existing_attempt, runner_for_repo
 
 
-def prepare(ports, cfg, task, day, mode):
+def prepare(ports, cfg, task, day, mode, state):
     spec, account = cfg["tasks"][task], cfg["accounts"]["chaonpu"]
     for workflow in ("run-a-share.yml", "run-us.yml"):
         need(existing_attempt("chaonpu/Stock", workflow, account, ports.env)["status"] == "no_active_run",
@@ -35,9 +35,18 @@ def prepare(ports, cfg, task, day, mode):
         workflow, route = READY_WORKFLOWS[task], "windows"
     else:
         raise RegistryGuard("hosted_allowance_unverified_no_readiness_dispatch")
+    # The public registry contains only source identities from confirmed runs.
+    # A code/requirements/rules change forces the original FULL isolation
+    # check; otherwise the daily selector only executes in the effect job.
+    verified = sorted((row for row in state["tasks"]
+                       if row.get("task") == task and row.get("status") == "verified"
+                       and isinstance(row.get("id"), str)
+                       and row["id"] < task + ":" + day), key=lambda row: row["id"])
+    prior_sha = verified[-1].get("sourceSha", "") if verified else ""
     body = {"ref":"main","return_run_details":True,"inputs":{
         "business_date":day,"publication_mode":mode,
-        **({"readiness_profile":"light"} if task == "stock_a" else {}),
+        **({"readiness_profile":"auto", "previous_verified_sha":prior_sha}
+           if task == "stock_a" else {}),
     }}
     response = ports.requester(ports.env["CHAONPU_ACTIONS_READ_TOKEN"], "POST",
         PRIVATE+"/actions/workflows/"+workflow+"/dispatches", body)
@@ -136,7 +145,7 @@ def execute(env, task, day, mode):
     today=datetime.now(timezone.utc).astimezone(ZoneInfo(schedule['marketTimezone'])).date().isoformat()
     need((mode=='formal' and today==day) or (mode=='theoretical_catchup' and today>day),
          'native_publication_window_not_open')
-    prepared = prepare(ports,config,task,day,mode)
+    prepared = prepare(ports,config,task,day,mode,state)
     if prepared.get("alreadyCurrent") is True:
         return skip_result(env, task, day, "authoritative_market_already_current",
                            readinessRunId=prepared["readinessRunId"], authoritativeStateChecked=True)
