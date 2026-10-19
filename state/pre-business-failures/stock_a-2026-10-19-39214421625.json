@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "reason": "historical_recovery_fields_rejected_before_business",
+  "originalTask": {
+    "coordinatorRunId": 39213308450,
+    "createdAt": "2026-10-19T07:11:15.129617+00:00",
+    "id": "stock_a:2026-10-19",
+    "publicationMode": "formal",
+    "repo": "chaonpu/Stock",
+    "route": "windows",
+    "runId": 39214421625,
+    "sourceSha": "f95bb97b14495a1ad3a0d6dc02b59f9063ceb313",
+    "status": "hold",
+    "task": "stock_a",
+    "updatedAt": "2026-10-19T07:17:39.774472+00:00",
+    "workflow": "run-a-share.yml"
+  },
+  "sourceFixCommit": "354219cf8702f90ebcc087d4d55cb8e77a182318",
+  "failedStep": "Admit exact RUNNER task and Stock run binding before coordinated business",
+  "runUrl": "https://github.com/chaonpu/Stock/actions/runs/39214421625",
+  "jobUrl": "https://github.com/chaonpu/Stock/actions/runs/39214421625/job/117934863380",
+  "verifiedSkippedSteps": [
+    "Check coordinated settled inputs are still current",
+    "Reconcile verified A-share ledger projection",
+    "Skip completed A-share session",
+    "Install dependencies",
+    "Run A-share strategy with retry",
+    "Show generated files",
+    "Verify private snapshot contract",
+    "Publish verified snapshot and ledger to private database",
+    "Checkpoint rebuildable ETF response cache",
+    "Synchronize coordinated inputs to the confirmed settled ledger",
+    "Save successful strategy state",
+    "Save failure-safe caches",
+    "Verify and attest published ledger receipt"
+  ],
+  "strategyStarted": false,
+  "businessWriteStepsExecuted": false,
+  "resolution": "Archived original pre-business failure; same session may be freshly coordinated after source correction."
+}
