@@ -132,8 +132,11 @@ def inspect(reader, task, day, now, publication_mode="formal", *, expected_run_i
         if inputs is not None and (not isinstance(inputs, dict)
                 or inputs.get("business_date") not in ("", None, day)
                 or inputs.get("publication_mode", "formal") != publication_mode
-                or (not already_current and
-                    inputs.get("readiness_profile", "full") != ("light" if light_ready else "full"))):
+                or (not already_current
+                    and inputs.get("readiness_profile", "full")
+                        not in ("auto", "light" if light_ready else "full"))
+                or (light_ready and inputs.get("readiness_profile") == "auto"
+                    and inputs.get("previous_verified_sha") != run["head_sha"])):
             return hold("hold_evidence_run_inputs_conflict")
         if inputs is not None and already_current and inputs.get("readiness_profile", "full") not in ("light", "full"):
             return hold("hold_evidence_run_inputs_conflict")
