@@ -65,13 +65,18 @@ class EvidenceTests(unittest.TestCase):
         self.assertFalse(outcome["marketDataReady"])
         self.assertFalse(outcome["selectionInputsVerified"])
         self.assertFalse(outcome["productionReady"])
-        for previous in ("", "b" * 40):
+        for previous in ("", "not-sha", "A" * 40):
             with self.subTest(previous=previous):
                 invalid = deepcopy(listing)
                 invalid["workflow_runs"][0]["inputs"]["previous_verified_sha"] = previous
                 denied = self.inspect(Reader(invalid, jobs))
                 self.assertFalse(denied["sourceSamplesReady"])
                 self.assertNotEqual(denied["evidenceStatus"], outcome["evidenceStatus"])
+        # Routine tracked results mutate the Git SHA; only the sealed code
+        # fingerprint in Stock (not the prior full commit SHA) decides drift.
+        different = deepcopy(listing)
+        different["workflow_runs"][0]["inputs"]["previous_verified_sha"] = "b" * 40
+        self.assertTrue(self.inspect(Reader(different, jobs))["sourceSamplesReady"])
         duplicate = deepcopy(jobs)
         duplicate["jobs"][0]["steps"][0]["conclusion"] = "success"
         self.assertFalse(self.inspect(Reader(listing, duplicate))["sourceSamplesReady"])
