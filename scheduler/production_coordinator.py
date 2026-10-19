@@ -158,6 +158,16 @@ def execute(env, task, day, mode):
         watched = watch(ports,session,env,deadline_seconds=14400)
         need(watched["status"] == "awaiting_effect_verification", "business_run_failed_or_unverified")
         result = ports.finish(session)
+        # Timing is diagnostic only. An Actions API hiccup must not change the
+        # verified ledger result or cause a second business execution.
+        if task == "stock_a":
+            try:
+                from scheduler.production_timing import collect, publish_summary
+                measured = collect(ports, prepared["readinessRunId"], session["runId"])
+                publish_summary(measured, prepared["readinessRunId"], session["runId"], env)
+            except (OSError, TypeError, ValueError, KeyError, AttributeError):
+                print(json.dumps({"phase":"measured_action_step_timings",
+                                  "status":"unavailable_no_business_effect"}), flush=True)
         print(json.dumps(result,sort_keys=True),flush=True)
         return result
     finally:
