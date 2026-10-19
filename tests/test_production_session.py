@@ -125,6 +125,37 @@ class ProductionSessionTests(unittest.TestCase):
         self.assertEqual(self.ports.events[events:], ["load"])
         self.assertEqual(len(self.ports.dispatches), 1)
 
+    def test_light_source_samples_allow_a_single_effect_run_but_never_claim_full_pool(self):
+        self.ports.audit_value.update(
+            marketDataReady=False, selectionInputsVerified=False,
+            sourceSamplesReady=True, postRunValidationRequired=True,
+            evidenceStatus="private_light_readiness_samples_and_dated_job_match",
+        )
+        session = self.begin()
+        self.assertEqual(session["status"], "dispatched")
+        self.assertEqual(len(self.ports.dispatches), 1)
+        self.assertFalse(session["businessVerified"])
+
+    def test_untrusted_sample_evidence_holds_without_any_dispatch(self):
+        for drift in (
+            {"sourceSamplesReady": False},
+            {"postRunValidationRequired": False},
+            {"selectionInputsVerified": True},
+            {"evidenceStatus": "other"},
+            {"exchangeSessionVerified": False},
+        ):
+            with self.subTest(drift=drift):
+                self.setUp()
+                self.ports.audit_value.update(
+                    marketDataReady=False, selectionInputsVerified=False,
+                    sourceSamplesReady=True, postRunValidationRequired=True,
+                    evidenceStatus="private_light_readiness_samples_and_dated_job_match",
+                    **drift,
+                )
+                with self.assertRaises(RegistryGuard):
+                    self.begin()
+                self.assertEqual(len(self.ports.dispatches), 0)
+
     def test_actual_disabled_configuration_never_writes_or_dispatches(self):
         self.ports.config = json.loads((ROOT / "config/repositories.json").read_text())
         with self.assertRaisesRegex(RegistryGuard, "production_disabled"):
