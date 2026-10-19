@@ -1,5 +1,12 @@
 {
   "builds": {
+    "053f4338499c2ff0061d5a02f84912661cd04e11": {
+      "createdAt": "2026-10-19T06:15:33.308630+00:00",
+      "liveSmoke": true,
+      "phase": "reserved",
+      "route": "windows",
+      "sourceSha": "053f4338499c2ff0061d5a02f84912661cd04e11"
+    },
     "24a0f2102b6dd8b18d8cc693f0d824c994522cee": {
       "createdAt": "2026-10-18T06:45:53.325270+00:00",
       "lastFailure": {
