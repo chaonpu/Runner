@@ -203,6 +203,16 @@
         "tag": "staged-apk-v2.4.2-signrun-39140695251",
         "releaseId": 416535639
       }
+    },
+    "126": {
+      "sourceCommit": "74345b0256c38de5d3cff1d3c1abbd9489708f77",
+      "versionName": "2.4.3",
+      "versionCode": 126,
+      "testRunId": 39203067711,
+      "signingRunId": 39203971217,
+      "updateLog": "v2.4.3\uff1a\n1. \u4fee\u590dB/S\u4ea4\u6613\u6807\u7b7e\u4e0eK\u7ebf\u4e0a\u4e0b\u5f71\u7ebf\u91cd\u53e0\u7684\u95ee\u9898\uff0c\u6807\u7b7e\u4f4d\u7f6e\u968f\u5b8c\u6574\u5f71\u7ebf\u53d8\u5316\u3002\n2. \u6807\u7b7e\u4fdd\u6301\u4e0e\u5bf9\u5e94K\u7ebf\u540c\u5217\uff0c\u7eb5\u5411\u907f\u8ba9\u76f8\u90bbK\u7ebf\u53ca\u5df2\u6709\u6807\u7b7e\u3002\n3. \u8fde\u63a5\u865a\u7ebf\u7ee7\u7eed\u6307\u5411\u771f\u5b9e\u6210\u4ea4\u4ef7\uff0c\u957f\u5ea6\u968f\u907f\u8ba9\u8ddd\u79bb\u8c03\u6574\u3002",
+      "forceUpdate": false,
+      "phase": "staging_reserved"
     }
   }
 }
