@@ -136,7 +136,7 @@ def inspect(reader, task, day, now, publication_mode="formal", *, expected_run_i
                     and inputs.get("readiness_profile", "full")
                         not in ("auto", "light" if light_ready else "full"))
                 or (light_ready and inputs.get("readiness_profile") == "auto"
-                    and inputs.get("previous_verified_sha") != run["head_sha"])):
+                    and not SHA.fullmatch(str(inputs.get("previous_verified_sha", ""))))):
             return hold("hold_evidence_run_inputs_conflict")
         if inputs is not None and already_current and inputs.get("readiness_profile", "full") not in ("light", "full"):
             return hold("hold_evidence_run_inputs_conflict")
