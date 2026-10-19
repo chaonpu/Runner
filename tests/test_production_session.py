@@ -150,8 +150,8 @@ class ProductionSessionTests(unittest.TestCase):
                     marketDataReady=False, selectionInputsVerified=False,
                     sourceSamplesReady=True, postRunValidationRequired=True,
                     evidenceStatus="private_light_readiness_samples_and_dated_job_match",
-                    **drift,
                 )
+                self.ports.audit_value.update(drift)
                 with self.assertRaises(RegistryGuard):
                     self.begin()
                 self.assertEqual(len(self.ports.dispatches), 0)
