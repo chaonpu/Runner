@@ -57,11 +57,12 @@
     "74345b0256c38de5d3cff1d3c1abbd9489708f77": {
       "createdAt": "2026-10-19T05:09:23.804030+00:00",
       "liveSmoke": true,
-      "phase": "test_verified",
+      "phase": "signer_reserved",
       "route": "windows",
+      "signingRoute": "windows",
       "sourceSha": "74345b0256c38de5d3cff1d3c1abbd9489708f77",
       "testRunId": 39203067711,
-      "updatedAt": "2026-10-19T05:19:35.065237+00:00"
+      "updatedAt": "2026-10-19T05:19:43.525205+00:00"
     },
     "7531c299ba2154771d955e037c25a186c0b28bbf": {
       "createdAt": "2026-10-18T07:10:42.196190+00:00",
