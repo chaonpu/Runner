@@ -35,7 +35,10 @@ def prepare(ports, cfg, task, day, mode):
         workflow, route = READY_WORKFLOWS[task], "windows"
     else:
         raise RegistryGuard("hosted_allowance_unverified_no_readiness_dispatch")
-    body = {"ref":"main","return_run_details":True,"inputs":{"business_date":day,"publication_mode":mode}}
+    body = {"ref":"main","return_run_details":True,"inputs":{
+        "business_date":day,"publication_mode":mode,
+        **({"readiness_profile":"light"} if task == "stock_a" else {}),
+    }}
     response = ports.requester(ports.env["CHAONPU_ACTIONS_READ_TOKEN"], "POST",
         PRIVATE+"/actions/workflows/"+workflow+"/dispatches", body)
     rid = response.get("workflow_run_id")
@@ -52,7 +55,9 @@ def prepare(ports, cfg, task, day, mode):
             need(run.get("conclusion") == "success", "private_readiness_failed")
             proof = inspect(ports.private_reader(),task,day,datetime.now(timezone.utc),mode,
                             expected_run_id=rid,expected_workflow=workflow)
-            need((proof["marketDataReady"] is True or proof.get("alreadyCurrent") is True)
+            need((proof["marketDataReady"] is True
+                  or proof.get("sourceSamplesReady") is True
+                  or proof.get("alreadyCurrent") is True)
                  and proof["sourceSha"] == run["head_sha"], "fresh_private_readiness_not_verified")
             return {**proof, "readinessRunId": rid, "readinessRoute": route}
         time.sleep(30)
