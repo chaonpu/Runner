@@ -50,6 +50,21 @@ class EvidenceTests(unittest.TestCase):
         self.assertFalse(result["productionReady"])
         self.assertEqual(len(reader.paths), 2)
 
+    def test_auto_profile_already_current_attests_noop_without_dispatch(self):
+        listing, jobs = fixtures()
+        listing["workflow_runs"][0]["inputs"] = {
+            "business_date": "2026-10-16", "publication_mode": "formal",
+            "readiness_profile": "auto", "previous_verified_sha": HEAD}
+        jobs["jobs"][0]["steps"][0]["conclusion"] = "skipped"
+        jobs["jobs"][0]["steps"].append({
+            "name": "Attest existing authoritative market state",
+            "status": "completed", "conclusion": "success",
+            "completed_at": "2026-10-17T06:00:00Z"})
+        result = self.inspect(Reader(listing, jobs))
+        self.assertTrue(result["alreadyCurrent"])
+        self.assertFalse(result["marketDataReady"])
+        self.assertFalse(result["productionReady"])
+
     def test_light_run_is_sample_only_and_requires_verified_previous_sha(self):
         listing, jobs = fixtures()
         listing["workflow_runs"][0]["inputs"] = {
