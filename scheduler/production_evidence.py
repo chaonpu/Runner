@@ -13,6 +13,7 @@ REPO = "chaonpu/Stock"
 WORKFLOWS = {"stock_a": "production-readiness-a.yml", "stock_us": "production-readiness-us.yml"}
 CLOUD_WORKFLOWS = {"stock_a": "production-readiness-cloud-a.yml", "stock_us": "production-readiness-cloud-us.yml"}
 STEP = "Attest live readiness"
+LIGHT_STEP = "Attest light readiness"
 EXISTING_STEP = "Attest existing authoritative market state"
 SHA = re.compile(r"^[0-9a-f]{40}$")
 
@@ -20,6 +21,7 @@ SHA = re.compile(r"^[0-9a-f]{40}$")
 def hold(reason):
     return {"evidenceStatus": reason, "exchangeSessionVerified": False,
             "marketDataReady": False, "selectionInputsVerified": False,
+            "sourceSamplesReady": False, "postRunValidationRequired": False,
             "sourceSha": "", "observedAt": None, "productionReady": False}
 
 
@@ -100,17 +102,23 @@ def inspect(reader, task, day, now, publication_mode="formal", *, expected_run_i
         if "run_attempt" in job and (type(job["run_attempt"]) is not int or job["run_attempt"] != 1):
             return hold("hold_evidence_job_unverified")
         live = [s for s in job["steps"] if isinstance(s, dict) and s.get("name") == STEP]
+        light = [s for s in job["steps"] if isinstance(s, dict) and s.get("name") == LIGHT_STEP]
         existing = [s for s in job["steps"] if isinstance(s, dict) and s.get("name") == EXISTING_STEP]
         good = lambda step: step.get("status") == "completed" and step.get("conclusion") == "success"
-        if len(live) != 1 or len(existing) > 1:
+        if len(live) != 1 or len(light) > 1 or len(existing) > 1:
             return hold("hold_evidence_attestation_step_unverified")
         already_current = bool(existing and good(existing[0]))
+        light_ready = bool(light and good(light[0]))
         if already_current:
-            if live[0].get("conclusion") != "skipped":
+            if live[0].get("conclusion") != "skipped" or light_ready:
                 return hold("hold_evidence_attestation_conflict")
             steps = existing
+        elif light_ready:
+            if live[0].get("conclusion") != "skipped" or (existing and good(existing[0])):
+                return hold("hold_evidence_attestation_conflict")
+            steps = light
         else:
-            if not good(live[0]):
+            if not good(live[0]) or light_ready:
                 return hold("hold_evidence_attestation_step_unverified")
             steps = live
         observed = timestamp(steps[0].get("completed_at"))
@@ -123,7 +131,15 @@ def inspect(reader, task, day, now, publication_mode="formal", *, expected_run_i
         inputs = run.get("inputs")
         if inputs is not None and (not isinstance(inputs, dict)
                 or inputs.get("business_date") not in ("", None, day)
-                or inputs.get("publication_mode", "formal") != publication_mode):
+                or inputs.get("publication_mode", "formal") != publication_mode
+                or (not already_current
+                    and inputs.get("readiness_profile", "full")
+                        not in ("auto", "light" if light_ready else "full"))
+                or (light_ready and inputs.get("readiness_profile") == "auto"
+                    and not SHA.fullmatch(str(inputs.get("previous_verified_sha", ""))))):
+            return hold("hold_evidence_run_inputs_conflict")
+        if (isinstance(inputs, dict) and already_current
+                and inputs.get("readiness_profile", "full") not in ("light", "full", "auto")):
             return hold("hold_evidence_run_inputs_conflict")
         if already_current:
             return {"evidenceStatus": "private_existing_state_run_and_dated_job_match",
@@ -131,9 +147,17 @@ def inspect(reader, task, day, now, publication_mode="formal", *, expected_run_i
                     "marketDataReady": False, "selectionInputsVerified": True,
                     "sourceSha": run["head_sha"], "observedAt": observed.isoformat(),
                     "productionReady": False, "businessVerified": False}
+        if light_ready:
+            return {"evidenceStatus": "private_light_readiness_samples_and_dated_job_match",
+                    "exchangeSessionVerified": True, "marketDataReady": False,
+                    "selectionInputsVerified": False, "sourceSamplesReady": True,
+                    "postRunValidationRequired": True,
+                    "sourceSha": run["head_sha"], "observedAt": observed.isoformat(),
+                    "productionReady": False}
         return {"evidenceStatus": "private_readiness_run_and_dated_job_match",
                 "exchangeSessionVerified": True, "marketDataReady": True,
-                "selectionInputsVerified": True, "sourceSha": run["head_sha"],
+                "selectionInputsVerified": True, "sourceSamplesReady": False,
+                "postRunValidationRequired": True, "sourceSha": run["head_sha"],
                 "observedAt": observed.isoformat(), "productionReady": False}
     except HTTPError as exc:
         return hold("hold_private_readiness_workflow_missing_or_not_visible" if exc.code == 404

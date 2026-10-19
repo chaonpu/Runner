@@ -3,7 +3,7 @@ from copy import deepcopy
 from datetime import datetime, timezone
 import unittest
 
-from scheduler.production_evidence import inspect, STEP
+from scheduler.production_evidence import inspect, STEP, LIGHT_STEP
 
 HEAD, RID = "a" * 40, 90000000333
 NOW = datetime(2026, 10, 17, 6, 0, 10, tzinfo=timezone.utc)
@@ -49,6 +49,52 @@ class EvidenceTests(unittest.TestCase):
         self.assertEqual(result["sourceSha"], HEAD)
         self.assertFalse(result["productionReady"])
         self.assertEqual(len(reader.paths), 2)
+
+    def test_auto_profile_already_current_attests_noop_without_dispatch(self):
+        listing, jobs = fixtures()
+        listing["workflow_runs"][0]["inputs"] = {
+            "business_date": "2026-10-16", "publication_mode": "formal",
+            "readiness_profile": "auto", "previous_verified_sha": HEAD}
+        jobs["jobs"][0]["steps"][0]["conclusion"] = "skipped"
+        jobs["jobs"][0]["steps"].append({
+            "name": "Attest existing authoritative market state",
+            "status": "completed", "conclusion": "success",
+            "completed_at": "2026-10-17T06:00:00Z"})
+        result = self.inspect(Reader(listing, jobs))
+        self.assertTrue(result["alreadyCurrent"])
+        self.assertFalse(result["marketDataReady"])
+        self.assertFalse(result["productionReady"])
+
+    def test_light_run_is_sample_only_and_requires_verified_previous_sha(self):
+        listing, jobs = fixtures()
+        listing["workflow_runs"][0]["inputs"] = {
+            "business_date": "2026-10-16", "publication_mode": "formal",
+            "readiness_profile": "auto", "previous_verified_sha": HEAD}
+        jobs["jobs"][0]["steps"][0]["conclusion"] = "skipped"
+        jobs["jobs"][0]["steps"].append({
+            "name": LIGHT_STEP, "status": "completed", "conclusion": "success",
+            "completed_at": "2026-10-17T06:00:00Z"})
+        outcome = self.inspect(Reader(listing, jobs))
+        self.assertTrue(outcome["sourceSamplesReady"])
+        self.assertTrue(outcome["postRunValidationRequired"])
+        self.assertFalse(outcome["marketDataReady"])
+        self.assertFalse(outcome["selectionInputsVerified"])
+        self.assertFalse(outcome["productionReady"])
+        for previous in ("", "not-sha", "A" * 40):
+            with self.subTest(previous=previous):
+                invalid = deepcopy(listing)
+                invalid["workflow_runs"][0]["inputs"]["previous_verified_sha"] = previous
+                denied = self.inspect(Reader(invalid, jobs))
+                self.assertFalse(denied["sourceSamplesReady"])
+                self.assertNotEqual(denied["evidenceStatus"], outcome["evidenceStatus"])
+        # Routine tracked results mutate the Git SHA; only the sealed code
+        # fingerprint in Stock (not the prior full commit SHA) decides drift.
+        different = deepcopy(listing)
+        different["workflow_runs"][0]["inputs"]["previous_verified_sha"] = "b" * 40
+        self.assertTrue(self.inspect(Reader(different, jobs))["sourceSamplesReady"])
+        duplicate = deepcopy(jobs)
+        duplicate["jobs"][0]["steps"][0]["conclusion"] = "success"
+        self.assertFalse(self.inspect(Reader(listing, duplicate))["sourceSamplesReady"])
 
     def test_no_run_does_not_use_unrelated_green_evidence(self):
         result = self.inspect(Reader({"total_count":0,"workflow_runs":[]}, {}))

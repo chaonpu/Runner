@@ -17,7 +17,7 @@ from scheduler.production_watch import watch
 from scheduler.probes import existing_attempt, runner_for_repo
 
 
-def prepare(ports, cfg, task, day, mode):
+def prepare(ports, cfg, task, day, mode, state):
     spec, account = cfg["tasks"][task], cfg["accounts"]["chaonpu"]
     for workflow in ("run-a-share.yml", "run-us.yml"):
         need(existing_attempt("chaonpu/Stock", workflow, account, ports.env)["status"] == "no_active_run",
@@ -35,7 +35,19 @@ def prepare(ports, cfg, task, day, mode):
         workflow, route = READY_WORKFLOWS[task], "windows"
     else:
         raise RegistryGuard("hosted_allowance_unverified_no_readiness_dispatch")
-    body = {"ref":"main","return_run_details":True,"inputs":{"business_date":day,"publication_mode":mode}}
+    # The public registry contains only source identities from confirmed runs.
+    # A code/requirements/rules change forces the original FULL isolation
+    # check; otherwise the daily selector only executes in the effect job.
+    verified = sorted((row for row in state["tasks"]
+                       if row.get("task") == task and row.get("status") == "verified"
+                       and isinstance(row.get("id"), str)
+                       and row["id"] < task + ":" + day), key=lambda row: row["id"])
+    prior_sha = verified[-1].get("sourceSha", "") if verified else ""
+    body = {"ref":"main","return_run_details":True,"inputs":{
+        "business_date":day,"publication_mode":mode,
+        **({"readiness_profile":"auto", "previous_verified_sha":prior_sha}
+           if task == "stock_a" else {}),
+    }}
     response = ports.requester(ports.env["CHAONPU_ACTIONS_READ_TOKEN"], "POST",
         PRIVATE+"/actions/workflows/"+workflow+"/dispatches", body)
     rid = response.get("workflow_run_id")
@@ -52,7 +64,9 @@ def prepare(ports, cfg, task, day, mode):
             need(run.get("conclusion") == "success", "private_readiness_failed")
             proof = inspect(ports.private_reader(),task,day,datetime.now(timezone.utc),mode,
                             expected_run_id=rid,expected_workflow=workflow)
-            need((proof["marketDataReady"] is True or proof.get("alreadyCurrent") is True)
+            need((proof["marketDataReady"] is True
+                  or proof.get("sourceSamplesReady") is True
+                  or proof.get("alreadyCurrent") is True)
                  and proof["sourceSha"] == run["head_sha"], "fresh_private_readiness_not_verified")
             return {**proof, "readinessRunId": rid, "readinessRoute": route}
         time.sleep(30)
@@ -131,7 +145,7 @@ def execute(env, task, day, mode):
     today=datetime.now(timezone.utc).astimezone(ZoneInfo(schedule['marketTimezone'])).date().isoformat()
     need((mode=='formal' and today==day) or (mode=='theoretical_catchup' and today>day),
          'native_publication_window_not_open')
-    prepared = prepare(ports,config,task,day,mode)
+    prepared = prepare(ports,config,task,day,mode,state)
     if prepared.get("alreadyCurrent") is True:
         return skip_result(env, task, day, "authoritative_market_already_current",
                            readinessRunId=prepared["readinessRunId"], authoritativeStateChecked=True)
@@ -144,6 +158,16 @@ def execute(env, task, day, mode):
         watched = watch(ports,session,env,deadline_seconds=14400)
         need(watched["status"] == "awaiting_effect_verification", "business_run_failed_or_unverified")
         result = ports.finish(session)
+        # Timing is diagnostic only. An Actions API hiccup must not change the
+        # verified ledger result or cause a second business execution.
+        if task == "stock_a":
+            try:
+                from scheduler.production_timing import collect, publish_summary
+                measured = collect(ports, prepared["readinessRunId"], session["runId"])
+                publish_summary(measured, prepared["readinessRunId"], session["runId"], env)
+            except (OSError, TypeError, ValueError, KeyError, AttributeError):
+                print(json.dumps({"phase":"measured_action_step_timings",
+                                  "status":"unavailable_no_business_effect"}), flush=True)
         print(json.dumps(result,sort_keys=True),flush=True)
         return result
     finally:
