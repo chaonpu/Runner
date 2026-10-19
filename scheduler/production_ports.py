@@ -157,6 +157,8 @@ class ReadOnlyPorts:
             "exchangeSessionVerified": closed and evidence["exchangeSessionVerified"],
             "marketDataReady": closed and evidence["marketDataReady"],
             "selectionInputsVerified": evidence["selectionInputsVerified"],
+            "sourceSamplesReady": closed and evidence.get("sourceSamplesReady") is True,
+            "postRunValidationRequired": evidence.get("postRunValidationRequired") is True,
             "evidenceStatus": evidence["evidenceStatus"],
             "billing": {"chaonpu": billing}, "runners": {"chaonpu/Stock": runners}}
         self._audits[report["taskId"]] = deepcopy(report)
