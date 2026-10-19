@@ -89,7 +89,12 @@ def readiness(ports, config, state, task, day, clock):
          and audit.get("activeRunCheck") == "no_active_run"
          and all(audit.get(k) is True for k in (
              "calendarCoverageCurrent", "scheduledSessionClosed",
-             "exchangeSessionVerified", "marketDataReady"))
+             "exchangeSessionVerified"))
+         and (audit.get("marketDataReady") is True
+              or (audit.get("sourceSamplesReady") is True
+                  and audit.get("postRunValidationRequired") is True
+                  and audit.get("selectionInputsVerified") is False
+                  and audit.get("evidenceStatus") == "private_light_readiness_samples_and_dated_job_match"))
          and bool(SHA.fullmatch(str(audit.get("sourceSha", "")))),
          "session_readiness_unverified")
     now = stamp(clock)
