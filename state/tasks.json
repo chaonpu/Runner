@@ -54,10 +54,11 @@
       "publicationMode": "formal",
       "repo": "chaonpu/Stock",
       "route": "windows",
+      "runId": 39451447690,
       "sourceSha": "323bcbe42e1166fbb164b45adea3b0f9b554e1fc",
-      "status": "reserved",
+      "status": "dispatched",
       "task": "stock_a",
-      "updatedAt": "2026-10-20T15:45:35.342435+00:00",
+      "updatedAt": "2026-10-20T15:46:06.178496+00:00",
       "workflow": "run-a-share.yml"
     }
   ]
