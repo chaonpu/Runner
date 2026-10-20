@@ -4,6 +4,32 @@ from unittest.mock import patch
 from scheduler import android_production as a
 
 class Tests(unittest.TestCase):
+    def test_runner_readiness_reports_cause_without_dispatch_or_reservation(self):
+        cases = [
+            ({"read": "permission_denied"}, "state_unreadable", False),
+            ({"read": "secret_missing"}, "state_unreadable", False),
+            ({"status": "not_registered"}, "not_registered", False),
+            ({"status": "offline"}, "offline", False),
+            ({"status": "unknown"}, "status_unknown", False),
+            ({"labelsVerified": False}, "labels_mismatch", False),
+            ({"busy": True}, "busy", False),
+            ({"busy": None}, "busy_state_unknown", False),
+            ({}, "ready", True),
+        ]
+        for changes, expected, ready in cases:
+            with self.subTest(expected=expected, changes=changes):
+                probe = dict(read="readable", status="online", busy=False,
+                             labelsVerified=True)
+                probe.update(changes)
+                with patch.object(a, "runner_for_repo", return_value=probe):
+                    with patch.object(a, "record_public") as report:
+                        with patch.object(a, "dispatch", side_effect=AssertionError("dispatch")):
+                            with patch.object(a, "reserve", side_effect=AssertionError("reserve")):
+                                self.assertIs(a.runner_ready(a.TEST, "ziwuxilv-test-win",
+                                                            {}, {}), ready)
+                        self.assertEqual(report.call_args.kwargs["reason"], expected)
+                        self.assertEqual(report.call_args.kwargs["probe"], probe)
+
     def record(self, repo, workflow, rid, sha):
         return dict(id=rid, repository={"full_name": repo},
                     path=".github/workflows/" + workflow, head_branch="main",

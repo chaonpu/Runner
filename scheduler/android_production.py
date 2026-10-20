@@ -205,8 +205,20 @@ def runner_account(repo, account, env):
 
 def runner_ready(repo, name, account, env):
     r = runner_for_repo(repo, name, runner_account(repo, account, env), env)
-    return (r.get("status") == "online" and r.get("busy") is False
-            and r.get("labelsVerified") is True)
+    ready = (r.get("read") == "readable" and r.get("status") == "online" and r.get("busy") is False
+             and r.get("labelsVerified") is True)
+    reason = ("state_unreadable" if r.get("read") != "readable" else
+              "not_registered" if r.get("status") == "not_registered" else
+              "offline" if r.get("status") == "offline" else
+              "status_unknown" if r.get("status") != "online" else
+              "labels_mismatch" if r.get("labelsVerified") is not True else
+              "busy" if r.get("busy") is True else
+              "busy_state_unknown" if r.get("busy") is not False else "ready")
+    record_public(None, "runner_readiness", repository=repo, runnerName=name,
+                  ready=ready, reason=reason, probe={
+                      "read": r.get("read"), "status": r.get("status"),
+                      "busy": r.get("busy"), "labelsVerified": r.get("labelsVerified")})
+    return ready
 
 
 def dispatch(token, repo, workflow, inputs):
