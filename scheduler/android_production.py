@@ -246,6 +246,70 @@ def validate_run(item, repo, workflow, rid, source=None):
         require(item.get("head_sha") == source, "source_moved_during_dispatch")
 
 
+def verify_completed_signer_retry(token, workflow, rid, expected_runner):
+    """Reconcile one finished rerun of the SAME Windows signer, without dispatch.
+
+    This is only called by explicit resume. Attempt one must have stopped at
+    network preflight before private handoff or signing material was accessed.
+    Test reruns, cloud reruns, third attempts and signing failures stay blocked.
+    """
+    latest = api(token, SIGNER, "/actions/runs/" + str(rid))
+    if latest.get("run_attempt") == 1:
+        validate_run(latest, SIGNER, workflow, rid)
+        return False
+    require(workflow == SIGN_WORKFLOW and type(latest.get("run_attempt")) is int
+            and latest["run_attempt"] == 2
+            and latest.get("status") == "completed"
+            and latest.get("conclusion") == "success",
+            "signer_retry_not_completed_second_attempt")
+    # Preserve every origin check; only the separately proven attempt may differ.
+    validate_run(dict(latest, run_attempt=1), SIGNER, workflow, rid)
+    require(isinstance(latest.get("head_sha"), str)
+            and SHA.fullmatch(latest["head_sha"]), "signer_retry_policy_sha_invalid")
+    prior = api(token, SIGNER, f"/actions/runs/{rid}/attempts/1")
+    validate_run(prior, SIGNER, workflow, rid, latest["head_sha"])
+    require(prior.get("status") == "completed" and prior.get("conclusion") == "failure",
+            "signer_retry_original_not_failure")
+    guarded = (
+        "Download exact successful private Test run handoff",
+        "Verify SHA, source archive, tests, lint and release policy",
+        "Restore signing material only after private verification",
+        "Sign already-tested unsigned APK without executing Test code",
+        "Verify certificate, package, version and signed APK digest",
+        "Prepare private release candidate metadata (does not publish)",
+        "Upload verified signed APK to private signing repository only",
+    )
+    for attempt, conclusion in ((1, "failure"), (2, "success")):
+        response = api(token, SIGNER,
+                       f"/actions/runs/{rid}/attempts/{attempt}/jobs?per_page=100")
+        jobs = response.get("jobs")
+        require(response.get("total_count") == 1 and isinstance(jobs, list)
+                and len(jobs) == 1 and isinstance(jobs[0], dict),
+                "signer_retry_jobs_incomplete")
+        job = jobs[0]
+        require(job.get("run_id") == rid and job.get("run_attempt") == attempt
+                and job.get("runner_name") == expected_runner
+                and job.get("status") == "completed"
+                and job.get("conclusion") == conclusion
+                and isinstance(job.get("steps"), list),
+                "signer_retry_execution_mismatch")
+        steps = job["steps"]
+        names = [s.get("name") for s in steps if isinstance(s, dict)]
+        preflight = "NETWORK_TRANSIENT_PREFLIGHT - verify and export GitHub HTTPS Git route"
+        require(len(names) == len(steps)
+                and all(names.count(name) == 1 for name in guarded + (preflight,)),
+                "signer_retry_steps_ambiguous")
+        results = {s["name"]: s.get("conclusion") for s in steps}
+        require(results.get(preflight) == ("failure" if attempt == 1 else "success")
+                and all(results.get(name) == ("skipped" if attempt == 1 else "success")
+                        for name in guarded),
+                "signer_retry_preflight_or_signing_proof_missing")
+    # Do not accept evidence if another rerun started during reconciliation.
+    confirmed = api(token, SIGNER, "/actions/runs/" + str(rid))
+    require(confirmed == latest, "signer_retry_changed_during_verification")
+    return True
+
+
 def wait_run(token, repo, workflow, rid, source=None):
     deadline = time.monotonic() + MAX_WAIT_SECONDS
     while time.monotonic() < deadline:
@@ -683,8 +747,27 @@ def run(env, *, execute=False, resume=False, requested_sha="", live_smoke=False)
         require(type(sign_run) is int and sign_run > 0,
                 "unknown_signing_dispatch_no_retry")
         signing_route, signing_workflow = sign_route_for(entry)
-        wait_recorded(pub, source, "signer", sign, SIGNER,
-                      signing_workflow, sign_run)
+        recovered_retry = False
+        if resume and signing_route == "windows":
+            # A finished signer rerun still relies on the original exact Test.
+            wait_recorded(pub, source, "test", test, TEST,
+                          source_workflow, entry["testRunId"], source)
+            if route == "hosted":
+                verify_hosted_execution(test, TEST, entry["testRunId"])
+            else:
+                verify_execution_runner(test, TEST, entry["testRunId"], task["runnerName"])
+            verify_artifact(test, TEST, entry["testRunId"], source_artifact)
+            if live_smoke:
+                verify_live_execution(test, entry["testRunId"])
+            recovered_retry = verify_completed_signer_retry(
+                sign, signing_workflow, sign_run, task["signingRunnerName"])
+        if not recovered_retry:
+            wait_recorded(pub, source, "signer", sign, SIGNER,
+                          signing_workflow, sign_run)
+        else:
+            record_public(source, "signer_retry_verified", signingRunId=sign_run,
+                          signingRunAttempt=2, testRunId=entry["testRunId"],
+                          dispatches=0, publication="not_authorized")
         if signing_route == "cloud":
             verify_hosted_execution(sign, SIGNER, sign_run)
         else:

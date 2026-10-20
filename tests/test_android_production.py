@@ -321,6 +321,138 @@ class Tests(unittest.TestCase):
                     self.assertEqual(a.choose_signer_route(task, account, {"CHAONPU_BILLING_READ_TOKEN": "present"}),
                                      ("cloud", a.CLOUD_SIGN_WORKFLOW))
 
+
+class SignerRetryResumeTests(unittest.TestCase):
+    def evidence(self):
+        rid = 43
+        base = dict(id=rid, repository={"full_name": a.SIGNER},
+                    path=".github/workflows/" + a.SIGN_WORKFLOW,
+                    head_branch="main", head_sha="c" * 40, event="workflow_dispatch",
+                    status="completed")
+        latest = dict(base, run_attempt=2, conclusion="success")
+        prior = dict(base, run_attempt=1, conclusion="failure")
+        names = (
+            "Download exact successful private Test run handoff",
+            "Verify SHA, source archive, tests, lint and release policy",
+            "Restore signing material only after private verification",
+            "Sign already-tested unsigned APK without executing Test code",
+            "Verify certificate, package, version and signed APK digest",
+            "Prepare private release candidate metadata (does not publish)",
+            "Upload verified signed APK to private signing repository only",
+        )
+        preflight = "NETWORK_TRANSIENT_PREFLIGHT - verify and export GitHub HTTPS Git route"
+        def jobs(attempt):
+            steps = [dict(name=preflight, conclusion="failure" if attempt == 1 else "success")]
+            steps += [dict(name=n, conclusion="skipped" if attempt == 1 else "success")
+                      for n in names]
+            # Checkout retries legitimately repeat unrelated step names.
+            steps += [dict(name="Refresh verified HTTPS route", conclusion="skipped")] * 2
+            return dict(total_count=1, jobs=[dict(
+                run_id=rid, run_attempt=attempt, runner_name="ziwuxilv-sign-win",
+                status="completed", conclusion="failure" if attempt == 1 else "success",
+                steps=steps)])
+        return latest, prior, jobs(1), jobs(2)
+
+    def verify(self, evidence, workflow=None):
+        latest, prior, first, second = evidence
+        responses = [latest, prior, first, second, latest]
+        with patch.object(a, "api", side_effect=responses) as request:
+            with patch.object(a, "dispatch", side_effect=AssertionError("redispatch")):
+                result = a.verify_completed_signer_retry(
+                    "sign", workflow or a.SIGN_WORKFLOW, 43, "ziwuxilv-sign-win")
+            self.assertTrue(all(not call.kwargs for call in request.call_args_list))
+            return result
+
+    def test_accepts_only_proven_preflight_failure_then_success_same_run(self):
+        self.assertTrue(self.verify(self.evidence()))
+        # The general origin validator remains strict for every other path.
+        with self.assertRaisesRegex(a.Hold, "run_origin_mismatch"):
+            a.validate_run(self.evidence()[0], a.SIGNER, a.SIGN_WORKFLOW, 43)
+
+    def test_rejects_key_access_missing_steps_wrong_runner_and_run(self):
+        import copy
+        for target, field, value in (
+            (0, "run_attempt", 3),
+            (0, "conclusion", "failure"),
+            (0, "event", "push"),
+            (0, "head_branch", "other"),
+            (1, "head_sha", "d" * 40),
+            (1, "conclusion", "success"),
+        ):
+            with self.subTest(target=target, field=field):
+                rows = list(copy.deepcopy(self.evidence()))
+                rows[target][field] = value
+                with self.assertRaises(a.Hold):
+                    self.verify(rows)
+        for attempt in (2, 3):
+            for field, value in (("runner_name", "other"), ("run_id", 99),
+                                 ("run_attempt", 3), ("status", "in_progress")):
+                with self.subTest(attempt=attempt, field=field):
+                    rows = list(copy.deepcopy(self.evidence()))
+                    rows[attempt]["jobs"][0][field] = value
+                    with self.assertRaises(a.Hold):
+                        self.verify(rows)
+            rows = list(copy.deepcopy(self.evidence()))
+            rows[attempt]["jobs"][0]["steps"][3]["conclusion"] = "success" if attempt == 2 else "skipped"
+            with self.assertRaises(a.Hold):
+                self.verify(rows)
+        rows = list(copy.deepcopy(self.evidence()))
+        rows[2]["jobs"][0]["steps"].pop(3)
+        with self.assertRaises(a.Hold):
+            self.verify(rows)
+        rows = list(copy.deepcopy(self.evidence()))
+        rows[3]["jobs"][0]["steps"].append(rows[3]["jobs"][0]["steps"][1])
+        with self.assertRaises(a.Hold):
+            self.verify(rows)
+
+    def test_rejects_cloud_and_evidence_changed_during_reads(self):
+        with self.assertRaises(a.Hold):
+            self.verify(self.evidence(), a.CLOUD_SIGN_WORKFLOW)
+        latest, prior, first, second = self.evidence()
+        changed = dict(latest, run_attempt=3)
+        with patch.object(a, "api", side_effect=[latest, prior, first, second, changed]):
+            with self.assertRaisesRegex(a.Hold, "changed_during_verification"):
+                a.verify_completed_signer_retry("s", a.SIGN_WORKFLOW, 43, "ziwuxilv-sign-win")
+
+    def test_first_attempt_uses_existing_wait_path(self):
+        latest = dict(self.evidence()[0], run_attempt=1)
+        with patch.object(a, "api", return_value=latest) as request:
+            self.assertFalse(a.verify_completed_signer_retry(
+                "s", a.SIGN_WORKFLOW, 43, "ziwuxilv-sign-win"))
+            request.assert_called_once()
+
+    def test_explicit_resume_rechecks_original_test_and_never_dispatches(self):
+        sha = "a" * 40
+        task = dict(repo=a.TEST, signingRepo=a.SIGNER,
+                    windowsWorkflow=a.TEST_WORKFLOW, signingWindowsWorkflow=a.SIGN_WORKFLOW,
+                    runnerName="ziwuxilv-test-win", signingRunnerName="ziwuxilv-sign-win")
+        cfg = dict(accounts={"anwpustudent-lab": {}, "chaonpu": {}},
+                   tasks={"android": task})
+        row = dict(sourceSha=sha, phase="signer_started", route="windows",
+                   signingRoute="windows", testRunId=42, signingRunId=43, liveSmoke=True)
+        def document(token, path):
+            return (cfg if path == a.CONFIG_PATH else
+                    dict(version=1, builds={sha: row})), "blob"
+        with patch.object(a, "json_file", side_effect=document), \
+             patch.object(a, "dispatch", side_effect=AssertionError("redispatch")), \
+             patch.object(a, "wait_recorded") as wait, \
+             patch.object(a, "verify_completed_signer_retry", return_value=True) as retry, \
+             patch.object(a, "verify_execution_runner") as runner, \
+             patch.object(a, "verify_artifact") as artifact, \
+             patch.object(a, "verify_live_execution") as live, \
+             patch.object(a, "put_state") as saved, \
+             patch.object(a, "record_public"):
+            a.run(dict(GH_TOKEN="p", TEST_ACTIONS_READ_TOKEN="t",
+                       CHAONPU_ACTIONS_READ_TOKEN="s"),
+                  execute=True, resume=True, requested_sha=sha)
+            wait.assert_called_once_with("p", sha, "test", "t", a.TEST,
+                                         a.TEST_WORKFLOW, 42, sha)
+            live.assert_called_once_with("t", 42)
+            retry.assert_called_once_with("s", a.SIGN_WORKFLOW, 43, "ziwuxilv-sign-win")
+            self.assertEqual(runner.call_count, 2)
+            self.assertEqual(artifact.call_count, 2)
+            saved.assert_called_once_with("p", sha, "signed_verified")
+
 if __name__ == "__main__":
     unittest.main()
 
