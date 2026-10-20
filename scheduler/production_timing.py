@@ -38,7 +38,8 @@ CATEGORIES = {
         "Check native selection, authoritative inputs and live feeds",
     ),
     "ledger_validation_and_publish": ("Publish verified snapshot and ledger to private database",),
-    "mail_delivery": ("Send A-share mail only after verified ledger publication",),
+    "mail_delivery": ("Send A-share mail only after verified ledger publication",
+                      "Send US mail only after verified ledger publication"),
     "receipt_confirmation": ("Verify and attest published ledger receipt",),
 }
 

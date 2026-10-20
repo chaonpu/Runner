@@ -15,9 +15,11 @@ class TimingTests(unittest.TestCase):
         result = summarize({"jobs": [{"steps": [
             step("Run US strategy with retry", duration=142),
             step("Prepare verified job-scoped GitHub route before Windows checkout", duration=236),
+            step("Send US mail only after verified ledger publication", duration=9),
         ]}]})
         self.assertEqual(result["data_and_selection_combined"], 142)
         self.assertEqual(result["git_route_verification"], 236)
+        self.assertEqual(result["mail_delivery"], 9)
 
     def test_known_stages_measured_without_inventing_internal_times(self):
         jobs = {"jobs": [{"steps": [
