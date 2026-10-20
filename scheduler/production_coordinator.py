@@ -45,8 +45,7 @@ def prepare(ports, cfg, task, day, mode, state):
     prior_sha = verified[-1].get("sourceSha", "") if verified else ""
     body = {"ref":"main","return_run_details":True,"inputs":{
         "business_date":day,"publication_mode":mode,
-        **({"readiness_profile":"auto", "previous_verified_sha":prior_sha}
-           if task == "stock_a" else {}),
+        "readiness_profile":"auto", "previous_verified_sha":prior_sha,
     }}
     response = ports.requester(ports.env["CHAONPU_ACTIONS_READ_TOKEN"], "POST",
         PRIVATE+"/actions/workflows/"+workflow+"/dispatches", body)
@@ -160,11 +159,11 @@ def execute(env, task, day, mode):
         result = ports.finish(session)
         # Timing is diagnostic only. An Actions API hiccup must not change the
         # verified ledger result or cause a second business execution.
-        if task == "stock_a":
+        if task in ("stock_a", "stock_us"):
             try:
                 from scheduler.production_timing import collect, publish_summary
                 measured = collect(ports, prepared["readinessRunId"], session["runId"])
-                publish_summary(measured, prepared["readinessRunId"], session["runId"], env)
+                publish_summary(measured, prepared["readinessRunId"], session["runId"], env, task=task)
             except (OSError, TypeError, ValueError, KeyError, AttributeError):
                 print(json.dumps({"phase":"measured_action_step_timings",
                                   "status":"unavailable_no_business_effect"}), flush=True)
@@ -208,3 +207,4 @@ def main():
 
 if __name__ == "__main__":
     raise SystemExit(main())
+

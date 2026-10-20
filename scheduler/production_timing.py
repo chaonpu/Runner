@@ -28,7 +28,11 @@ CATEGORIES = {
         "Install dependencies", "Prepare isolated Windows Python strategy runtime",
         "Restore isolated cloud pip downloads",
     ),
-    "data_and_selection_combined": ("Run A-share strategy with retry",),
+    "git_route_verification": (
+        "Prepare verified job-scoped GitHub route before Windows checkout",
+        "Verify database route independently and pin its main commit",
+    ),
+    "data_and_selection_combined": ("Run A-share strategy with retry", "Run US strategy with retry"),
     "light_source_probes": (
         "Check authoritative inputs, complete native selection and live sources",
         "Check native selection, authoritative inputs and live feeds",
@@ -72,14 +76,14 @@ def summarize(jobs):
             "combinedStrategyStepCannotBeFurtherSeparated": True}
 
 
-def publish_summary(summary, readiness_run_id, effect_run_id, env=os.environ):
+def publish_summary(summary, readiness_run_id, effect_run_id, env=os.environ, *, task="stock_a"):
     report = {"phase": "measured_action_step_timings", "readinessRunId": readiness_run_id,
               "effectRunId": effect_run_id, **summary}
     print(json.dumps(report, sort_keys=True), flush=True)
     location = env.get("GITHUB_STEP_SUMMARY")
     if location:
         parts = [
-            "\n### A股运行分段耗时（GitHub Actions 实测）\n",
+            "\n### " + ("美股" if task == "stock_us" else "A股") + "运行分段耗时（GitHub Actions 实测）\n",
             "| 分段 | 秒 |\n|---|---:|",
             *[f"| {key} | {summary[key]:.2f} |" for key in CATEGORIES],
             "\n*行情读取、行业查询与纯计算仍在同一正式策略步骤中，无法从 Actions 步骤时间独立精确拆分，未虚构分段值。*\n",
@@ -102,3 +106,4 @@ def collect(ports, readiness_run_id, effect_run_id):
         "timingScope": "github_actions_successful_step_wall_time",
         "combinedStrategyStepCannotBeFurtherSeparated": True,
     }
+

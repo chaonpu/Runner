@@ -15,6 +15,30 @@ def utc(month, day, hour, minute=0):
 
 
 class AutomaticStrategyTests(unittest.TestCase):
+    def test_both_market_readiness_dispatches_request_auto_with_own_verified_source(self):
+        for task, workflow in (("stock_a", "production-readiness-cloud-a.yml"),
+                               ("stock_us", "production-readiness-cloud-us.yml")):
+            with self.subTest(task=task):
+                ports = Mock()
+                ports.env = {"CHAONPU_ACTIONS_READ_TOKEN": "synthetic"}
+                ports.requester.return_value = {"workflow_run_id": 90000000001}
+                ports.run.return_value = {"event": "workflow_dispatch", "head_branch": "main",
+                    "run_attempt": 1, "path": ".github/workflows/" + workflow,
+                    "status": "completed", "conclusion": "success", "head_sha": "b" * 40}
+                cfg = {"tasks": {task: {}}, "accounts": {"chaonpu": {}}}
+                state = {"tasks": [
+                    {"task": task, "status": "verified", "id": task + ":2026-10-16", "sourceSha": "a" * 40},
+                    {"task": task, "status": "hold", "id": task + ":2026-10-18", "sourceSha": "c" * 40},
+                ]}
+                with patch.object(c, "existing_attempt", return_value={"status": "no_active_run"}), \
+                     patch.object(c, "hosted_capacity", return_value="available"), \
+                     patch.object(c, "inspect", return_value={"marketDataReady": True, "sourceSha": "b" * 40}), \
+                     patch("sys.stdout", new_callable=io.StringIO):
+                    c.prepare(ports, cfg, task, "2026-10-19", "formal", state)
+                inputs = ports.requester.call_args.args[3]["inputs"]
+                self.assertEqual(inputs["readiness_profile"], "auto")
+                self.assertEqual(inputs["previous_verified_sha"], "a" * 40)
+
     def test_a_close_boundary(self):
         before=c.resolve_request('stock_a',now=utc(10,19,6,59))
         after=c.resolve_request('stock_a',now=utc(10,19,7))
@@ -94,3 +118,4 @@ class AutomaticStrategyTests(unittest.TestCase):
 
     def test_execution_uses_same_resolved_plan(self):
         self.run_cli(True)
+

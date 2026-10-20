@@ -11,6 +11,14 @@ def step(name, begin=0, duration=8, *, conclusion="success"):
 
 
 class TimingTests(unittest.TestCase):
+    def test_us_selection_and_git_route_delay_are_visible(self):
+        result = summarize({"jobs": [{"steps": [
+            step("Run US strategy with retry", duration=142),
+            step("Prepare verified job-scoped GitHub route before Windows checkout", duration=236),
+        ]}]})
+        self.assertEqual(result["data_and_selection_combined"], 142)
+        self.assertEqual(result["git_route_verification"], 236)
+
     def test_known_stages_measured_without_inventing_internal_times(self):
         jobs = {"jobs": [{"steps": [
             step("Set up job", duration=15),
@@ -57,3 +65,4 @@ class TimingTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
