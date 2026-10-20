@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "reason": "coordinator_run_origin_not_verified",
+  "resolution": "archived_pre_business_admission_failure_after_fix",
+  "originalTask": {
+    "coordinatorRunId": 39345038917,
+    "createdAt": "2026-10-20T00:09:00.593039+00:00",
+    "id": "stock_us:2026-10-19",
+    "publicationMode": "formal",
+    "repo": "chaonpu/Stock",
+    "route": "windows",
+    "runId": 39345935403,
+    "sourceSha": "3a6e4970a2c7a73c345d726cbfb2706cc3af9111",
+    "status": "hold",
+    "task": "stock_us",
+    "updatedAt": "2026-10-20T00:10:26.883874+00:00",
+    "workflow": "run-us.yml"
+  },
+  "evidence": {
+    "coordinatorRunUrl": "https://github.com/chaonpu/Runner/actions/runs/39345038917",
+    "stockRunUrl": "https://github.com/chaonpu/Stock/actions/runs/39345935403",
+    "failedStep": "Admit exact RUNNER task and Stock run binding before coordinated business",
+    "allSubsequentBusinessStepsSkipped": true,
+    "databaseUSAsOf": "2026-10-16",
+    "taskReceiptAbsent": true,
+    "fixCommit": "fceadad1e7e88dd779130d99b82911260ee58cce"
+  },
+  "businessExecuted": false,
+  "businessVerified": false,
+  "automaticRetryAuthorized": false
+}
