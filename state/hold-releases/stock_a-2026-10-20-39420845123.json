@@ -1,0 +1,43 @@
+{
+  "action": "release_confirmed_unpublished_hold_for_owner_requested_retry",
+  "automaticDispatchPerformed": false,
+  "businessVerified": false,
+  "evidence": {
+    "databaseCommitNotReached": true,
+    "databasePushNotReached": true,
+    "failurePhase": "database_fetch_before_ledger_advancement",
+    "jobId": 118621105669,
+    "jobLogSha256": "9a0775fb49ab23680f58695ab668e8ea2b46df37b96ec678baf7cb3a9b7479d8",
+    "jobUrl": "https://github.com/chaonpu/Stock/actions/runs/39420845123/job/118621105669",
+    "ledgerAdvancementNotReached": true,
+    "mailStepSkipped": true,
+    "noActiveStrategyRunObserved": true,
+    "runAttempt": 1,
+    "runId": 39420845123,
+    "runUrl": "https://github.com/chaonpu/Stock/actions/runs/39420845123",
+    "sourceSha": "7064f1413fb59dd770c355593f180f57777010df",
+    "workflowBlobSha": "db671f2c9607710e81e24e75c14f238f9f6aa86d"
+  },
+  "nextExecution": {
+    "normalManualEntryRequired": true,
+    "originalRunRerunRequired": false,
+    "sourceSha": "16866475a9ac388a4945878ed1fa86f99eb7c324"
+  },
+  "originalTask": {
+    "coordinatorRunId": 39419843872,
+    "createdAt": "2026-10-20T12:14:37.911807+00:00",
+    "id": "stock_a:2026-10-20",
+    "publicationMode": "formal",
+    "repo": "chaonpu/Stock",
+    "route": "windows",
+    "runId": 39420845123,
+    "sourceSha": "7064f1413fb59dd770c355593f180f57777010df",
+    "status": "hold",
+    "task": "stock_a",
+    "updatedAt": "2026-10-20T12:38:23.406505+00:00",
+    "workflow": "run-a-share.yml"
+  },
+  "reviewedAt": "2026-10-20T12:57:39.219202+00:00",
+  "schema": 1,
+  "taskId": "stock_a:2026-10-20"
+}
