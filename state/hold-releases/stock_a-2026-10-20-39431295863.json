@@ -1,0 +1,45 @@
+{
+  "schema": 1,
+  "taskId": "stock_a:2026-10-20",
+  "action": "release_confirmed_unpublished_hold_after_api_transport_fix",
+  "reviewedAt": "2026-10-20T13:51:53.595Z",
+  "originalTask": {
+    "coordinatorRunId": 39429799718,
+    "createdAt": "2026-10-20T13:32:14.818694+00:00",
+    "id": "stock_a:2026-10-20",
+    "publicationMode": "formal",
+    "repo": "chaonpu/Stock",
+    "route": "windows",
+    "runId": 39431295863,
+    "sourceSha": "9f302e3112e5243ca173824e56f0d2dbde53426d",
+    "status": "hold",
+    "task": "stock_a",
+    "updatedAt": "2026-10-20T13:41:04.349925+00:00",
+    "workflow": "run-a-share.yml"
+  },
+  "evidence": {
+    "runId": 39431295863,
+    "jobId": 118656744685,
+    "runAttempt": 1,
+    "sourceSha": "9f302e3112e5243ca173824e56f0d2dbde53426d",
+    "workflowBlobSha": "2e3f7877ccbf8c391f1b9c42e4cca669fdb29345",
+    "refreshHelperBlobSha": "5a4b61f6d7c41578c06d8ac07fe96c8b16d33dc8",
+    "computationSucceeded": true,
+    "snapshotContractPassed": true,
+    "failurePhase": "remote_main_refresh_before_rebase_and_ledger_advancement",
+    "ledgerAdvancementNotReached": true,
+    "databaseCommitNotReached": true,
+    "databasePushNotReached": true,
+    "mailStepSkipped": true,
+    "noActiveStrategyRunObserved": true,
+    "runUrl": "https://github.com/chaonpu/Stock/actions/runs/39431295863",
+    "jobUrl": "https://github.com/chaonpu/Stock/actions/runs/39431295863/job/118656744685"
+  },
+  "nextExecution": {
+    "sourceSha": "b561bbb11777055d02af0f1f8bd81afed910ef74",
+    "normalManualEntryRequired": true,
+    "originalRunRerunRequired": false
+  },
+  "businessVerified": false,
+  "automaticDispatchPerformed": false
+}
