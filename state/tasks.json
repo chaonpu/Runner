@@ -42,9 +42,9 @@
       "route": "windows",
       "runId": 39362723973,
       "sourceSha": "fceadad1e7e88dd779130d99b82911260ee58cce",
-      "status": "dispatched",
+      "status": "running",
       "task": "stock_us",
-      "updatedAt": "2026-10-20T03:08:36.270489+00:00",
+      "updatedAt": "2026-10-20T03:09:09.485825+00:00",
       "workflow": "run-us.yml"
     }
   ]
