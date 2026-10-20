@@ -1,0 +1,50 @@
+{
+  "schema": 1,
+  "taskId": "stock_a:2026-10-20",
+  "action": "release_confirmed_unpublished_hold_after_snapshot_sha256_eol_fix",
+  "originalTask": {
+    "coordinatorRunId": 39442254881,
+    "createdAt": "2026-10-20T14:55:08.589212+00:00",
+    "id": "stock_a:2026-10-20",
+    "publicationMode": "formal",
+    "repo": "chaonpu/Stock",
+    "route": "windows",
+    "runId": 39443672139,
+    "sourceSha": "b561bbb11777055d02af0f1f8bd81afed910ef74",
+    "status": "hold",
+    "task": "stock_a",
+    "updatedAt": "2026-10-20T15:04:56.865864+00:00",
+    "workflow": "run-a-share.yml"
+  },
+  "evidence": {
+    "runId": 39443672139,
+    "jobId": 118699824303,
+    "runAttempt": 1,
+    "sourceSha": "b561bbb11777055d02af0f1f8bd81afed910ef74",
+    "coordinatorRunId": 39442254881,
+    "computationSucceeded": true,
+    "snapshotContractPassed": true,
+    "failurePhase": "database_ledger_sync_historical_snapshot_sha256_mismatch_before_git_add_commit_or_push",
+    "failedPath": "snapshots/A_SHARE_20260908_150506_000000_27c1c7ae43b8dd6c.json",
+    "ledgerAdvancementNotReached": true,
+    "databaseCommitNotReached": true,
+    "databasePushNotReached": true,
+    "mailStepSkipped": true,
+    "receiptAttestationSkipped": true,
+    "remoteDatabaseHeadReviewed": "e5b5950512d89f54a96e337c5d43f2e40e4fcaf4",
+    "remoteAshareAsOf": "2026-10-19",
+    "remoteAshare20261020ReceiptAbsent": true,
+    "noActiveStrategyRunObserved": true,
+    "runUrl": "https://github.com/chaonpu/Stock/actions/runs/39443672139",
+    "jobUrl": "https://github.com/chaonpu/Stock/actions/runs/39443672139/job/118699824303"
+  },
+  "nextExecution": {
+    "sourceSha": "666ade8241dc30f79afaf75d6b03e41aeca6b008",
+    "normalManualEntryRequired": true,
+    "originalRunRerunRequired": false,
+    "requiresFreshReadiness": true,
+    "serverSideVerifiedPublicationRequired": true
+  },
+  "businessVerified": false,
+  "automaticDispatchPerformed": false
+}
