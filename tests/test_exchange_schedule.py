@@ -95,10 +95,10 @@ class OfficialExchangeScheduleTests(unittest.TestCase):
         self.assertTrue(result["publishedScheduleMatched"])
         self.assertFalse(result["scheduledSessionClosed"])
 
-    def test_outside_2026_cannot_silently_use_stale_calendar(self):
-        for task in ("stock_a", "stock_us"):
+    def test_outside_verified_coverage_cannot_silently_use_stale_calendar(self):
+        for task, year in (("stock_a",2027),("stock_us",2029)):
             with self.subTest(task=task):
-                found = evaluate(task, "", now=utc(2027, 1, 5, 22))
+                found = evaluate(task, "", now=utc(year, 1, 5, 22))
                 self.assertIsNone(found["businessDate"])
                 self.assertEqual(found["calendarStatus"], "outside_published_year")
                 self.assertFalse(found["calendarCoverageCurrent"])

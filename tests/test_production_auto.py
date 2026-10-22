@@ -65,7 +65,7 @@ class AutomaticStrategyTests(unittest.TestCase):
 
     def test_calendar_exhaustion_cannot_dispatch(self):
         with self.assertRaisesRegex(RegistryGuard,'business_date_unavailable'):
-            c.resolve_request('stock_us',now=datetime(2027,1,5,22,tzinfo=timezone.utc))
+            c.resolve_request('stock_us',now=datetime(2029,1,5,22,tzinfo=timezone.utc))
 
     def test_internal_override_cannot_replay_historical_universe(self):
         with self.assertRaisesRegex(RegistryGuard,'historical_decision_replay_unsupported'):
@@ -94,7 +94,7 @@ class AutomaticStrategyTests(unittest.TestCase):
         ports.load.return_value=({'tasks':{'stock_us':{'publicationMode':'formal'}}},{'tasks':[]},'blob')
         argv=['coordinator','--task','stock_us']+(['--execute'] if execute else [])
         with patch.dict(c.os.environ,env,clear=True),patch('sys.argv',argv),\
-             patch.object(c,'resolve_request',return_value=plan) as resolve,\
+             patch.object(c,'pin_latest'),patch.object(c,'resolve_request',return_value=plan) as resolve,\
              patch.object(c,'execute') as run,patch.object(c,'ReadOnlyPorts',return_value=ports),\
              patch('scheduler.production_ports.public_report',return_value={'dispatchAuthorized':False}),\
              patch('sys.stdout',new_callable=io.StringIO) as output:

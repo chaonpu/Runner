@@ -147,7 +147,8 @@ class ReadOnlyPorts:
         capacity = hosted_capacity(billing, spec, now=self.clock())
         workflow = CLOUD_WORKFLOWS[task] if capacity == "available" else READY_WINDOWS[task]
         evidence = inspect(self.private_reader(), task, day, self.clock(),
-                           spec.get("publicationMode", "formal"), expected_workflow=workflow)
+                           spec.get("publicationMode", "formal"), expected_workflow=workflow,
+                           expected_calendar_revision=self.env.get("ZIWU_CALENDAR_REVISION") or None)
         source = evidence["sourceSha"]
         closed = calendar["calendarCoverageCurrent"] and calendar["scheduledSessionClosed"]
         report = {"taskId": task + ":" + day, "sourceSha": source,

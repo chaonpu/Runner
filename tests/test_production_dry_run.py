@@ -123,7 +123,7 @@ class ProductionDryRunTests(unittest.TestCase):
     def test_unsupported_calendar_year_holds_before_any_remote_preflight(self):
         preflight_fn = Mock()
         result = check(CONFIG, STATE, "stock_us", "",
-                       clock=datetime(2027, 1, 5, 23, tzinfo=timezone.utc),
+                       clock=datetime(2029, 1, 5, 23, tzinfo=timezone.utc),
                        preflight_fn=preflight_fn)
         self.assertEqual(result["status"], "hold_calendar_coverage_unavailable")
         self.assertFalse(result["dispatchAuthorized"])

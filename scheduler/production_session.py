@@ -169,6 +169,8 @@ def start(ports, task, business_date, env, *, clock=lambda: datetime.now(timezon
     }}
     if publication_mode != "formal":
         payload["inputs"]["publication_mode"] = publication_mode
+    if env.get("ZIWU_CALENDAR_REVISION"):
+        payload["inputs"]["calendar_revision"] = env["ZIWU_CALENDAR_REVISION"]
     # No retry on 204/missing Run ID, timeout, server error or later bind failure.
     response = call(ports.dispatch, "chaonpu/Stock", WORKFLOWS[task], payload)
     rid = response.get("workflow_run_id") if isinstance(response, dict) else None

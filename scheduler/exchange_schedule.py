@@ -1,4 +1,4 @@
-"""Pure, fail-closed published regular-equities calendar audit (2026 only).
+"""Validated regular-equities calendar snapshots; unknown coverage fails closed.
 
 Offline schedule transcribed from official SSE/SZSE and NYSE/Nasdaq notices,
 with exact source links in config/exchange_schedule_2026.json. This is NOT a
@@ -12,6 +12,8 @@ from datetime import date, datetime, time, timedelta, timezone
 import json
 from pathlib import Path
 from zoneinfo import ZoneInfo
+
+from scheduler.calendar_runtime import current, day_rule, CalendarUnavailable
 
 SCHEDULE = Path(__file__).resolve().parents[1] / "config" / "exchange_schedule_2026.json"
 EXPECTED = {
@@ -97,84 +99,69 @@ def evaluate(task: str, entered: str = "", *, now: datetime | None = None,
     instant = datetime.now(timezone.utc) if now is None else now
     if not isinstance(instant, datetime) or instant.tzinfo is None:
         raise CalendarGuard("timezone_aware_clock_required")
-    data = _validated(schedule) if schedule is not None else load_schedule()
-    record = data["markets"][task]
-    zone = ZoneInfo(record["timezone"])
+    zone = ZoneInfo(EXPECTED[task][0])
     local = instant.astimezone(zone)
-    # Fail closed outside the verified reference year. Do not quietly pick
-    # the last day of 2026 for an audit started in 2027.
-    if local.year != data["coverageYear"]:
-        return {
-            "businessDate": entered if entered else None,
-            "calendarStatus": "outside_published_year",
-            "publishedScheduleMatched": False,
-            "scheduledSessionClosed": False,
-            "calendarCoverageCurrent": False,
-            "marketDataReady": False,
-            "businessDateAuthorized": False,
+    calendar_id = "CN_EQ" if task == "stock_a" else "US_EQ"
+    # Explicit legacy data is retained solely for compatibility/regression;
+    # production uses the process-pinned public snapshot, never a mutable year.
+    if schedule is not None:
+        data = _validated(schedule)
+        record = data["markets"][task]
+        def rule(day):
+            if day.year != data["coverageYear"]:
+                return {"kind": "UNKNOWN"}
+            return {"kind": "NORMAL" if day.weekday() < 5 and day.isoformat() not in record["closedWeekdays"] else "CLOSED",
+                    "closeMinute": int(_hour(record["earlyCloses"].get(day.isoformat(), record["regularClose"])).hour)*60
+                                   + _hour(record["earlyCloses"].get(day.isoformat(), record["regularClose"])).minute}
+        revision = "legacy-2026-fixture"
+    else:
+        try:
+            snapshot = current()
+            revision = snapshot["revision"]
+            def rule(day): return day_rule(snapshot, calendar_id, day)
+        except (OSError, ValueError, KeyError, TypeError) as exc:
+            raise CalendarGuard("published_schedule_unavailable") from exc
+    base = {"businessDate": entered or None, "calendarStatus": "outside_published_year",
+            "publishedScheduleMatched": False, "scheduledSessionClosed": False,
+            "calendarCoverageCurrent": False, "marketDataReady": False,
+            "businessDateAuthorized": False, "calendarRevision": revision,
             "dateMode": "manual_override" if entered else "auto_schedule_unavailable",
-            "marketTimezone": record["timezone"],
-            "marketLocalClock": local.isoformat(timespec="seconds"),
-            "scheduledClose": None,
-        }
+            "marketTimezone": zone.key, "marketLocalClock": local.isoformat(timespec="seconds"),
+            "scheduledClose": None}
+    if rule(local.date())["kind"] == "UNKNOWN":
+        return base
     if entered:
-        requested = _day(entered)
-        if requested.year != data["coverageYear"]:
-            return {
-                "businessDate": entered, "calendarStatus": "outside_published_year",
-                "publishedScheduleMatched": False, "scheduledSessionClosed": False,
-                "calendarCoverageCurrent": False, "marketDataReady": False,
-                "businessDateAuthorized": False, "dateMode": "manual_override",
-                "marketTimezone": record["timezone"],
-                "marketLocalClock": local.isoformat(timespec="seconds"),
-                "scheduledClose": None,
-            }
-        selected = requested
+        selected = _day(entered)
+        if rule(selected)["kind"] == "UNKNOWN":
+            return base
         mode = "manual_override"
     else:
         selected = None
         mode = "auto_official_schedule_candidate"
         cursor = local.date()
-        while cursor.year == data["coverageYear"]:
-            name = cursor.isoformat()
-            eligible = (cursor.weekday() < 5
-                        and name not in record["closedWeekdays"])
-            if eligible:
-                close = _hour(record["earlyCloses"].get(
-                    name, record["regularClose"]))
+        for _ in range(370):
+            value = rule(cursor)
+            if value["kind"] == "UNKNOWN":
+                break
+            if value["kind"] == "NORMAL":
+                minute = value["closeMinute"]
+                close = time(minute // 60, minute % 60)
                 if local >= datetime.combine(cursor, close, tzinfo=zone):
                     selected = cursor
                     break
             cursor -= timedelta(days=1)
         if selected is None:
-            return {
-                "businessDate": None, "calendarStatus": "no_complete_session_in_coverage",
-                "publishedScheduleMatched": False, "scheduledSessionClosed": False,
-                "calendarCoverageCurrent": True, "marketDataReady": False,
-                "businessDateAuthorized": False, "dateMode": mode,
-                "marketTimezone": record["timezone"],
-                "marketLocalClock": local.isoformat(timespec="seconds"),
-                "scheduledClose": None,
-            }
-    name = selected.isoformat()
-    eligible = selected.weekday() < 5 and name not in record["closedWeekdays"]
-    close = _hour(record["earlyCloses"].get(name, record["regularClose"]))
-    moment = datetime.combine(selected, close, tzinfo=zone)
+            return {**base, "calendarCoverageCurrent": True,
+                    "calendarStatus": "no_complete_session_in_coverage", "dateMode": mode}
+    value = rule(selected)
+    eligible = value["kind"] == "NORMAL"
+    minute = value["closeMinute"]
+    moment = datetime.combine(selected, time(minute // 60, minute % 60), tzinfo=zone)
     complete = eligible and local >= moment
-    return {
-        "businessDate": name,
-        "calendarStatus": (
-            "published_session_past_scheduled_close" if complete
-            else "published_session_not_yet_closed" if eligible
-            else "exchange_scheduled_closed"
-        ),
-        "publishedScheduleMatched": eligible,
-        "scheduledSessionClosed": complete,
-        "calendarCoverageCurrent": True,
-        "marketDataReady": False,  # Requires separate PRIVATE source readiness.
-        "businessDateAuthorized": False,
-        "dateMode": mode,
-        "marketTimezone": record["timezone"],
-        "marketLocalClock": local.isoformat(timespec="seconds"),
-        "scheduledClose": moment.isoformat(timespec="seconds") if eligible else None,
-    }
+    return {**base, "businessDate": selected.isoformat(),
+            "calendarStatus": ("published_session_past_scheduled_close" if complete
+                               else "published_session_not_yet_closed" if eligible
+                               else "exchange_scheduled_closed"),
+            "publishedScheduleMatched": eligible, "scheduledSessionClosed": complete,
+            "calendarCoverageCurrent": True, "dateMode": mode,
+            "scheduledClose": moment.isoformat(timespec="seconds") if eligible else None}

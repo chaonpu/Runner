@@ -7,6 +7,8 @@ import time
 from zoneinfo import ZoneInfo
 
 from scheduler.exchange_schedule import evaluate
+from scheduler.calendar_runtime import pin_latest
+from pathlib import Path
 from scheduler.production_ports import ProductionPorts, ReadOnlyPorts, PRIVATE, need
 from scheduler.production_evidence import WORKFLOWS as READY_WORKFLOWS, CLOUD_WORKFLOWS, inspect
 from scheduler.policies import hosted_capacity
@@ -47,6 +49,8 @@ def prepare(ports, cfg, task, day, mode, state):
         "business_date":day,"publication_mode":mode,
         "readiness_profile":"auto", "previous_verified_sha":prior_sha,
     }}
+    if ports.env.get("ZIWU_CALENDAR_REVISION"):
+        body["inputs"]["calendar_revision"] = ports.env["ZIWU_CALENDAR_REVISION"]
     response = ports.requester(ports.env["CHAONPU_ACTIONS_READ_TOKEN"], "POST",
         PRIVATE+"/actions/workflows/"+workflow+"/dispatches", body)
     rid = response.get("workflow_run_id")
@@ -62,7 +66,8 @@ def prepare(ports, cfg, task, day, mode, state):
         if run.get("status") == "completed":
             need(run.get("conclusion") == "success", "private_readiness_failed")
             proof = inspect(ports.private_reader(),task,day,datetime.now(timezone.utc),mode,
-                            expected_run_id=rid,expected_workflow=workflow)
+                            expected_run_id=rid,expected_workflow=workflow,
+                            expected_calendar_revision=ports.env.get("ZIWU_CALENDAR_REVISION") or None)
             need((proof["marketDataReady"] is True
                   or proof.get("sourceSamplesReady") is True
                   or proof.get("alreadyCurrent") is True)
@@ -98,7 +103,8 @@ def resolve_request(task, entered="", mode="auto", *, now=None):
     selected = automatic if mode == "auto" else mode
     need(selected == automatic, "native_publication_window_not_open")
     return {"businessDate": day, "publicationMode": selected,
-            "dateMode": schedule["dateMode"], "marketTimezone": schedule["marketTimezone"]}
+            "dateMode": schedule["dateMode"], "marketTimezone": schedule["marketTimezone"],
+            "calendarRevision": schedule.get("calendarRevision")}
 
 
 def report_plan(env, task, plan, execute):
@@ -182,6 +188,7 @@ def main():
     a=p.parse_args()
     manual_task_context(dict(os.environ), a.task)
     try:
+        pin_latest(Path(os.environ.get("RUNNER_TEMP", ".")) / "ziwuxilv-calendar" / "snapshot.json")
         plan=resolve_request(a.task,a.business_date,a.publication_mode)
         report_plan(os.environ,a.task,plan,a.execute)
         day,mode=plan["businessDate"],plan["publicationMode"]

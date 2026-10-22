@@ -34,7 +34,7 @@ def timestamp(value):
     return result.astimezone(timezone.utc)
 
 
-def inspect(reader, task, day, now, publication_mode="formal", *, expected_run_id=None, expected_workflow=None):
+def inspect(reader, task, day, now, publication_mode="formal", *, expected_run_id=None, expected_workflow=None, expected_calendar_revision=None):
     """Require newest original readiness Run, exact dated job and final step.
 
     The private producer must independently check live session completion,
@@ -105,6 +105,12 @@ def inspect(reader, task, day, now, publication_mode="formal", *, expected_run_i
         light = [s for s in job["steps"] if isinstance(s, dict) and s.get("name") == LIGHT_STEP]
         existing = [s for s in job["steps"] if isinstance(s, dict) and s.get("name") == EXISTING_STEP]
         good = lambda step: step.get("status") == "completed" and step.get("conclusion") == "success"
+        if expected_calendar_revision:
+            if not re.fullmatch(r"[0-9a-f]{64}", expected_calendar_revision):
+                return hold("hold_calendar_revision_invalid")
+            calendar_steps = [s for s in job["steps"] if s.get("name") == "Attest calendar snapshot " + expected_calendar_revision]
+            if len(calendar_steps) != 1 or not good(calendar_steps[0]):
+                return hold("hold_calendar_snapshot_not_attested")
         if len(live) != 1 or len(light) > 1 or len(existing) > 1:
             return hold("hold_evidence_attestation_step_unverified")
         already_current = bool(existing and good(existing[0]))
