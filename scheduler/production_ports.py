@@ -266,7 +266,7 @@ class ProductionPorts(ReadOnlyPorts):
              "effect_original_session_mismatch")
         run = self.run(row["repo"], row["runId"])
         jobs = self.private_reader().get(PRIVATE+f"/actions/runs/{row['runId']}/jobs?filter=latest&per_page=100")
-        proof = verify_effect(run, jobs, row)
+        proof = verify_effect(run, jobs, row, expected_calendar_revision=self.env.get("ZIWU_CALENDAR_REVISION") or None)
         after = deepcopy(state)
         entry = next(x for x in after["tasks"] if x["id"] == row["id"])
         entry.update(status="verified", updatedAt=self.clock().isoformat())

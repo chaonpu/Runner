@@ -6,7 +6,7 @@ from scheduler.production_session import WORKFLOWS
 STEP = "Verify and attest published ledger receipt"
 
 
-def verify(run, jobs, row):
+def verify(run, jobs, row, *, expected_calendar_revision=None):
     mode = row.get("publicationMode", "formal")
     if not (run.get("id") == row["runId"] and run.get("repository", {}).get("full_name") == row["repo"]
             and run.get("event") == "workflow_dispatch" and run.get("head_branch") == "main"
@@ -23,6 +23,12 @@ def verify(run, jobs, row):
     if len(found) != 1:
         raise RegistryGuard("private_effect_job_not_unique")
     job = found[0]
+    if expected_calendar_revision:
+        calendar_steps = [s for s in job.get("steps", [])
+                          if s.get("name") == "Attest calendar snapshot " + expected_calendar_revision]
+        if (len(calendar_steps) != 1 or calendar_steps[0].get("status") != "completed"
+                or calendar_steps[0].get("conclusion") != "success"):
+            raise RegistryGuard("private_effect_calendar_revision_mismatch")
     steps = [s for s in job.get("steps", []) if s.get("name") == STEP]
     if not (job.get("run_id") == row["runId"] and job.get("status") == "completed"
             and job.get("conclusion") == "success" and len(steps) == 1

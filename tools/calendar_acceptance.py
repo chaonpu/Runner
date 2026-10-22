@@ -28,6 +28,8 @@ def main():
     token=os.environ.get(secret,'')
     if not token:raise SystemExit('Existing validation token is unavailable')
     config=json.loads(Path('config/calendar-acceptance.json').read_text())
+    if args.target=='stock':
+        inputs={**inputs,'calendar_revision':config['calendarRevision']}
     expected=config[args.target+'SourceSha']
     if not re.fullmatch('[0-9a-f]{40}',expected):raise ValueError('invalid_source_sha')
     base='https://api.github.com/repos/'+repo
