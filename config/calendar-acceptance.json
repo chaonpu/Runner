@@ -1,7 +1,8 @@
 {
   "schemaVersion": 1,
   "appSourceSha": "4267aed3b342809292ba9613a139e12b72a80d4e",
-  "stockSourceSha": "e160483c6d11c7ed45b3d4564461dfa627a7e07a",
+  "stockSourceSha": "e5c753d54a674fa206d46e0075cef64166d25fc2",
   "purpose": "Read-only unified calendar and Android build validation",
-  "calendarRevision": "cbd2e7e6b24ae0a534a7412da55d47ab17aaf48e6fb263c3e1c2b9a0e1f83a9e"
+  "calendarRevision": "cbd2e7e6b24ae0a534a7412da55d47ab17aaf48e6fb263c3e1c2b9a0e1f83a9e",
+  "appValidationRunId": 39836879391
 }

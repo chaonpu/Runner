@@ -34,9 +34,14 @@ def main():
     if not re.fullmatch('[0-9a-f]{40}',expected):raise ValueError('invalid_source_sha')
     base='https://api.github.com/repos/'+repo
     # One dispatch only. An ambiguous response is not retried.
-    result=request(token,'POST',base+'/actions/workflows/'+workflow+'/dispatches',
-                   {'ref':'main','return_run_details':True,'inputs':inputs})
-    rid=result.get('workflow_run_id')
+    reuse=config.get('appValidationRunId') if args.target=='app' else None
+    if reuse is not None:
+        if type(reuse) is not int or reuse<=0:raise ValueError('invalid_original_validation_run')
+        rid=reuse
+    else:
+        result=request(token,'POST',base+'/actions/workflows/'+workflow+'/dispatches',
+                       {'ref':'main','return_run_details':True,'inputs':inputs})
+        rid=result.get('workflow_run_id')
     if type(rid) is not int:raise ValueError('dispatch_run_identity_uncertain_no_retry')
     print(json.dumps({'target':args.target,'runId':rid,'sourceSha':expected,'readOnlyValidation':True}),flush=True)
     deadline=time.monotonic()+3600
@@ -47,8 +52,23 @@ def main():
                 or run.get('path','').split('@')[0]!='.github/workflows/'+workflow):
             raise ValueError('private_validation_source_or_workflow_mismatch')
         if run.get('status')=='completed':
+            if run.get('conclusion')=='success':
+                jobs=request(token,'GET',base+'/actions/runs/'+str(rid)+'/jobs?filter=latest&per_page=100')
+                if jobs.get('total_count')!=len(jobs.get('jobs',[])) or not jobs.get('jobs'):raise ValueError('validation_jobs_incomplete')
+                steps=[s for j in jobs['jobs'] for s in j.get('steps',[])]
+                def passed(name):
+                    matched=[s for s in steps if s.get('name')==name]
+                    return len(matched)==1 and matched[0].get('status')=='completed' and matched[0].get('conclusion')=='success'
+                if args.target=='app':
+                    if not passed('Verify actual public calendar network execution') or not passed('Verify live chart execution evidence'):
+                        raise ValueError('actual_calendar_or_chart_test_not_verified')
+                else:
+                    if not passed('Validate both markets against shared pinned calendar') or not passed('Attest calendar snapshot '+config['calendarRevision']):
+                        raise ValueError('private_calendar_revision_or_comparisons_not_verified')
+                    business=[s for s in steps if s.get('name','').startswith('Check authoritative inputs, complete native selection')]
+                    if len(business)!=1 or business[0].get('conclusion')!='skipped':raise ValueError('calendar_only_validation_boundary_not_verified')
             public={'target':args.target,'runId':rid,'sourceSha':expected,'result':run.get('conclusion'),
-                    'url':run.get('html_url'),'strategyExecutions':0,'databaseWrites':0}
+                    'url':run.get('html_url'),'strategyExecutions':0,'databaseWrites':0,'reusedOriginalRun':reuse is not None}
             print(json.dumps(public),flush=True)
             if os.environ.get('GITHUB_STEP_SUMMARY'):
                 with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as stream:stream.write('### '+args.target+'日历接入验收\n\n'+json.dumps(public)+'\n')
