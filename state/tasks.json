@@ -126,9 +126,9 @@
       "route": "windows",
       "runId": 39916076147,
       "sourceSha": "e5c753d54a674fa206d46e0075cef64166d25fc2",
-      "status": "awaiting_effect_verification",
+      "status": "verified",
       "task": "stock_a",
-      "updatedAt": "2026-10-23T07:22:57.557317+00:00",
+      "updatedAt": "2026-10-23T07:23:00.961282+00:00",
       "workflow": "run-a-share.yml"
     }
   ]
