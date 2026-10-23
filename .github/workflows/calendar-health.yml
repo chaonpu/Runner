@@ -15,6 +15,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
   group: independent-calendar-health
@@ -33,4 +34,6 @@ jobs:
       - name: Verify real dispatch adapter with pinned calendar without business execution
         run: python3 -m unittest discover -s tests -p 'test_production_*.py' -q
       - name: Read actual calendar coverage, source health and successful workflow history
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: python3 -m scheduler.calendar_watchdog
