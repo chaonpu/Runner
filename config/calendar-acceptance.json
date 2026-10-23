@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "appSourceSha": "7e576dad9924405a008e77ebcee6f662af30ea0a",
+  "appSourceSha": "766a29ea0d91960e2c56315d64ddb082a1c80d15",
   "stockSourceSha": "e5c753d54a674fa206d46e0075cef64166d25fc2",
-  "purpose": "Verify calendar-driven HK pre-open history, temporal guards and source-reset protection",
+  "purpose": "Verify calendar-confirmed A-share and HK pre-open history, source-clock guards and complete Android regression",
   "calendarRevision": "181b17fba8cb426cf6e0da114ea49be8ed9d46f498a519999ffdcf05e77319a0",
   "stockValidationRunId": 39877556697
 }
