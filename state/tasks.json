@@ -138,10 +138,11 @@
       "publicationMode": "theoretical_catchup",
       "repo": "chaonpu/Stock",
       "route": "windows",
+      "runId": 39932318865,
       "sourceSha": "c4b0d41de14eb65aa5fdca373abfb0b109ed7375",
-      "status": "reserved",
+      "status": "dispatched",
       "task": "stock_us",
-      "updatedAt": "2026-10-23T09:29:37.642334+00:00",
+      "updatedAt": "2026-10-23T09:30:10.430008+00:00",
       "workflow": "run-us.yml"
     }
   ]
