@@ -1,6 +1,9 @@
 name: 私有仓库历史清理（每日）
 
 on:
+  push:
+    branches: [main]
+    paths: ['config/retired-workflow-cleanup.json']
   schedule:
     # Daily 04:30 Asia/Shanghai = previous day 20:30 UTC.
     - cron: '30 20 * * *'
@@ -13,6 +16,7 @@ on:
 
 permissions:
   contents: read
+  actions: write
 
 concurrency:
   group: private-history-cleanup
@@ -20,7 +24,7 @@ concurrency:
 
 jobs:
   cleanup:
-    if: github.repository == 'chaonpu/Runner' && github.ref == 'refs/heads/main' && github.actor == 'chaonpu'
+    if: github.repository == 'chaonpu/Runner' && github.ref == 'refs/heads/main' && github.actor == 'chaonpu' && github.event_name != 'push'
     runs-on: ubuntu-24.04
     timeout-minutes: 40
     steps:
@@ -50,3 +54,30 @@ jobs:
           path: private-history-cleanup-result.json
           if-no-files-found: ignore
           retention-days: 7
+
+  retired-history:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && github.actor == 'chaonpu'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        repository: [chaonpu/Runner, chaonpu/Stock]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Verify exact-run cleanup boundaries
+        run: node --test tests/retired_run_cleanup.test.cjs
+      - name: Delete only the approved retired run records
+        uses: actions/github-script@v7
+        env:
+          CLEANUP_TARGET: ${{ matrix.repository }}
+        with:
+          github-token: ${{ matrix.repository == 'chaonpu/Stock' && secrets.CHAONPU_ACTIONS_READ_TOKEN || github.token }}
+          script: |
+            const clean = require('./tools/retired_run_cleanup.cjs');
+            const plan = require('./config/retired-workflow-cleanup.json');
+            const result = await clean({github, context, plan, target: process.env.CLEANUP_TARGET});
+            await core.summary.addHeading('Retired workflow history cleanup').addCodeBlock(JSON.stringify(result, null, 2)).write();
