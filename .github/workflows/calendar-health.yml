@@ -9,6 +9,8 @@ on:
     paths:
       - 'scheduler/calendar_watchdog.py'
       - 'tests/test_calendar_watchdog.py'
+      - 'scheduler/production_ports.py'
+      - 'tests/test_production_ports.py'
       - '.github/workflows/calendar-health.yml'
 
 permissions:
@@ -28,5 +30,7 @@ jobs:
         with: {persist-credentials: false}
       - name: Test the same health policy independently of calendar maintenance
         run: python3 -m unittest discover -s tests -p 'test_calendar_watchdog.py' -v
+      - name: Verify real dispatch adapter with pinned calendar without business execution
+        run: python3 -m unittest discover -s tests -p 'test_production_*.py' -q
       - name: Read actual calendar coverage, source health and successful workflow history
         run: python3 -m scheduler.calendar_watchdog

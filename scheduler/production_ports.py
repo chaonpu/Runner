@@ -226,8 +226,13 @@ class ProductionPorts(ReadOnlyPorts):
              "ports_dispatch_target_invalid")
         inputs = payload.get("inputs")
         need(isinstance(inputs, dict) and {"task_id", "coordinator_run_id", "force_run", "runner_mode"}.issubset(inputs)
-             and set(inputs).issubset({"task_id", "coordinator_run_id", "force_run", "runner_mode", "publication_mode"}),
+             and set(inputs).issubset({"task_id", "coordinator_run_id", "force_run", "runner_mode", "publication_mode", "calendar_revision"}),
              "ports_dispatch_inputs_invalid")
+        expected_calendar = self.env.get("ZIWU_CALENDAR_REVISION", "")
+        need((bool(re.fullmatch(r"[0-9a-f]{64}", expected_calendar))
+              and inputs.get("calendar_revision") == expected_calendar)
+             if expected_calendar else "calendar_revision" not in inputs,
+             "ports_calendar_revision_conflict")
         key = inputs.get("task_id")
         need(isinstance(key, str) and key in self._armed, "ports_reservation_not_armed")
         arm = self._armed.pop(key)  # Consume before any uncertain network call.

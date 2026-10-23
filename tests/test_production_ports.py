@@ -107,6 +107,32 @@ class PortsTests(unittest.TestCase):
         self.assertTrue(all(p.startswith(PRIVATE + "/actions/") and not any(x in p for x in ("/contents/", "/artifacts", "/logs", "/git/"))
                             for p in self.backend.private_paths))
 
+    def test_real_session_through_writer_keeps_pinned_calendar_on_dispatch(self):
+        revision = 'a' * 64
+        ports = self.ports()
+        ports.env['ZIWU_CALENDAR_REVISION'] = revision
+        self.backend.evidence_jobs['jobs'][0]['steps'].append({
+            'name': 'Attest calendar snapshot ' + revision, 'status': 'completed', 'conclusion': 'success'})
+        session = start(ports, 'stock_us', DAY, dict(env(), ZIWU_CALENDAR_REVISION=revision), clock=self.clock)
+        self.assertEqual(self.backend.target['inputs']['calendar_revision'], revision)
+        self.assertEqual(session['runId'], TARGET)
+        self.assertEqual(len(self.effects('POST')), 1)
+
+    def test_writer_rejects_missing_changed_or_unrequested_calendar_before_network(self):
+        payload = {'ref': 'main', 'return_run_details': True, 'inputs': {
+            'task_id': 'stock_us:' + DAY, 'coordinator_run_id': str(OWNER),
+            'force_run': 'false', 'runner_mode': 'windows'}}
+        for expected, supplied in [('a' * 64, None), ('a' * 64, 'b' * 64),
+                                   ('not-a-digest', 'not-a-digest'), ('', 'a' * 64)]:
+            with self.subTest(expected=expected, supplied=supplied):
+                ports = self.ports()
+                if expected: ports.env['ZIWU_CALENDAR_REVISION'] = expected
+                body = deepcopy(payload)
+                if supplied is not None: body['inputs']['calendar_revision'] = supplied
+                with self.assertRaisesRegex(RegistryGuard, 'ports_calendar_revision_conflict'):
+                    ports.dispatch('chaonpu/Stock', 'run-us.yml', body)
+        self.assertFalse(self.effects('POST'))
+
     def test_read_only_adapter_cannot_mutate_even_when_configuration_enabled(self):
         ports = self.ports(ReadOnlyPorts)
         cfg, state, _ = ports.load()
