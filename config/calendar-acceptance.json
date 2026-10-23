@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "appSourceSha": "5cc7da436612e57bc95bb54d8bc2d3f85a15e30f",
+  "appSourceSha": "66033608698d37e4749ee787dbf7018034025078",
   "stockSourceSha": "e5c753d54a674fa206d46e0075cef64166d25fc2",
-  "purpose": "Verify expanded calendars and repaired Saudi chart transport using exact original validation evidence",
+  "purpose": "Verify new calendars, bounded Saudi retry and explicit pre-open futures proof hold",
   "calendarRevision": "181b17fba8cb426cf6e0da114ea49be8ed9d46f498a519999ffdcf05e77319a0",
   "stockValidationRunId": 39877556697
 }
