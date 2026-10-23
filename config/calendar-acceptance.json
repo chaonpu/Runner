@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "appSourceSha": "66033608698d37e4749ee787dbf7018034025078",
+  "appSourceSha": "7e576dad9924405a008e77ebcee6f662af30ea0a",
   "stockSourceSha": "e5c753d54a674fa206d46e0075cef64166d25fc2",
-  "purpose": "Verify new calendars, bounded Saudi retry and explicit pre-open futures proof hold",
+  "purpose": "Verify calendar-driven HK pre-open history, temporal guards and source-reset protection",
   "calendarRevision": "181b17fba8cb426cf6e0da114ea49be8ed9d46f498a519999ffdcf05e77319a0",
   "stockValidationRunId": 39877556697
 }
