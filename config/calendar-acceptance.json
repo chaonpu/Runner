@@ -1,8 +1,0 @@
-{
-  "schemaVersion": 1,
-  "appSourceSha": "4c97362d82db053783b5c609beebd0c32d3c5f8b",
-  "stockSourceSha": "e5c753d54a674fa206d46e0075cef64166d25fc2",
-  "purpose": "Complete calendar and all-market chart acceptance with bounded original-address FinScope daily recovery",
-  "calendarRevision": "181b17fba8cb426cf6e0da114ea49be8ed9d46f498a519999ffdcf05e77319a0",
-  "stockValidationRunId": 39877556697
-}
