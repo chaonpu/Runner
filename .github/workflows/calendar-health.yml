@@ -1,0 +1,32 @@
+name: 交易日历独立巡检
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 1 * * *'
+  push:
+    branches: [main]
+    paths:
+      - 'scheduler/calendar_watchdog.py'
+      - 'tests/test_calendar_watchdog.py'
+      - '.github/workflows/calendar-health.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: independent-calendar-health
+  cancel-in-progress: false
+
+jobs:
+  inspect:
+    if: github.repository == 'chaonpu/Runner' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - name: Test the same health policy independently of calendar maintenance
+        run: python3 -m unittest discover -s tests -p 'test_calendar_watchdog.py' -v
+      - name: Read actual calendar coverage, source health and successful workflow history
+        run: python3 -m scheduler.calendar_watchdog
