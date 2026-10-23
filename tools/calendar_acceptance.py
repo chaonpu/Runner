@@ -34,7 +34,7 @@ def main():
     if not re.fullmatch('[0-9a-f]{40}',expected):raise ValueError('invalid_source_sha')
     base='https://api.github.com/repos/'+repo
     # One dispatch only. An ambiguous response is not retried.
-    reuse=config.get('appValidationRunId') if args.target=='app' else None
+    reuse=config.get(args.target+'ValidationRunId')
     if reuse is not None:
         if type(reuse) is not int or reuse<=0:raise ValueError('invalid_original_validation_run')
         rid=reuse

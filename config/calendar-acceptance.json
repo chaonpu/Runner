@@ -1,7 +1,8 @@
 {
   "schemaVersion": 1,
-  "appSourceSha": "4267aed3b342809292ba9613a139e12b72a80d4e",
+  "appSourceSha": "5cc7da436612e57bc95bb54d8bc2d3f85a15e30f",
   "stockSourceSha": "e5c753d54a674fa206d46e0075cef64166d25fc2",
-  "purpose": "Read-only verification of expanded public calendars, production dispatch adapter and Android live refresh",
-  "calendarRevision": "181b17fba8cb426cf6e0da114ea49be8ed9d46f498a519999ffdcf05e77319a0"
+  "purpose": "Verify expanded calendars and repaired Saudi chart transport using exact original validation evidence",
+  "calendarRevision": "181b17fba8cb426cf6e0da114ea49be8ed9d46f498a519999ffdcf05e77319a0",
+  "stockValidationRunId": 39877556697
 }
