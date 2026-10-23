@@ -24,6 +24,7 @@ jobs:
         run: |
           python3 -m unittest discover -s tests -p 'test_exchange_schedule.py' -v
           python3 -m unittest discover -s tests -p 'test_calendar_integration.py' -v
+          python3 -m unittest discover -s tests -p 'test_calendar_watchdog.py' -v
           python3 -m unittest discover -s tests -p 'test_production_*.py' -q
       - name: Read and verify current public calendar bytes
         run: python3 -m scheduler.calendar_runtime --cache "$RUNNER_TEMP/calendar-snapshot.json"
