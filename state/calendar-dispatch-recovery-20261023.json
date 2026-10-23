@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "action": "remove_provably_undispatched_reservation",
+  "taskId": "stock_us:2026-10-22",
+  "originalCoordinatorRunId": 39875443786,
+  "readinessRunId": 39875478455,
+  "failedCoordinatorSource": "fbaec4f3be969195c6a8b3904e3990c52c182621",
+  "fixCommit": "5b06f0d45b60e1558db70526b4d9877c48327a39",
+  "reason": "calendar_revision rejected by deterministic input allowlist before private POST",
+  "evidence": {
+    "privateBusinessRunsAfterCoordinatorStart": 0,
+    "readinessConclusion": "success",
+    "businessDispatchRetried": false,
+    "databaseWrites": 0,
+    "emailsSent": 0
+  },
+  "removedReservation": {
+    "coordinatorRunId": 39875443786,
+    "createdAt": "2026-10-23T00:06:44.922352+00:00",
+    "id": "stock_us:2026-10-22",
+    "publicationMode": "formal",
+    "repo": "chaonpu/Stock",
+    "route": "windows",
+    "sourceSha": "e5c753d54a674fa206d46e0075cef64166d25fc2",
+    "status": "reserved",
+    "task": "stock_us",
+    "updatedAt": "2026-10-23T00:06:44.922352+00:00",
+    "workflow": "run-us.yml"
+  }
+}
+
