@@ -42,6 +42,12 @@
     },
     "3a13891423fc50c31206936daab0aad33b1014f5": {
       "createdAt": "2026-10-24T05:04:59.222683+00:00",
+      "lastFailure": {
+        "code": "network_retry_exhausted_same_run_no_publication",
+        "recordedAt": "2026-10-24T05:21:56.072235+00:00",
+        "runId": 40065566796,
+        "stage": "signer"
+      },
       "liveSmoke": true,
       "phase": "signer_started",
       "route": "windows",
