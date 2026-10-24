@@ -43,11 +43,11 @@
     "3a13891423fc50c31206936daab0aad33b1014f5": {
       "createdAt": "2026-10-24T05:04:59.222683+00:00",
       "liveSmoke": true,
-      "phase": "test_started",
+      "phase": "test_verified",
       "route": "windows",
       "sourceSha": "3a13891423fc50c31206936daab0aad33b1014f5",
       "testRunId": 40064864069,
-      "updatedAt": "2026-10-24T05:05:01.870780+00:00"
+      "updatedAt": "2026-10-24T05:15:40.269719+00:00"
     },
     "4db3f3f4e49eb4a56e20e3375f431d505147fda6": {
       "createdAt": "2026-10-20T19:42:19.523353+00:00",
