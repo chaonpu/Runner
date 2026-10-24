@@ -428,7 +428,7 @@
       "signingRunId": 40061476635,
       "updateLog": "v2.5.1\uff1a\n1. \u6536\u76ca\u66f2\u7ebf\u5de6\u4fa7\u663e\u793a\u51c0\u503c\u3001\u53f3\u4fa7\u663e\u793a\u6536\u76ca\u767e\u5206\u6bd4\uff0c\u4e24\u4fa7\u523b\u5ea6\u5747\u653e\u5728\u56fe\u6846\u5185\u3002\n2. \u4fee\u590d\u96f6\u8f74\u9644\u8fd1\u523b\u5ea6\u91cd\u53e0\uff0c\u6309\u6587\u5b57\u9ad8\u5ea6\u81ea\u52a8\u907f\u8ba9\u3002\n3. \u70b9\u6309\u6216\u62d6\u52a8\u5149\u6807\u53ef\u67e5\u770b\u5bf9\u5e94\u65e5\u671f\u7684\u5f53\u65e5\u6536\u76ca\u6d6e\u7a97\uff0c\u6d6e\u7a97\u9760\u8fd1\u8fb9\u7f18\u65f6\u81ea\u52a8\u6362\u4f4d\u3002",
       "forceUpdate": false,
-      "phase": "prepared",
+      "phase": "dispatch_reserved",
       "publishRequest": {
         "sourceUrl": "https://github.com/chaonpu/Runner/releases/download/staged-apk-v2.5.1-signrun-40061476635/ziwuxilv-verified-v2.5.1.zip",
         "artifactSha256": "c7ce98dbec0df80097bba2c741fcf03ae0b6f217a977c23fdd48684adaf363a4",
