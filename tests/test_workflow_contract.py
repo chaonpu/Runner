@@ -1,4 +1,4 @@
-"""Only four owner-operated manual workflows; never automatic business triggers."""
+"""Four manual business entries plus bounded maintenance and read-only health checks."""
 from pathlib import Path
 import json
 import re
@@ -8,6 +8,7 @@ ROOT = Path(__file__).resolve().parents[1]
 WORKFLOWS = ROOT / '.github/workflows'
 MANUAL_ONLY = {'android-production.yml','android-publish.yml','production-dispatch.yml','stock-us.yml'}
 MAINTENANCE_ONLY = {'private-history-cleanup.yml'}
+HEALTH_ONLY = {'calendar-health.yml'}
 
 
 def event_keys(text):
@@ -21,9 +22,9 @@ def event_keys(text):
 class WorkflowContractTests(unittest.TestCase):
     def test_exactly_four_manual_workflows(self):
         files = {p.name:p for p in WORKFLOWS.glob('*.yml')}
-        # One independently gated daily maintenance job is allowed alongside
-        # the four owner-initiated business workflows; no other entrypoints.
-        self.assertEqual(set(files), MANUAL_ONLY | MAINTENANCE_ONLY)
+        # Maintenance and read-only calendar health are independent of the
+        # four owner-initiated business workflows; reject unknown entrypoints.
+        self.assertEqual(set(files), MANUAL_ONLY | MAINTENANCE_ONLY | HEALTH_ONLY)
         for name in sorted(MANUAL_ONLY):
             path = files[name]
             text = path.read_text()
@@ -42,7 +43,7 @@ class WorkflowContractTests(unittest.TestCase):
             self.assertNotIn('pull_request_target', text)
             self.assertNotIn('actions: write', text)
 
-    def test_maintenance_is_the_only_scheduled_entry(self):
+    def test_maintenance_schedule_and_permissions(self):
         text = (WORKFLOWS/'private-history-cleanup.yml').read_text()
         self.assertEqual(event_keys(text), {'schedule', 'workflow_dispatch'})
         self.assertIn("cron: '30 20 * * *'", text)
@@ -57,6 +58,33 @@ class WorkflowContractTests(unittest.TestCase):
         self.assertNotIn('scheduler.android_publish', text)
         self.assertNotIn('scheduler.production_coordinator', text)
         self.assertNotIn('scheduler.android_production', text)
+
+    def test_calendar_health_is_read_only_and_cannot_dispatch_business(self):
+        text = (WORKFLOWS/'calendar-health.yml').read_text()
+        self.assertEqual(event_keys(text), {'schedule', 'workflow_dispatch', 'push'})
+        self.assertIn("cron: '17 1 * * *'", text)
+        self.assertIn('branches: [main]', text)
+        self.assertIn("github.repository == 'chaonpu/Runner'", text)
+        self.assertIn("github.ref == 'refs/heads/main'", text)
+        self.assertIn('contents: read', text)
+        self.assertIn('actions: read', text)
+        self.assertNotRegex(text, r'(?m)^\s+[\w-]+:\s*write\s*$')
+        self.assertNotIn('secrets.', text)
+        self.assertIn('cancel-in-progress: false', text)
+        self.assertIn('timeout-minutes: 5', text)
+        self.assertIn('python3 -m scheduler.calendar_watchdog', text)
+        self.assertIn('test_calendar_watchdog.py', text)
+        for module in ('android_publish', 'production_coordinator', 'android_production'):
+            self.assertNotIn('scheduler.' + module, text)
+        self.assertNotIn('/dispatches', text)
+        self.assertNotIn('gh workflow run', text)
+
+    def test_only_maintenance_and_health_have_automatic_triggers(self):
+        automatic = {
+            path.name for path in WORKFLOWS.glob('*.yml')
+            if event_keys(path.read_text()) - {'workflow_dispatch'}
+        }
+        self.assertEqual(automatic, MAINTENANCE_ONLY | HEALTH_ONLY)
 
     def test_strategy_market_and_cleanup(self):
         for name, task in (('production-dispatch.yml','stock_a'),('stock-us.yml','stock_us')):
