@@ -49,13 +49,13 @@
         "stage": "signer"
       },
       "liveSmoke": true,
-      "phase": "signer_started",
+      "phase": "signed_verified",
       "route": "windows",
       "signingRoute": "windows",
       "signingRunId": 40065566796,
       "sourceSha": "3a13891423fc50c31206936daab0aad33b1014f5",
       "testRunId": 40064864069,
-      "updatedAt": "2026-10-24T05:15:51.150903+00:00"
+      "updatedAt": "2026-10-24T05:35:22.923293+00:00"
     },
     "4db3f3f4e49eb4a56e20e3375f431d505147fda6": {
       "createdAt": "2026-10-20T19:42:19.523353+00:00",
