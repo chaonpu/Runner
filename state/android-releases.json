@@ -467,7 +467,12 @@
         "updateLog": "v2.5.2\uff1a\n1. \u6536\u76ca\u66f2\u7ebf\u5de6\u53f3\u4e24\u4fa7\u4ec5\u663e\u793a\u6700\u9ad8\u3001\u6700\u4f4e\u5750\u6807\u503c\uff0c\u51cf\u5c11\u523b\u5ea6\u5e72\u6270\u3002\n2. \u79fb\u9664\u5750\u6807\u6587\u5b57\u80cc\u666f\uff0c\u907f\u514d\u906e\u6321\u6536\u76ca\u66f2\u7ebf\u3002\n3. \u4fdd\u7559\u6846\u5185\u51c0\u503c\u4e0e\u6536\u76ca\u767e\u5206\u6bd4\u53cc\u8f74\uff0c\u4ee5\u53ca\u968f\u5149\u6807\u663e\u793a\u7684\u5f53\u65e5\u6536\u76ca\u6d6e\u7a97\u3002",
         "forceUpdate": false
       },
-      "publicRunId": 40068277384
+      "publicRunId": 40068277384,
+      "stagingCleanup": {
+        "status": "deleted",
+        "tag": "staged-apk-v2.5.2-signrun-40065566796",
+        "releaseId": 422547796
+      }
     }
   }
 }
