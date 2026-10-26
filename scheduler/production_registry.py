@@ -69,7 +69,7 @@ def _time(value: object) -> None:
 def validate(config: dict, state: dict) -> dict:
     if (not isinstance(state, dict)
             or not {"schema", "tasks"}.issubset(state)
-            or not set(state).issubset({"schema", "tasks", "description"})
+            or not set(state).issubset({"schema", "tasks", "description", "retiredPrebusinessFailures"})
             or state["schema"] != 1 or not isinstance(state["tasks"], list)):
         raise RegistryGuard("registry_schema_invalid")
     if "description" in state and (
@@ -138,6 +138,23 @@ def validate(config: dict, state: dict) -> dict:
             raise RegistryGuard("target_run_required")
         _time(entry.get("createdAt"))
         _time(entry.get("updatedAt"))
+    # Preserve the original failed Run identity when a narrowly attested
+    # PRE-BUSINESS failure is retired for one controlled same-date retry.
+    archived = state.get("retiredPrebusinessFailures", [])
+    if not isinstance(archived, list) or len(archived) > 64:
+        raise RegistryGuard("retired_prebusiness_metadata_invalid")
+    if archived:
+        if any(not isinstance(x, dict) or x.get("status") != "hold"
+               or x.get("task") not in ("stock_a", "stock_us")
+               or type(x.get("runId")) is not int for x in archived):
+            raise RegistryGuard("retired_prebusiness_record_invalid")
+        if len({x.get("id") for x in archived}) != len(archived):
+            raise RegistryGuard("multiple_prebusiness_retries_for_same_session")
+        # Reuse the full normal registry row schema and provenance checks.
+        validate(config, {"schema": 1, "tasks": archived})
+        active_runs = {x.get("runId") for x in state["tasks"] if x.get("runId")}
+        if any(x["runId"] in active_runs for x in archived):
+            raise RegistryGuard("retired_and_active_run_identity_conflict")
     return state
 
 
