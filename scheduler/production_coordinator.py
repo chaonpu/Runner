@@ -137,6 +137,12 @@ def execute(env, task, day, mode):
     ports = ProductionPorts(env)
     config,state,_ = ports.load()
     registered = [r for r in state["tasks"] if r["id"] == task+":"+day]
+    if registered and len(registered) == 1 and registered[0].get("status") == "hold":
+        proof = ports.retire_prebusiness_hold(task, day)
+        print(json.dumps({"phase": "bounded_prebusiness_recovery", **proof}, sort_keys=True), flush=True)
+        config, state, _ = ports.load()
+        registered = [r for r in state["tasks"] if r["id"] == task + ":" + day]
+        need(not registered, "prebusiness_recovery_registry_still_active")
     if registered:
         need(len(registered) == 1 and registered[0].get("status") == "verified",
              "task_already_registered_no_redispatch")

@@ -181,6 +181,98 @@ class ProductionPorts(ReadOnlyPorts):
         authorize(self.env, self.requester, self.reader_factory)
         self._armed, self._accepted = {}, {}
 
+    def retire_prebusiness_hold(self, task, day):
+        """One strictly attested pre-strategy failure may be re-dispatched.
+
+        The old coordinator/run/SHA row remains immutable in the public
+        registry's append-only retiredPrebusinessFailures audit field. No
+        uncertain run, unknown job, or post-calculation failure qualifies.
+        """
+        context(self.env)
+        key = task + ":" + day
+        cfg, state, blob = self.load()
+        need(cfg.get("dispatchEnabled") is False and "activeLease" not in cfg
+             and all(not x.get("enabledForDispatch") for x in cfg["tasks"].values()),
+             "prebusiness_recovery_requires_closed_permits")
+        old = [x for x in state["tasks"] if x.get("id") == key]
+        need(len(old) == 1, "prebusiness_original_task_missing")
+        row = old[0]
+        need(row.get("status") == "hold" and row.get("task") in ("stock_a", "stock_us")
+             and row["task"] == task and row.get("route") == "windows"
+             and row.get("publicationMode") in ("formal", "theoretical_catchup")
+             and type(row.get("runId")) is int
+             and bool(SHA.fullmatch(str(row.get("sourceSha", "")))),
+             "prebusiness_recovery_scope_invalid")
+        need(not any(x.get("id") == key for x in state.get("retiredPrebusinessFailures", [])),
+             "prebusiness_recovery_once_per_session")
+        run = self.run(row["repo"], row["runId"])
+        need(run.get("id") == row["runId"]
+             and run.get("repository", {}).get("full_name") == "chaonpu/Stock"
+             and run.get("path", "").split("@")[0] == ".github/workflows/" + row["workflow"]
+             and run.get("event") == "workflow_dispatch"
+             and run.get("head_branch") == "main"
+             and run.get("head_sha") == row["sourceSha"]
+             and run.get("run_attempt") == 1
+             and run.get("actor", {}).get("login") == "chaonpu"
+             and run.get("status") == "completed" and run.get("conclusion") == "failure",
+             "prebusiness_original_run_unverified")
+        jobs = self.private_reader().get(
+            PRIVATE + f"/actions/runs/{row['runId']}/jobs?filter=latest&per_page=100")
+        need(jobs.get("total_count") == 1 and len(jobs.get("jobs", [])) == 1,
+             "prebusiness_jobs_incomplete")
+        job = jobs["jobs"][0]
+        need(job.get("run_id") == row["runId"] and job.get("status") == "completed"
+             and job.get("conclusion") == "failure"
+             and job.get("name") ==
+                 f"effect-v1:{key}:{row['coordinatorRunId']}:{row['publicationMode']}",
+             "prebusiness_job_identity_unverified")
+        steps = job.get("steps")
+        need(isinstance(steps, list) and
+             len({s.get("name") for s in steps if isinstance(s, dict)}) == len(steps),
+             "prebusiness_step_trace_invalid")
+        phases = {s["name"]: s.get("conclusion") for s in steps}
+        route_phase = ("Prepare verified job-scoped GitHub route before Windows checkout",
+                       "Bootstrap job-scoped Git route; probe only when source fetch is required")
+        need(sum(phases.get(name) == "failure" for name in route_phase) == 1,
+             "prebusiness_not_known_git_route_failure")
+        failure_index = next(i for i, step in enumerate(steps)
+                             if step["name"] in route_phase and step["conclusion"] == "failure")
+        need(all(step["name"] in ("Complete job",) or step.get("conclusion") == "skipped"
+                 for step in steps[failure_index + 1:]),
+             "prebusiness_postfailure_work_must_be_skipped")
+        # Require the entire calculation -> publication pipeline never began.
+        no_effect = ("Run A-share strategy with retry", "Run US strategy with retry",
+                     "Verify approved mobile HTML full report",
+                     "Verify private snapshot contract",
+                     "Publish verified snapshot and ledger to private database",
+                     "Synchronize coordinated inputs to the confirmed settled ledger",
+                     "Save successful strategy state",
+                     "Verify and attest published ledger receipt",
+                     "Send A-share mail only after verified ledger publication",
+                     "Send US mail only after verified ledger publication")
+        name = "Run A-share strategy with retry" if task == "stock_a" else "Run US strategy with retry"
+        need(phases.get(name) == "skipped"
+             and phases.get("Publish verified snapshot and ledger to private database") == "skipped"
+             and phases.get("Save successful strategy state") == "skipped"
+             and phases.get("Verify and attest published ledger receipt") == "skipped"
+             and all(phases.get(p) in (None, "skipped") for p in no_effect),
+             "prebusiness_effect_not_proven_absent")
+        next_state = deepcopy(state)
+        next_state["tasks"] = [x for x in state["tasks"] if x.get("id") != key]
+        next_state.setdefault("retiredPrebusinessFailures", []).append(deepcopy(row))
+        validate(cfg, next_state)
+        # A single CAS write changes both active and archived metadata atomically.
+        self.requester(self.env["GH_TOKEN"], "PUT", PUBLIC + "/contents/" + REGISTRY, {
+            "branch": "main", "sha": blob,
+            "message": "Archive verified prebusiness Git route failure for bounded retry",
+            "content": base64.b64encode((json.dumps(next_state, indent=2) + "\n").encode()).decode(),
+        })
+        c, saved, _ = self.load()
+        need(c == cfg and saved == next_state, "prebusiness_recovery_commit_unverified")
+        return {"status": "prebusiness_recovery_attested", "taskId": key,
+                "originalRunId": row["runId"], "businessVerified": False,
+                "archived": True, "dispatches": 0}
+
     def save(self, config, before, after, sha, env):
         need(context(env) == context(self.env), "ports_owner_mismatch")
         live_config, live_state, live_sha = self.load()

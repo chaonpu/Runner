@@ -1,0 +1,36 @@
+name: Verify prebusiness retry safety
+
+on:
+  push:
+    branches:
+      - 'fix/attested-prebusiness-retry-*'
+      - main
+    paths:
+      - 'scheduler/production_coordinator.py'
+      - 'scheduler/production_ports.py'
+      - 'scheduler/production_registry.py'
+      - 'tests/test_prebusiness_retry.py'
+      - '.github/workflows/verify-prebusiness-retry.yml'
+  pull_request:
+    paths:
+      - 'scheduler/production_coordinator.py'
+      - 'scheduler/production_ports.py'
+      - 'scheduler/production_registry.py'
+      - 'tests/test_prebusiness_retry.py'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - name: Regression tests for verified prebusiness recovery
+        run: python3 -m unittest discover -s tests -p test_prebusiness_retry.py -v
+      - name: Production safety contract regression tests
+        run: |
+          python3 -m unittest discover -s tests -p test_production_registry.py -v
+          python3 -m unittest discover -s tests -p test_production_noop.py -v
+          python3 -m unittest discover -s tests -p test_production_auto.py -v
