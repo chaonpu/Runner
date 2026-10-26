@@ -213,6 +213,7 @@ class ProductionPorts(ReadOnlyPorts):
              and run.get("head_branch") == "main"
              and run.get("head_sha") == row["sourceSha"]
              and run.get("run_attempt") == 1
+             and run.get("actor", {}).get("login") == "chaonpu"
              and run.get("status") == "completed" and run.get("conclusion") == "failure",
              "prebusiness_original_run_unverified")
         jobs = self.private_reader().get(
@@ -234,6 +235,11 @@ class ProductionPorts(ReadOnlyPorts):
                        "Bootstrap job-scoped Git route; probe only when source fetch is required")
         need(sum(phases.get(name) == "failure" for name in route_phase) == 1,
              "prebusiness_not_known_git_route_failure")
+        failure_index = next(i for i, step in enumerate(steps)
+                             if step["name"] in route_phase and step["conclusion"] == "failure")
+        need(all(step["name"] in ("Complete job",) or step.get("conclusion") == "skipped"
+                 for step in steps[failure_index + 1:]),
+             "prebusiness_postfailure_work_must_be_skipped")
         # Require the entire calculation -> publication pipeline never began.
         no_effect = ("Run A-share strategy with retry", "Run US strategy with retry",
                      "Verify approved mobile HTML full report",
