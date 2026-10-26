@@ -23,6 +23,7 @@ class NoopTests(unittest.TestCase):
     def test_pending_or_uncertain_original_task_remains_blocked(self):
         for status in ('reserved','dispatched','running','hold','awaiting_effect_verification'):
             ports=Mock();ports.load.return_value=({}, {'tasks':[{'id':'stock_us:'+DAY,'status':status}]},'blob')
+            ports.retire_prebusiness_hold.side_effect = RegistryGuard('task_already_registered_no_redispatch')
             with patch.object(c,'ProductionPorts',return_value=ports),patch.object(c,'prepare') as prep:
                 with self.assertRaisesRegex(RegistryGuard,'already_registered'):
                     c.execute(self.env(),'stock_us',DAY,'theoretical_catchup')
