@@ -1,5 +1,21 @@
 {
   "description": "Public-safe task metadata only. No source code, positions, customer details or secrets.",
+  "retiredPrebusinessFailures": [
+    {
+      "coordinatorRunId": 40283227241,
+      "createdAt": "2026-10-26T07:10:11.939367+00:00",
+      "id": "stock_a:2026-10-26",
+      "publicationMode": "formal",
+      "repo": "chaonpu/Stock",
+      "route": "windows",
+      "runId": 40284175857,
+      "sourceSha": "96d6f256f130aa1987d2af02ba3c808bac4e0885",
+      "status": "hold",
+      "task": "stock_a",
+      "updatedAt": "2026-10-26T07:14:17.890877+00:00",
+      "workflow": "run-a-share.yml"
+    }
+  ],
   "schema": 1,
   "tasks": [
     {
@@ -158,21 +174,18 @@
       "task": "stock_us",
       "updatedAt": "2026-10-24T00:08:34.140233+00:00",
       "workflow": "run-us.yml"
-    }
-  ],
-  "retiredPrebusinessFailures": [
+    },
     {
-      "coordinatorRunId": 40283227241,
-      "createdAt": "2026-10-26T07:10:11.939367+00:00",
+      "coordinatorRunId": 40290257014,
+      "createdAt": "2026-10-26T08:16:50.463956+00:00",
       "id": "stock_a:2026-10-26",
       "publicationMode": "formal",
       "repo": "chaonpu/Stock",
       "route": "windows",
-      "runId": 40284175857,
-      "sourceSha": "96d6f256f130aa1987d2af02ba3c808bac4e0885",
-      "status": "hold",
+      "sourceSha": "d4def482f1b25e5ed603c6e49e28437a6a58f694",
+      "status": "reserved",
       "task": "stock_a",
-      "updatedAt": "2026-10-26T07:14:17.890877+00:00",
+      "updatedAt": "2026-10-26T08:16:50.463956+00:00",
       "workflow": "run-a-share.yml"
     }
   ]
