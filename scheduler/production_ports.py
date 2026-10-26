@@ -265,7 +265,7 @@ class ProductionPorts(ReadOnlyPorts):
         self.requester(self.env["GH_TOKEN"], "PUT", PUBLIC + "/contents/" + REGISTRY, {
             "branch": "main", "sha": blob,
             "message": "Archive verified prebusiness Git route failure for bounded retry",
-            "content": base64.b64encode((json.dumps(next_state, indent=2) + "\\n").encode()).decode(),
+            "content": base64.b64encode((json.dumps(next_state, indent=2) + "\n").encode()).decode(),
         })
         c, saved, _ = self.load()
         need(c == cfg and saved == next_state, "prebusiness_recovery_commit_unverified")
