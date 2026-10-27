@@ -1,4 +1,4 @@
-name: 私有仓库历史清理（每日）
+name: 工作流废弃记录清理（每日）
 
 on:
   schedule:
@@ -13,6 +13,7 @@ on:
 
 permissions:
   contents: read
+  actions: write
 
 concurrency:
   group: private-history-cleanup
@@ -31,8 +32,9 @@ jobs:
           persist-credentials: false
       - name: Verify deletion boundaries
         run: python3 -m unittest discover -s tests -p test_private_history_cleanup.py -v
-      - name: Clean retired workflow history or preview
+      - name: Clean retired workflow history across four repositories or preview
         env:
+          RUNNER_ACTIONS_TOKEN: ${{ github.token }}
           CHAONPU_ACTIONS_READ_TOKEN: ${{ secrets.CHAONPU_ACTIONS_READ_TOKEN }}
           TEST_ACTIONS_READ_TOKEN: ${{ secrets.TEST_ACTIONS_READ_TOKEN }}
           EXECUTE: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && !inputs.dry_run) }}
