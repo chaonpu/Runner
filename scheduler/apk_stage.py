@@ -317,14 +317,14 @@ def main() -> int:
             private_env = dict(os.environ)
             private_env["GH_TOKEN"] = os.environ["CHAONPU_ACTIONS_READ_TOKEN"]
             dl = subprocess.run(
-                ["gh", "run", "download", str(req["signingRunId"]),
-                 "--repo", SIGN_REPO, "--name", "windows-signed-release",
-                 "--dir", str(signed)],
+                [sys.executable, "tools/private_release_transport.py", "download",
+                 "--kind", "signed", "--sha", req["sourceCommit"],
+                 "--run-id", str(req["signingRunId"]), "--dir", str(signed)],
                 check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-                env=private_env, timeout=240
+                env=private_env, timeout=240,
             )
             if dl.returncode != 0:
-                raise GuardError("verified_private_signed_artifact_unavailable")
+                raise GuardError("verified_private_signed_release_unavailable")
             apk, candidate, names = assert_clean_artifact(signed, req)
             verify_apk_bytes(apk, req)
             # Recheck active version before any public action.
