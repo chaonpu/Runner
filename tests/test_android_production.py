@@ -338,7 +338,7 @@ class SignerRetryResumeTests(unittest.TestCase):
             "Sign already-tested unsigned APK without executing Test code",
             "Verify certificate, package, version and signed APK digest",
             "Prepare private release candidate metadata (does not publish)",
-            "Upload verified signed APK to private signing repository only",
+            "Publish verified signed APK to PRIVATE Release Assets (not Actions Artifact)",
         )
         preflight = "NETWORK_TRANSIENT_PREFLIGHT - verify and export GitHub HTTPS Git route"
         def jobs(attempt):
