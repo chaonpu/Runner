@@ -11,6 +11,7 @@ on:
       - 'scheduler/android_publish.py'
       - 'tests/test_android_*.py'
       - 'tests/test_apk_stage.py'
+      - 'tests/test_workflow_contract.py'
       - '.github/workflows/android-release-transport-check.yml'
   workflow_dispatch:
 
@@ -34,3 +35,4 @@ jobs:
         run: |
           python3 -m unittest discover -s tests -p 'test_android_*.py' -v
           python3 -m unittest discover -s tests -p 'test_apk_stage.py' -v
+          python3 -m unittest discover -s tests -p 'test_workflow_contract.py' -v
