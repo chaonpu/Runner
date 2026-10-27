@@ -35,6 +35,33 @@ class RecoveryTests(unittest.TestCase):
             with self.assertRaises(Hold):
                 r.verify_no_signing_started(modified)
 
+    def test_two_prior_attempts_are_proven_pre_key_release_download_failures(self):
+        source = "Download exact successful private Test run handoff"
+        early = "NETWORK_TRANSIENT_PREFLIGHT - verify and export GitHub HTTPS Git route"
+        skipped = list(r.FORBIDDEN_STARTED)
+        row = {"run_id": 40566493488, "run_attempt": 2, "runner_name": "ziwuxilv-sign-win",
+               "status": "completed", "conclusion": "failure", "steps": [
+                   {"name": early, "conclusion": "success"},
+                   {"name": source, "conclusion": "failure"},
+               ] + [{"name": name, "conclusion": "skipped"} for name in skipped]}
+        response = {"total_count": 1, "jobs": [row]}
+        r.verify_no_signing_started(response, run_id=40566493488, attempt=2,
+                                    expected_runner="ziwuxilv-sign-win")
+        for stage in skipped:
+            changed = dict(row, steps=[
+                dict(x, conclusion="success") if x["name"] == stage else x
+                for x in row["steps"]])
+            with self.assertRaisesRegex(Hold, "could_have_accessed_keys"):
+                r.verify_no_signing_started({"total_count": 1, "jobs": [changed]},
+                                            run_id=40566493488, attempt=2,
+                                            expected_runner="ziwuxilv-sign-win")
+        with self.assertRaisesRegex(Hold, "execution_unverified"):
+            r.verify_no_signing_started(response, run_id=40566493488, attempt=1,
+                                        expected_runner="ziwuxilv-sign-win")
+        with self.assertRaisesRegex(Hold, "execution_unverified"):
+            r.verify_no_signing_started(response, run_id=40566493488, attempt=2,
+                                        expected_runner="incorrect")
+
     def test_cas_stops_any_unsigned_recovery_without_exact_prior_state(self):
         document={"builds":{SOURCE:{"phase":"signed_verified",
                                    "sourceSha":SOURCE,
