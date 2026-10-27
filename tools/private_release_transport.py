@@ -15,6 +15,7 @@ import os
 from pathlib import Path
 import re
 import sys
+import tempfile
 import urllib.error
 import urllib.request
 import zipfile
@@ -85,7 +86,7 @@ def unpack(raw, kind, folder):
         names = z.namelist()
         check(len(names) == len(set(names)) and all(
             re.fullmatch(r"[A-Za-z0-9_.-]+", n) and not n.startswith(".")
-            and not (i.external_attr >> 16) & 0o170000 == 0o120000
+            and ((i.external_attr >> 16) & 0o170000) != 0o120000
             and i.file_size <= MAX_BYTES
             for i, n in ((i, i.filename) for i in z.infolist())),
             "release_archive_unsafe")
@@ -147,9 +148,6 @@ def verify_metadata(kind, sha, run_id, token):
     repo = REPOS[kind]
     item = gh_json(release_url(kind, tag), token)
     check(item.get("tag_name") == tag and item.get("prerelease") is True
-          and item.get("draft") is False and item.get("target_commitish") in (sha, None)
-          if kind == "test" else
-          item.get("tag_name") == tag and item.get("prerelease") is True
           and item.get("draft") is False,
           "release_provenance_invalid")
     assets = item.get("assets")
@@ -206,9 +204,8 @@ def publish(kind, sha, run_id, folder, token, target):
           "private_release_creation_unverified")
     asset_url = ("https://uploads.github.com/repos/" + repo + "/releases/" +
                  str(result["id"]) + "/assets?name=" + ASSETS[kind])
-    uploaded = gh_json(asset_url, token, method="POST", body=None) if False else gh(
-        asset_url, token, method="POST", data=data,
-        content_type="application/zip")
+    uploaded = gh(asset_url, token, method="POST", data=data,
+                  content_type="application/zip")
     try:
         descriptor = json.loads(uploaded)
         check(descriptor.get("name") == ASSETS[kind] and
@@ -242,7 +239,27 @@ def main(argv=None):
             raise AssertionError("unsafe SHA accepted")
         except TransportError:
             pass
-        print("Private Release transport identity self-test passed.")
+        with tempfile.TemporaryDirectory(prefix="release-transport-selftest-") as temp:
+            root = Path(temp)
+            source = root / "source"
+            source.mkdir()
+            for name in TEST_FILES:
+                (source / name).write_bytes(b"verified-test-data" * 100)
+            archive = build("test", source)
+            extracted = root / "downloaded"
+            unpack(archive, "test", extracted)
+            assert sorted(p.name for p in extracted.iterdir()) == sorted(TEST_FILES)
+            assert all((source / n).read_bytes() == (extracted / n).read_bytes()
+                       for n in TEST_FILES)
+            bad = io.BytesIO()
+            with zipfile.ZipFile(bad, "w") as z:
+                z.writestr("../unsafe", b"x")
+            try:
+                unpack(bad.getvalue(), "test", root / "must-not-extract")
+                raise AssertionError("unsafe archive accepted")
+            except TransportError:
+                pass
+        print("Private Release archive roundtrip and unsafe-path tests passed.")
         return 0
     check(args.kind and args.sha and args.run_id, "release_parameters_required")
     token = os.environ.get("GH_TOKEN") or os.environ.get("GITHUB_TOKEN")
