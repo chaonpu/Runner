@@ -77,3 +77,43 @@ class RecoveryTests(unittest.TestCase):
                           'completionSourceSha':'b'*40}]:
             altered=copy.deepcopy(self.state);altered['tasks'][0].update(metadata)
             with self.assertRaises(RegistryGuard):validate(self.config,altered)
+
+    def make_a_share_formal(self):
+        self.row.update(id='stock_a:2026-10-16', task='stock_a',
+                        workflow='run-a-share.yml', publicationMode='formal')
+        self.original['path']='.github/workflows/run-a-share.yml'
+        self.jobs['jobs'][0]['name']='effect-v1:stock_a:2026-10-16:39028948173:formal'
+        self.jobs['jobs'][0]['steps'][0]['name']='Run A-share strategy with retry'
+        self.jobs['jobs'][0]['steps'].append({'name':'Verify approved mobile HTML full report',
+                                            'conclusion':'success'})
+        self.recovery['path']='.github/workflows/production-publish-recovery-a.yml'
+        self.recovery_jobs['jobs'][0]['name']='recovery-v1:stock_a:2026-10-16:39029549179:39028948173'
+
+    def test_a_share_formal_recovery_preserves_original_failed_run(self):
+        self.make_a_share_formal()
+        result,proof=self.finish()
+        row=result['tasks'][0]
+        self.assertEqual(row['status'],'verified')
+        self.assertEqual(row['runId'],self.original['id'])
+        self.assertEqual(row['sourceSha'],self.original['head_sha'])
+        self.assertEqual(row['completionRunId'],self.recovery['id'])
+        self.assertTrue(proof['formalReportVerified'])
+        self.assertFalse(proof['strategyRecomputed'])
+        self.assertFalse(proof['originalRunSucceeded'])
+        with self.assertRaises(RegistryGuard):
+            verify_change(self.config,self.state,result,self.row['coordinatorRunId'])
+
+    def test_a_share_requires_original_html_and_exact_recovery_workflow(self):
+        self.make_a_share_formal()
+        self.jobs['jobs'][0]['steps'][-1]['conclusion']='failure'
+        with self.assertRaises(RegistryGuard):self.finish()
+        self.jobs['jobs'][0]['steps'][-1]['conclusion']='success'
+        self.recovery['path']='.github/workflows/production-publish-recovery-us.yml'
+        with self.assertRaises(RegistryGuard):self.finish()
+
+    def test_unapproved_a_share_catchup_and_us_formal_recovery_rejected(self):
+        self.row['publicationMode']='formal'
+        with self.assertRaises(RegistryGuard):self.finish()
+        self.make_a_share_formal()
+        self.row['publicationMode']='theoretical_catchup'
+        with self.assertRaises(RegistryGuard):self.finish()

@@ -10,18 +10,24 @@ from scheduler.production_evidence import timestamp
 
 WORKFLOW='production-publish-recovery-us.yml'
 STEP='Attest recovered original ledger publication'
+SCOPES={
+    ('stock_us','theoretical_catchup'):('run-us.yml',WORKFLOW,'Run US strategy with retry'),
+    ('stock_a','formal'):('run-a-share.yml','production-publish-recovery-a.yml','Run A-share strategy with retry'),
+}
 
 def need(ok,reason):
     if not ok:raise RegistryGuard(reason)
 
 def verify(original,original_jobs,recovery,recovery_jobs,row,expected_source):
-    need(row.get('task')=='stock_us' and row.get('repo')=='chaonpu/Stock'
-         and row.get('workflow')=='run-us.yml' and row.get('route')=='windows'
-         and row.get('publicationMode')=='theoretical_catchup','recovery_scope_unapproved')
+    scope=SCOPES.get((row.get('task'),row.get('publicationMode')))
+    need(scope is not None,'recovery_scope_unapproved')
+    workflow,recovery_workflow,strategy_step=scope
+    need(row.get('repo')=='chaonpu/Stock' and row.get('workflow')==workflow
+         and row.get('route')=='windows','recovery_scope_unapproved')
     need(original.get('id')==row['runId'] and original.get('head_sha')==row['sourceSha']
          and original.get('repository',{}).get('full_name')==row['repo']
          and original.get('event')=='workflow_dispatch' and original.get('head_branch')=='main'
-         and original.get('path','').split('@')[0]=='.github/workflows/run-us.yml'
+         and original.get('path','').split('@')[0]=='.github/workflows/'+workflow
          and original.get('run_attempt')==1 and original.get('status')=='completed'
          and original.get('conclusion')=='failure','original_failed_run_unverified')
     need(original_jobs.get('total_count')==1 and len(original_jobs.get('jobs',[]))==1,
@@ -29,20 +35,22 @@ def verify(original,original_jobs,recovery,recovery_jobs,row,expected_source):
     job=original_jobs['jobs'][0]
     need(job.get('run_id')==row['runId'] and job.get('status')=='completed'
          and job.get('conclusion')=='failure'
-         and job.get('name')==f"effect-v1:{row['id']}:{row['coordinatorRunId']}:theoretical_catchup",
+         and job.get('name')==f"effect-v1:{row['id']}:{row['coordinatorRunId']}:{row['publicationMode']}",
          'original_job_scope_mismatch')
-    phases={'Run US strategy with retry':'success','Verify private snapshot contract':'success',
+    phases={strategy_step:'success','Verify private snapshot contract':'success',
         'Publish verified snapshot and ledger to private database':'failure',
         'Synchronize coordinated inputs to the confirmed settled ledger':'skipped',
         'Save successful strategy state':'skipped','Save failure-safe caches':'skipped',
         'Verify and attest published ledger receipt':'skipped'}
+    if row['task']=='stock_a':
+        phases['Verify approved mobile HTML full report']='success'
     for name,result in phases.items():
         steps=[s for s in job.get('steps',[]) if s.get('name')==name]
         need(len(steps)==1 and steps[0].get('conclusion')==result,'original_phase_unverified')
     need(re.fullmatch(r'[a-f0-9]{40}',str(expected_source))
          and recovery.get('head_sha')==expected_source
          and recovery.get('repository',{}).get('full_name')==row['repo']
-         and recovery.get('path','').split('@')[0]=='.github/workflows/'+WORKFLOW
+         and recovery.get('path','').split('@')[0]=='.github/workflows/'+recovery_workflow
          and recovery.get('event') in ('push','workflow_dispatch')
          and recovery.get('actor',{}).get('login')=='chaonpu'
          and recovery.get('head_branch')=='main' and recovery.get('run_attempt')==1
@@ -64,7 +72,7 @@ def verify(original,original_jobs,recovery,recovery_jobs,row,expected_source):
          'recovery_attestation_time_invalid')
     return {'privateSameCommitReceiptAttested':True,'originalRunSucceeded':False,
         'recoveryRunSucceeded':True,'originalComputationReused':True,
-        'strategyRecomputed':False,'formalReportVerified':False,'businessVerified':True}
+        'strategyRecomputed':False,'formalReportVerified':row['task']=='stock_a','businessVerified':True}
 
 def reconcile(config,state,key,original,original_jobs,recovery,recovery_jobs,*,expected_source,at):
     validate(config,state);_time(at)

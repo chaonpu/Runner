@@ -218,6 +218,9 @@
       "workflow": "run-us.yml"
     },
     {
+      "completionMode": "recovered_original_commit",
+      "completionRunId": 40478643246,
+      "completionSourceSha": "5c7d8621317764164268f9583b2760b5cccfd4e8",
       "coordinatorRunId": 40472773544,
       "createdAt": "2026-10-27T08:29:17.662199+00:00",
       "id": "stock_a:2026-10-27",
@@ -226,9 +229,9 @@
       "route": "windows",
       "runId": 40473896539,
       "sourceSha": "191586f2b1fa225b4bb3bbf7ae1238bc702f8202",
-      "status": "hold",
+      "status": "verified",
       "task": "stock_a",
-      "updatedAt": "2026-10-27T08:34:12.444816+00:00",
+      "updatedAt": "2026-10-27T09:10:55.818568+00:00",
       "workflow": "run-a-share.yml"
     }
   ]

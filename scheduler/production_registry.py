@@ -94,8 +94,8 @@ def validate(config: dict, state: dict) -> dict:
         recovery = {"completionMode", "completionRunId", "completionSourceSha"}
         if recovery.intersection(entry):
             if not (recovery.issubset(entry) and entry.get("status") == "verified"
-                    and entry.get("task") == "stock_us"
-                    and entry.get("publicationMode") == "theoretical_catchup"
+                    and (entry.get("task"), entry.get("publicationMode")) in (
+                        ("stock_us", "theoretical_catchup"), ("stock_a", "formal"))
                     and entry["completionMode"] == "recovered_original_commit"
                     and type(entry["completionRunId"]) is int and entry["completionRunId"] > 0
                     and entry["completionRunId"] != entry.get("runId")
