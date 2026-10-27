@@ -62,21 +62,41 @@ def guard_context(env):
         raise Hold("recovery_request_must_be_only_modified_file")
 
 
-def verify_no_signing_started(response):
+def verify_no_signing_started(response, *, run_id=None, attempt=None, expected_runner=None):
+    """Only an audited pre-key failure authorizes a controlled signer replacement."""
     jobs = response.get("jobs")
     if response.get("total_count") != 1 or not isinstance(jobs, list) or len(jobs) != 1:
         raise Hold("old_signer_jobs_not_proven")
     job = jobs[0]
     if job.get("conclusion") != "failure" or not isinstance(job.get("steps"), list):
         raise Hold("old_signer_result_not_failure")
-    steps = {s.get("name"): s.get("conclusion") for s in job["steps"] if isinstance(s, dict)}
-    allowed_early_failures = {
+    if run_id is not None and (job.get("run_id") != run_id or
+                               job.get("run_attempt") != attempt or
+                               job.get("runner_name") != expected_runner or
+                               job.get("status") != "completed"):
+        raise Hold("old_signer_execution_unverified")
+    raw = job["steps"]
+    steps = [x for x in raw if isinstance(x, dict)]
+    names = [x.get("name") for x in steps]
+    if len(steps) != len(raw) or len(names) != len(set(names)):
+        # Checkout retries may share helper step names, but pre-key security
+        # stages and signing stages must be unambiguous.
+        critical = set(FORBIDDEN_STARTED) | {
+            PREFLIGHT, "Download exact successful private Test run handoff",
+            "NETWORK_TRANSIENT_PREFLIGHT - verify and export GitHub HTTPS Git route",
+        }
+        if any(names.count(name) != 1 for name in critical):
+            raise Hold("old_signer_steps_ambiguous")
+    conclusions = {x["name"]: x.get("conclusion") for x in steps}
+    early = {
         PREFLIGHT,
         "Test official GitHub API uploader integrity and interrupted transfer recovery",
+        "NETWORK_TRANSIENT_PREFLIGHT - verify and export GitHub HTTPS Git route",
+        "Download exact successful private Test run handoff",
     }
-    if not any(steps.get(name) == "failure" for name in allowed_early_failures):
+    if not any(conclusions.get(name) == "failure" for name in early):
         raise Hold("old_signer_not_pre_key_material_failure")
-    if any(steps.get(name) != "skipped" for name in FORBIDDEN_STARTED):
+    if any(conclusions.get(name) != "skipped" for name in FORBIDDEN_STARTED):
         raise Hold("old_signer_could_have_accessed_keys")
 
 
@@ -136,11 +156,27 @@ def perform(env, source, test_id, failed_id):
         raise Hold("signing_retry_limit_or_state_mismatch")
 
     failed = api(signer_token, SIGNER, "/actions/runs/" + str(failed_id))
-    validate_run(failed, SIGNER, SIGN_WORKFLOW, failed_id)
+    count = failed.get("run_attempt")
+    if type(count) is not int or count not in (1, 2):
+        raise Hold("signer_recovery_attempt_limit_exceeded")
+    validate_run(dict(failed, run_attempt=1), SIGNER, SIGN_WORKFLOW, failed_id)
     if failed.get("status") != "completed" or failed.get("conclusion") != "failure":
         raise Hold("old_signing_run_not_completed_failure")
-    jobs = api(signer_token, SIGNER, "/actions/runs/" + str(failed_id) + "/jobs?per_page=100")
-    verify_no_signing_started(jobs)
+    config, _ = json_file(public, "config/repositories.json")
+    account = config["accounts"]["chaonpu"]
+    runner_name = config["tasks"]["android"]["signingRunnerName"]
+    for attempt in range(1, count + 1):
+        previous = api(signer_token, SIGNER,
+                       "/actions/runs/" + str(failed_id) + "/attempts/" + str(attempt))
+        validate_run(dict(previous, run_attempt=1), SIGNER, SIGN_WORKFLOW, failed_id)
+        if previous.get("run_attempt") != attempt or previous.get("status") != "completed" \
+                or previous.get("conclusion") != "failure":
+            raise Hold("old_signing_attempt_not_proven")
+        jobs = api(signer_token, SIGNER,
+                   "/actions/runs/" + str(failed_id) + "/attempts/" +
+                   str(attempt) + "/jobs?per_page=100")
+        verify_no_signing_started(jobs, run_id=failed_id, attempt=attempt,
+                                  expected_runner=runner_name)
 
     test = api(test_token, TEST, "/actions/runs/" + str(test_id))
     validate_run(test, TEST, TEST_WORKFLOW, test_id, source)
@@ -148,9 +184,6 @@ def perform(env, source, test_id, failed_id):
         raise Hold("test_run_not_verified")
     verify_artifact(env.get("TEST_SOURCE_READ_TOKEN") or test_token, TEST, test_id, "windows-test-verified", source)
 
-    config, _ = json_file(public, "config/repositories.json")
-    account = config["accounts"]["chaonpu"]
-    runner_name = config["tasks"]["android"]["signingRunnerName"]
     check_idle(SIGNER, SIGN_WORKFLOW, account, env)
     if not runner_ready(SIGNER, runner_name, account, env):
         raise Hold("signing_runner_not_ready")
