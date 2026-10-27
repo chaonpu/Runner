@@ -792,7 +792,7 @@ def run(env, *, execute=False, resume=False, requested_sha="", live_smoke=False)
             verify_hosted_execution(sign, SIGNER, sign_run)
         else:
             verify_execution_runner(sign, SIGNER, sign_run, task["signingRunnerName"])
-        verify_artifact(sign, SIGNER, sign_run, "windows-signed-release", source)
+        verify_artifact(env.get("CHAONPU_SOURCE_READ_TOKEN") or sign, SIGNER, sign_run, "windows-signed-release", source)
         put_state(pub, source, "signed_verified")
         record_public(source, "signed_verified", testRunId=entry["testRunId"],
                       signingRunId=sign_run,
