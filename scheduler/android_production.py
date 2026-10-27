@@ -250,8 +250,9 @@ def verify_completed_signer_retry(token, workflow, rid, expected_runner):
     """Reconcile one finished rerun of the SAME Windows signer, without dispatch.
 
     This is only called by explicit resume. Attempt one must have stopped at
-    network preflight before private handoff or signing material was accessed.
-    Test reruns, cloud reruns, third attempts and signing failures stay blocked.
+    verified network preflight OR exact private Test Release download, before
+    any signing key was accessed. Test reruns, cloud reruns, third attempts and
+    signing failures stay blocked.
     """
     latest = api(token, SIGNER, "/actions/runs/" + str(rid))
     if latest.get("run_attempt") == 1:
@@ -300,10 +301,24 @@ def verify_completed_signer_retry(token, workflow, rid, expected_runner):
                 and all(names.count(name) == 1 for name in guarded + (preflight,)),
                 "signer_retry_steps_ambiguous")
         results = {s["name"]: s.get("conclusion") for s in steps}
-        require(results.get(preflight) == ("failure" if attempt == 1 else "success")
-                and all(results.get(name) == ("skipped" if attempt == 1 else "success")
-                        for name in guarded),
-                "signer_retry_preflight_or_signing_proof_missing")
+        if attempt == 1:
+            # A 403 fetching an exact private Release is a pre-key handoff failure.
+            # Permit one SAME-RUN rerun only when the remaining security-critical
+            # steps are explicitly skipped; never infer this from error text.
+            stopped_at_network = (results.get(preflight) == "failure"
+                                  and all(results.get(name) == "skipped"
+                                          for name in guarded))
+            stopped_at_handoff = (
+                results.get(preflight) == "success"
+                and results.get(guarded[0]) == "failure"
+                and all(results.get(name) == "skipped" for name in guarded[1:])
+            )
+            require(stopped_at_network or stopped_at_handoff,
+                    "signer_retry_preflight_or_signing_proof_missing")
+        else:
+            require(results.get(preflight) == "success"
+                    and all(results.get(name) == "success" for name in guarded),
+                    "signer_retry_preflight_or_signing_proof_missing")
     # Do not accept evidence if another rerun started during reconciliation.
     confirmed = api(token, SIGNER, "/actions/runs/" + str(rid))
     require(confirmed == latest, "signer_retry_changed_during_verification")
