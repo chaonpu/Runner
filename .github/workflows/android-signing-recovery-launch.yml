@@ -1,0 +1,46 @@
+name: Recover exact verified Android signer only
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'config/android-signing-recovery.json'
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: controlled-android-signer-recovery
+  cancel-in-progress: false
+
+jobs:
+  recover-signer:
+    if: github.repository == 'chaonpu/Runner' && github.actor == 'chaonpu'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GITHUB_EVENT_BEFORE: ${{ github.event.before }}
+      TEST_ACTIONS_READ_TOKEN: ${{ secrets.TEST_ACTIONS_READ_TOKEN }}
+      TEST_SOURCE_READ_TOKEN: ${{ secrets.TEST_SOURCE_READ_TOKEN }}
+      CHAONPU_ACTIONS_READ_TOKEN: ${{ secrets.CHAONPU_ACTIONS_READ_TOKEN }}
+      CHAONPU_SOURCE_READ_TOKEN: ${{ secrets.CHAONPU_SOURCE_READ_TOKEN }}
+      RUNNER_READ_TOKEN: ${{ secrets.RUNNER_READ_TOKEN }}
+    steps:
+      - name: Check out exact approved Runner revision
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Verify recovery implementation and required safety tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m compileall -q scheduler/android_signing_recovery.py scheduler/android_production.py tools/private_release_transport.py
+          python3 -m unittest discover -s tests -p 'test_android_signing_recovery.py' -v
+          python3 -m unittest discover -s tests -p 'test_android_private_release.py' -v
+      - name: Recover only a fully proven pre-key signing failure
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m scheduler.android_signing_recovery
