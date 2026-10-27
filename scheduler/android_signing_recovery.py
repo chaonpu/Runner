@@ -22,7 +22,7 @@ REQUEST = Path("config/android-signing-recovery.json")
 WORKFLOW = (
     "chaonpu/Runner/.github/workflows/android-signing-recovery-launch.yml@refs/heads/main"
 )
-PREFLIGHT = "Download and verify pinned official artifact uploader from GitHub API"
+PREFLIGHT = "Verify private Release transport policy"
 FORBIDDEN_STARTED = (
     "Restore signing material only after private verification",
     "Sign already-tested unsigned APK without executing Test code",
