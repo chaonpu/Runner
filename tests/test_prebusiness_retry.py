@@ -260,11 +260,15 @@ class RecoveryTests(unittest.TestCase):
             "GITHUB_ACTOR": "chaonpu",
             "GITHUB_REF": "refs/heads/main",
         }
+        # The test is about one-shot retirement, not the real system date.
+        # Pin the wall clock to this synthetic A-share formal trading day.
         with patch.object(c, "ProductionPorts", return_value=ports), \
+             patch.object(c, "datetime") as clock, \
              patch.object(c, "prepare", return_value={
                  "alreadyCurrent": True, "readinessRunId": 123,
              }) as ready, \
              patch("sys.stdout"):
+            clock.now.return_value = datetime(2026, 10, 26, 9, 0, tzinfo=timezone.utc)
             out = c.execute(env, TASK, DAY, "formal")
         self.assertEqual(out["status"], "skipped")
         ports.retire_prebusiness_hold.assert_called_once_with(TASK, DAY)
