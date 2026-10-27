@@ -1,0 +1,36 @@
+name: Verify Android private Release transport
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'tools/private_release_transport.py'
+      - 'scheduler/android_production.py'
+      - 'scheduler/android_signing_recovery.py'
+      - 'scheduler/apk_stage.py'
+      - 'scheduler/android_publish.py'
+      - 'tests/test_android_*.py'
+      - 'tests/test_apk_stage.py'
+      - '.github/workflows/android-release-transport-check.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  offline-regression:
+    if: github.repository == 'chaonpu/Runner' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Compile Release transport and Android coordinator
+        run: python3 -m compileall -q tools/private_release_transport.py scheduler/android_production.py scheduler/android_signing_recovery.py scheduler/apk_stage.py scheduler/android_publish.py
+      - name: Test private Release ZIP roundtrip and path safeguards
+        run: python3 tools/private_release_transport.py self-test
+      - name: Test Android release pipeline fail-closed regressions without network
+        run: |
+          python3 -m unittest discover -s tests -p 'test_android_*.py' -v
+          python3 -m unittest discover -s tests -p 'test_apk_stage.py' -v
