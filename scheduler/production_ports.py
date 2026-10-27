@@ -231,13 +231,37 @@ class ProductionPorts(ReadOnlyPorts):
              len({s.get("name") for s in steps if isinstance(s, dict)}) == len(steps),
              "prebusiness_step_trace_invalid")
         phases = {s["name"]: s.get("conclusion") for s in steps}
-        route_phase = ("Prepare verified job-scoped GitHub route before Windows checkout",
-                       "Bootstrap job-scoped Git route; probe only when source fetch is required")
+        # Only a named pre-business Git transport stage may qualify. A failed
+        # source route was already eligible; the Windows database checkout
+        # retry-route failure is equally pre-business and has no ledger effects.
+        route_phase = (
+            "Prepare verified job-scoped GitHub route before Windows checkout",
+            "Bootstrap job-scoped Git route; probe only when source fetch is required",
+            "Refresh verified Git route before Windows win_db retry 2",
+            "Refresh verified Git route before Windows win_db retry 3",
+        )
         need(sum(phases.get(name) == "failure" for name in route_phase) == 1,
              "prebusiness_not_known_git_route_failure")
+        failing_step = next(name for name in route_phase if phases.get(name) == "failure")
         failure_index = next(i for i, step in enumerate(steps)
-                             if step["name"] in route_phase and step["conclusion"] == "failure")
-        need(all(step["name"] in ("Complete job",) or step.get("conclusion") == "skipped"
+                             if step["name"] == failing_step and step["conclusion"] == "failure")
+        if failing_step.startswith("Refresh verified Git route before Windows win_db"):
+            need(phases.get("Verify private database write token") == "success"
+                 and phases.get("Windows private database checkout attempt 1 (pre-business only)")
+                 in ("success", "failure")
+                 and phases.get("Verify bounded Windows Stock source recovery before strategy")
+                 == "success",
+                 "prebusiness_database_recovery_prerequisite_missing")
+        # GitHub post-job cleanup is permitted only for the specifically
+        # recorded Git checkout that failed before strategy. No other step
+        # after the failure may run.
+        cleanup = (
+            "Complete job",
+            "Post Windows private database checkout attempt 1 (pre-business only)",
+            "Post Windows private database checkout attempt 2 (pre-business only)",
+            "Post Windows private database checkout attempt 3 (pre-business only)",
+        )
+        need(all(step["name"] in cleanup or step.get("conclusion") == "skipped"
                  for step in steps[failure_index + 1:]),
              "prebusiness_postfailure_work_must_be_skipped")
         # Require the entire calculation -> publication pipeline never began.
@@ -264,7 +288,7 @@ class ProductionPorts(ReadOnlyPorts):
         # A single CAS write changes both active and archived metadata atomically.
         self.requester(self.env["GH_TOKEN"], "PUT", PUBLIC + "/contents/" + REGISTRY, {
             "branch": "main", "sha": blob,
-            "message": "Archive verified prebusiness Git route failure for bounded retry",
+            "message": "Archive verified prebusiness Git/source/database route failure for bounded retry",
             "content": base64.b64encode((json.dumps(next_state, indent=2) + "\n").encode()).decode(),
         })
         c, saved, _ = self.load()

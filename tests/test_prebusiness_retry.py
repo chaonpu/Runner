@@ -136,6 +136,103 @@ class RecoveryTests(unittest.TestCase):
                 obj.requester.assert_not_called()
                 self.assertNotIn("retiredPrebusinessFailures", memory[0])
 
+    def database_jobs(self, *, market="a", failure="Refresh verified Git route before Windows win_db retry 2"):
+        """Realistic GitHub job step conclusions around failed checkout@v7.
+
+        checkout uses continue-on-error: job API reports 'success' for a step
+        whose *outcome* was failure. Only failing transport refresh is decisive.
+        """
+        record = jobs()
+        trace = [
+            {"name": "Verify bounded Windows Stock source recovery before strategy",
+             "conclusion": "success"},
+            {"name": "Verify private database write token", "conclusion": "success"},
+            {"name": "Restore exact private database from same-session verified Windows cache",
+             "conclusion": "success"},
+            {"name": "Windows private database checkout attempt 1 (pre-business only)",
+             "conclusion": "success"},
+            {"name": "Windows private database connection backoff after failed attempt 1",
+             "conclusion": "success"},
+            {"name": failure, "conclusion": "failure"},
+            {"name": "Windows private database checkout attempt 2 (pre-business only)",
+             "conclusion": "skipped"},
+            {"name": "Verify bounded Windows private database recovery before strategy",
+             "conclusion": "skipped"},
+            {"name": "Run A-share strategy with retry", "conclusion": "skipped"},
+            {"name": "Run US strategy with retry", "conclusion": "skipped"},
+            {"name": "Verify approved mobile HTML full report", "conclusion": "skipped"},
+            {"name": "Verify private snapshot contract", "conclusion": "skipped"},
+            {"name": "Publish verified snapshot and ledger to private database",
+             "conclusion": "skipped"},
+            {"name": "Synchronize coordinated inputs to the confirmed settled ledger",
+             "conclusion": "skipped"},
+            {"name": "Save successful strategy state", "conclusion": "skipped"},
+            {"name": "Verify and attest published ledger receipt", "conclusion": "skipped"},
+            {"name": "Send A-share mail only after verified ledger publication",
+             "conclusion": "skipped"},
+            {"name": "Save failure-safe caches", "conclusion": "skipped"},
+            {"name": "Post Windows private database checkout attempt 1 (pre-business only)",
+             "conclusion": "success"},
+            {"name": "Complete job", "conclusion": "success"},
+        ]
+        record["jobs"][0]["steps"] = trace
+        return record
+
+    def test_attested_database_checkout_git_route_failure_is_once_recoverable(self):
+        _, obj, state = self.fixture(job_value=self.database_jobs())
+        proof = self.retire(obj)
+        self.assertEqual(proof["status"], "prebusiness_recovery_attested")
+        self.assertTrue(proof["archived"])
+        self.assertEqual(proof["dispatches"], 0)
+        self.assertEqual(state[0]["tasks"], [])
+        self.assertEqual(state[0]["retiredPrebusinessFailures"][0]["runId"], RUN)
+        obj.requester.assert_called_once()
+
+    def test_database_recovery_denies_drift_or_postfailure_business(self):
+        cases = {}
+        for label, step, conclusion in (
+            ("strategy already ran", "Run A-share strategy with retry", "success"),
+            ("published ledger", "Publish verified snapshot and ledger to private database", "failure"),
+            ("sent mail", "Send A-share mail only after verified ledger publication", "success"),
+            ("unknown post failure", "Unexpected business mutation", "success"),
+            ("no original database checkout",
+             "Windows private database checkout attempt 1 (pre-business only)", "skipped"),
+            ("source not verified",
+             "Verify bounded Windows Stock source recovery before strategy", "skipped"),
+            ("secret unavailable", "Verify private database write token", "failure"),
+        ):
+            trace = self.database_jobs()
+            steps = trace["jobs"][0]["steps"]
+            match = [s for s in steps if s["name"] == step]
+            if match:
+                match[0]["conclusion"] = conclusion
+            else:
+                steps.insert(-2, {"name": step, "conclusion": conclusion})
+            cases[label] = trace
+        for label, trace in cases.items():
+            with self.subTest(label=label):
+                _, obj, memory = self.fixture(job_value=trace)
+                with self.assertRaises(RegistryGuard):
+                    self.retire(obj)
+                obj.requester.assert_not_called()
+                self.assertNotIn("retiredPrebusinessFailures", memory[0])
+
+    def test_database_failure_without_named_route_or_repeated_recovery_denied(self):
+        unknown = self.database_jobs()
+        for step in unknown["jobs"][0]["steps"]:
+            if step["name"] == "Refresh verified Git route before Windows win_db retry 2":
+                step["name"] = "Unknown failure after checkout"
+        _, obj, memory = self.fixture(job_value=unknown)
+        with self.assertRaisesRegex(RegistryGuard, "not_known_git_route_failure"):
+            self.retire(obj)
+        obj.requester.assert_not_called()
+        state = data()[1]
+        state["retiredPrebusinessFailures"] = deepcopy(state["tasks"])
+        _, obj, memory = self.fixture(state=state, job_value=self.database_jobs())
+        with self.assertRaisesRegex(RegistryGuard, "once_per_session"):
+            self.retire(obj)
+        obj.requester.assert_not_called()
+
     def test_non_hold_does_not_recover(self):
         cfg, state = data()
         state["tasks"][0]["status"] = "verified"
@@ -163,11 +260,15 @@ class RecoveryTests(unittest.TestCase):
             "GITHUB_ACTOR": "chaonpu",
             "GITHUB_REF": "refs/heads/main",
         }
+        # The test is about one-shot retirement, not the real system date.
+        # Pin the wall clock to this synthetic A-share formal trading day.
         with patch.object(c, "ProductionPorts", return_value=ports), \
+             patch.object(c, "datetime") as clock, \
              patch.object(c, "prepare", return_value={
                  "alreadyCurrent": True, "readinessRunId": 123,
              }) as ready, \
              patch("sys.stdout"):
+            clock.now.return_value = datetime(2026, 10, 26, 9, 0, tzinfo=timezone.utc)
             out = c.execute(env, TASK, DAY, "formal")
         self.assertEqual(out["status"], "skipped")
         ports.retire_prebusiness_hold.assert_called_once_with(TASK, DAY)
