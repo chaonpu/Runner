@@ -33,6 +33,7 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       CHAONPU_ACTIONS_READ_TOKEN: ${{ secrets.CHAONPU_ACTIONS_READ_TOKEN }}
+      CHAONPU_SOURCE_READ_TOKEN: ${{ secrets.CHAONPU_SOURCE_READ_TOKEN }}
       TEST_ACTIONS_READ_TOKEN: ${{ secrets.TEST_ACTIONS_READ_TOKEN }}
       TEST_SOURCE_READ_TOKEN: ${{ secrets.TEST_SOURCE_READ_TOKEN }}
       UPDATE_LOG: ${{ inputs.update_log }}
@@ -57,15 +58,6 @@ jobs:
             *) echo "::error::无效的 APK 发布方式"; exit 2 ;;
           esac
           python3 -m scheduler.android_publish --release-mode "$mode" 2>&1 | tee "$RUNNER_TEMP/entry-result.jsonl"
-      - name: Downloadable public release request
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: apk-publication-request
-          path: publication-output/android-publish-request.json
-          if-no-files-found: ignore
-          retention-days: 7
-
       - name: Show authoritative entry outcome (not GitHub green alone)
         if: always()
         env:
