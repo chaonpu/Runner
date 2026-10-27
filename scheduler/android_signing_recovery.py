@@ -27,7 +27,7 @@ FORBIDDEN_STARTED = (
     "Restore signing material only after private verification",
     "Sign already-tested unsigned APK without executing Test code",
     "Verify certificate, package, version and signed APK digest",
-    "Upload verified signed APK to private signing repository only",
+    "Publish verified signed APK to PRIVATE Release Assets (not Actions Artifact)",
 )
 
 
@@ -146,7 +146,7 @@ def perform(env, source, test_id, failed_id):
     validate_run(test, TEST, TEST_WORKFLOW, test_id, source)
     if test.get("status") != "completed" or test.get("conclusion") != "success":
         raise Hold("test_run_not_verified")
-    verify_artifact(test_token, TEST, test_id, "windows-test-verified")
+    verify_artifact(env.get("TEST_SOURCE_READ_TOKEN") or test_token, TEST, test_id, "windows-test-verified", source)
 
     config, _ = json_file(public, "config/repositories.json")
     account = config["accounts"]["chaonpu"]
@@ -162,7 +162,7 @@ def perform(env, source, test_id, failed_id):
                   previousSigningRunId=failed_id, testRunId=test_id)
     wait_run(signer_token, SIGNER, SIGN_WORKFLOW, new_id)
     verify_execution_runner(signer_token, SIGNER, new_id, runner_name)
-    verify_artifact(signer_token, SIGNER, new_id, "windows-signed-release")
+    verify_artifact(signer_token, SIGNER, new_id, "windows-signed-release", source)
     put_state(public, source, "signed_verified")
     record_public(source, "signed_verified", signingRunId=new_id,
                   testRunId=test_id, publication="not_authorized_no_public_apk")
