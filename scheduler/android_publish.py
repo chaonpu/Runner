@@ -97,7 +97,7 @@ def candidate_version(env, row):
                                 env["TEST_ACTIONS_READ_TOKEN"])
     with tempfile.TemporaryDirectory(prefix="signed-publication-preview-") as folder:
         root = Path(folder)
-        private_env = dict(env, GH_TOKEN=env["CHAONPU_ACTIONS_READ_TOKEN"])
+        private_env = dict(env, GH_TOKEN=env.get("CHAONPU_SOURCE_READ_TOKEN") or env["CHAONPU_ACTIONS_READ_TOKEN"])
         result = subprocess.run([sys.executable, "tools/private_release_transport.py",
             "download", "--kind", "signed", "--sha", row["sourceSha"],
             "--run-id", str(row["signingRunId"]), "--dir", str(root)],
