@@ -92,7 +92,7 @@
         "stage": "signer"
       },
       "liveSmoke": true,
-      "phase": "signer_started",
+      "phase": "signed_verified",
       "recoveryFromSigningRunId": 40566493488,
       "route": "windows",
       "signingRecoveryHistory": [
@@ -102,7 +102,7 @@
       "signingRunId": 40572178326,
       "sourceSha": "54124da4a09e9c88de8c74ba475de0e92672daff",
       "testRunId": 40564925944,
-      "updatedAt": "2026-10-27T19:46:55.743872+00:00"
+      "updatedAt": "2026-10-27T19:59:57.381655+00:00"
     },
     "580951fab35aadff8fee715c77707ceead1e0338": {
       "createdAt": "2026-10-24T04:01:54.448002+00:00",
