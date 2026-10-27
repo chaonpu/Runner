@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "dispatchEnabled": true,
+  "dispatchEnabled": false,
   "description": "Public coordinator allowlists only private build/strategy workflow targets; public APK release is separate, repository-owned, and never dispatched with a private-repo token.",
   "accounts": {
     "anwpustudent-lab": {
@@ -34,13 +34,12 @@
       "kind": "strategy",
       "repo": "chaonpu/Stock",
       "cloudWorkflow": "run-us.yml",
-      "windowsWorkflow": "run-us.yml",
+      "windowsWorkflow": null,
       "runnerName": "ziwuxilv-stock-win",
       "estimatedMinutes": 180,
       "reserveMinutes": 200,
       "idempotencyScope": "trade-date",
-      "enabledForDispatch": true,
-      "publicationMode": "formal"
+      "enabledForDispatch": false
     },
     "android": {
       "kind": "android",
@@ -56,16 +55,6 @@
       "reserveMinutes": 200,
       "idempotencyScope": "source-sha",
       "enabledForDispatch": false
-    }
-  },
-  "activeLease": {
-    "taskId": "stock_us:2026-10-26",
-    "publicationMode": "formal",
-    "coordinatorRunId": 40423573958,
-    "expiresAt": "2026-10-27T06:07:33.784681+00:00",
-    "restoreTask": {
-      "windowsWorkflow": null,
-      "publicationMode": null
     }
   }
 }
