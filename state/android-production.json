@@ -85,6 +85,12 @@
     },
     "54124da4a09e9c88de8c74ba475de0e92672daff": {
       "createdAt": "2026-10-27T18:58:46.538276+00:00",
+      "lastFailure": {
+        "code": "android_signer_setup_or_handoff_failed_manual_review",
+        "recordedAt": "2026-10-27T19:10:14.538666+00:00",
+        "runId": 40566493488,
+        "stage": "signer"
+      },
       "liveSmoke": true,
       "phase": "signer_started",
       "route": "windows",
