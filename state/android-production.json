@@ -354,6 +354,12 @@
     },
     "da4c843dee7f425543c369bea6666cbd89e2af32": {
       "createdAt": "2026-10-27T18:35:50.118651+00:00",
+      "lastFailure": {
+        "code": "android_live_validation_failed_or_skipped",
+        "recordedAt": "2026-10-27T18:49:33.853601+00:00",
+        "runId": 40561452989,
+        "stage": "test"
+      },
       "liveSmoke": true,
       "phase": "test_started",
       "route": "windows",
