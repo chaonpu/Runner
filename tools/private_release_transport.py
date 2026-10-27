@@ -10,6 +10,8 @@ from __future__ import annotations
 import argparse
 import hashlib
 import io
+import subprocess
+import time
 import json
 import os
 from pathlib import Path
@@ -118,17 +120,43 @@ def gh(url, token, *, method="GET", data=None, content_type="application/json", 
         "Content-Type": content_type, "User-Agent": "ziwuxilv-verified-private-release-transport",
         "Cache-Control": "no-cache",
     })
-    try:
-        with urllib.request.urlopen(req, timeout=150) as response:
-            result = response.read(MAX_BYTES + 1)
-            check(len(result) <= MAX_BYTES, "release_response_too_large")
-            return result
-    except urllib.error.HTTPError as exc:
-        if exc.code == 404:
-            raise TransportError("private_release_not_found") from None
-        raise TransportError("github_release_http_" + str(exc.code)) from None
-    except (OSError, TimeoutError):
-        raise TransportError("github_release_transport_unavailable") from None
+    # Only safe GET reads can be repeated; POST creates immutable releases and
+    # must never be blindly replayed after an ambiguous connection failure.
+    attempts = 2 if method == "GET" else 1
+    for attempt in range(attempts):
+        try:
+            with urllib.request.urlopen(req, timeout=45 if method == "GET" else 150) as response:
+                result = response.read(MAX_BYTES + 1)
+                check(len(result) <= MAX_BYTES, "release_response_too_large")
+                return result
+        except urllib.error.HTTPError as exc:
+            if exc.code == 404:
+                raise TransportError("private_release_not_found") from None
+            # Auth/rate-limit errors must not be misclassified as transients.
+            raise TransportError("github_release_http_" + str(exc.code)) from None
+        except (OSError, TimeoutError):
+            if attempt + 1 < attempts:
+                time.sleep(2)
+    # github-cli is a separately implemented TLS/HTTP stack already used to
+    # verify the Test run. Only the *same* allowlisted GitHub API read is tried.
+    if method == "GET" and url.startswith("https://api.github.com/repos/"):
+        endpoint = url.removeprefix("https://api.github.com/")
+        parts = endpoint.split("/")
+        if (len(parts) >= 5 and "/".join(parts[1:3]) in REPOS.values()
+                and parts[3] in ("releases", "git")):
+            env = dict(os.environ, GH_TOKEN=token)
+            env.pop("GITHUB_TOKEN", None)
+            try:
+                result = subprocess.run(
+                    ["gh", "api", "-X", "GET", "-H", "Accept: " + accept, endpoint],
+                    env=env, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+                    timeout=85, check=False,
+                )
+                if result.returncode == 0 and 0 < len(result.stdout) <= MAX_BYTES:
+                    return result.stdout
+            except (OSError, subprocess.TimeoutExpired):
+                pass
+    raise TransportError("github_release_transport_unavailable")
 
 def gh_json(url, token, *, method="GET", body=None):
     raw = gh(url, token, method=method,
@@ -173,9 +201,35 @@ def verify_metadata(kind, sha, run_id, token):
 
 def download(kind, sha, run_id, folder, token):
     asset = verify_metadata(kind, sha, run_id, token)
-    raw = gh("https://api.github.com/repos/" + REPOS[kind] +
-             "/releases/assets/" + str(asset["id"]), token,
-             accept="application/octet-stream")
+    try:
+        raw = gh("https://api.github.com/repos/" + REPOS[kind] +
+                 "/releases/assets/" + str(asset["id"]), token,
+                 accept="application/octet-stream")
+    except TransportError as exc:
+        if str(exc) != "github_release_transport_unavailable":
+            raise
+        # CLI's release download has its own redirect handling, useful when a
+        # self-hosted Windows runner cannot stream a GitHub asset with urllib.
+        # It never selects a latest release or another repository/asset name.
+        with tempfile.TemporaryDirectory(prefix="verified-release-cli-") as temp:
+            env = dict(os.environ, GH_TOKEN=token)
+            env.pop("GITHUB_TOKEN", None)
+            try:
+                result = subprocess.run(
+                    ["gh", "release", "download", identity(kind, sha, run_id),
+                     "--repo", REPOS[kind], "--pattern", ASSETS[kind],
+                     "--dir", temp],
+                    env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                    timeout=120, check=False,
+                )
+                target = Path(temp) / ASSETS[kind]
+                check(result.returncode == 0 and target.is_file()
+                      and not target.is_symlink()
+                      and target.stat().st_size == asset["size"],
+                      "private_release_cli_download_unverified")
+                raw = target.read_bytes()
+            except (OSError, subprocess.TimeoutExpired):
+                raise TransportError("private_release_cli_transport_unavailable") from None
     check(len(raw) == asset["size"], "release_asset_length_mismatch")
     if asset.get("digest") is not None:
         check(sha256(raw) == asset["digest"][7:], "release_asset_sha256_mismatch")
