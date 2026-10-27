@@ -1,8 +1,8 @@
 {
   "version": 1,
-  "enabled": true,
-  "sourceSha": "54124da4a09e9c88de8c74ba475de0e92672daff",
-  "testRunId": 40564925944,
-  "failedSigningRunId": 40566493488,
-  "approval": "RECOVER-SIGNER-54124da4a09e9c88de8c74ba475de0e92672daff-40566493488"
+  "enabled": false,
+  "sourceSha": "",
+  "testRunId": 0,
+  "failedSigningRunId": 0,
+  "approval": ""
 }
