@@ -315,7 +315,7 @@ def main() -> int:
             # GitHub CLI authenticates using the existing CHAONPU private Actions
             # token; never reuses the Runner's GITHUB_TOKEN for private access.
             private_env = dict(os.environ)
-            private_env["GH_TOKEN"] = os.environ["CHAONPU_ACTIONS_READ_TOKEN"]
+            private_env["GH_TOKEN"] = os.environ.get("CHAONPU_SOURCE_READ_TOKEN") or os.environ["CHAONPU_ACTIONS_READ_TOKEN"]
             dl = subprocess.run(
                 [sys.executable, "tools/private_release_transport.py", "download",
                  "--kind", "signed", "--sha", req["sourceCommit"],
