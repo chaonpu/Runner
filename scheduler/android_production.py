@@ -499,15 +499,35 @@ def verify_hosted_execution(token, repo, rid):
             "hosted_standard_ubuntu_not_verified")
 
 
-def verify_artifact(token, repo, rid, expected):
-    response = api(token, repo, "/actions/runs/" + str(rid) + "/artifacts?per_page=100")
-    artifacts = response.get("artifacts")
-    require(isinstance(artifacts, list), "artifact_list_unavailable")
-    matches = [x for x in artifacts if x.get("name") == expected
-               and x.get("expired") is False
-               and type(x.get("size_in_bytes")) is int
-               and x.get("size_in_bytes") > 0]
-    require(len(matches) == 1, "verified_private_artifact_missing_or_ambiguous")
+def verify_artifact(token, repo, rid, expected, source):
+    """Verify exact private Release Assets metadata, never Actions Artifact storage."""
+    require(isinstance(source, str) and SHA.fullmatch(source)
+            and type(rid) is int and rid > 0, "release_transport_identity_invalid")
+    require((repo == TEST and expected in ("windows-test-verified", "cloud-test-verified"))
+            or (repo == SIGNER and expected == "windows-signed-release"),
+            "release_kind_not_allowlisted")
+    kind = "test" if repo == TEST else "signed"
+    tag = "verified-" + kind + "-" + source + "-run-" + str(rid)
+    release = api(token, repo, "/releases/tags/" + tag)
+    require(release.get("tag_name") == tag and release.get("prerelease") is True
+            and release.get("draft") is False, "private_release_not_verified")
+    assets = release.get("assets")
+    require(isinstance(assets, list) and len(assets) == 1, "private_release_assets_not_unique")
+    item = assets[0]
+    require(isinstance(item, dict)
+            and item.get("name") == "verified-" + kind + "-bundle.zip"
+            and item.get("state") == "uploaded"
+            and type(item.get("id")) is int and item["id"] > 0
+            and type(item.get("size")) is int and 1024 < item["size"] <= 240 * 1024 * 1024
+            and (item.get("digest") is None or
+                 re.fullmatch(r"sha256:[a-f0-9]{64}", str(item["digest"])) is not None),
+            "private_release_asset_unverified")
+    if kind == "test":
+        ref = api(token, repo, "/git/ref/tags/" + tag)
+        require(ref.get("ref") == "refs/tags/" + tag
+                and ref.get("object", {}).get("type") == "commit"
+                and ref.get("object", {}).get("sha") == source,
+                "private_release_source_tag_mismatch")
 
 
 def choose_signer_route(task, account, env):
@@ -553,7 +573,7 @@ def verify_live_execution(token, rid):
              if x.get("name") == "Verify live chart execution evidence"]
     require(len(steps) == 1 and steps[0].get("conclusion") == "success",
             "live_validation_execution_missing_or_skipped")
-    verify_artifact(token, TEST, rid, "live-chart-validation")
+    # The bound private Release contains live chart evidence in verification.json.
 
 
 def run(env, *, execute=False, resume=False, requested_sha="", live_smoke=False):
@@ -713,7 +733,7 @@ def run(env, *, execute=False, resume=False, requested_sha="", live_smoke=False)
             verify_hosted_execution(test, TEST, test_run)
         else:
             verify_execution_runner(test, TEST, test_run, task["runnerName"])
-        verify_artifact(test, TEST, test_run, source_artifact)
+        verify_artifact(env.get("TEST_SOURCE_READ_TOKEN") or test, TEST, test_run, source_artifact, source)
         if live_smoke:
             verify_live_execution(test, test_run)
         put_state(pub, source, "test_verified")
@@ -726,7 +746,7 @@ def run(env, *, execute=False, resume=False, requested_sha="", live_smoke=False)
         # Never create another Test job on resume; revalidate the original run.
         wait_recorded(pub, source, "test", test, TEST,
                       source_workflow, test_run, source)
-        verify_artifact(test, TEST, test_run, source_artifact)
+        verify_artifact(env.get("TEST_SOURCE_READ_TOKEN") or test, TEST, test_run, source_artifact, source)
         if live_smoke:
             verify_live_execution(test, test_run)
         check_idle(SIGNER, SIGN_WORKFLOW, sign_account, env)
@@ -756,7 +776,7 @@ def run(env, *, execute=False, resume=False, requested_sha="", live_smoke=False)
                 verify_hosted_execution(test, TEST, entry["testRunId"])
             else:
                 verify_execution_runner(test, TEST, entry["testRunId"], task["runnerName"])
-            verify_artifact(test, TEST, entry["testRunId"], source_artifact)
+            verify_artifact(env.get("TEST_SOURCE_READ_TOKEN") or test, TEST, entry["testRunId"], source_artifact, source)
             if live_smoke:
                 verify_live_execution(test, entry["testRunId"])
             recovered_retry = verify_completed_signer_retry(
@@ -772,7 +792,7 @@ def run(env, *, execute=False, resume=False, requested_sha="", live_smoke=False)
             verify_hosted_execution(sign, SIGNER, sign_run)
         else:
             verify_execution_runner(sign, SIGNER, sign_run, task["signingRunnerName"])
-        verify_artifact(sign, SIGNER, sign_run, "windows-signed-release")
+        verify_artifact(sign, SIGNER, sign_run, "windows-signed-release", source)
         put_state(pub, source, "signed_verified")
         record_public(source, "signed_verified", testRunId=entry["testRunId"],
                       signingRunId=sign_run,
