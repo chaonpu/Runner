@@ -369,6 +369,31 @@ class SignerRetryResumeTests(unittest.TestCase):
         with self.assertRaisesRegex(a.Hold, "run_origin_mismatch"):
             a.validate_run(self.evidence()[0], a.SIGNER, a.SIGN_WORKFLOW, 43)
 
+    def test_recover_same_signing_run_after_verified_pre_key_release_403(self):
+        # First attempt reached private Test Release download, but never accessed
+        # any signing material. Only a fully verified successful attempt 2 counts.
+        import copy
+        rows = list(copy.deepcopy(self.evidence()))
+        first = rows[2]["jobs"][0]["steps"]
+        first[0]["conclusion"] = "success"  # verified Git preflight
+        first[1]["conclusion"] = "failure"  # private Test Release HTTP 403
+        self.assertTrue(self.verify(rows))
+        # Never permit recovery once keystore restoration could have started.
+        dangerous = list(copy.deepcopy(rows))
+        dangerous[2]["jobs"][0]["steps"][3]["conclusion"] = "success"
+        with self.assertRaisesRegex(a.Hold, "signer_retry_preflight_or_signing_proof_missing"):
+            self.verify(dangerous)
+        # Evidence of a skipped download without a failing preflight is not enough.
+        missing = list(copy.deepcopy(rows))
+        missing[2]["jobs"][0]["steps"][1]["conclusion"] = "skipped"
+        with self.assertRaises(a.Hold):
+            self.verify(missing)
+        # Repeated handoff failure on attempt 2 is never accepted.
+        second_failure = list(copy.deepcopy(rows))
+        second_failure[3]["jobs"][0]["steps"][1]["conclusion"] = "failure"
+        with self.assertRaises(a.Hold):
+            self.verify(second_failure)
+
     def test_rejects_key_access_missing_steps_wrong_runner_and_run(self):
         import copy
         for target, field, value in (
