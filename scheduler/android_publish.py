@@ -98,11 +98,12 @@ def candidate_version(env, row):
     with tempfile.TemporaryDirectory(prefix="signed-publication-preview-") as folder:
         root = Path(folder)
         private_env = dict(env, GH_TOKEN=env["CHAONPU_ACTIONS_READ_TOKEN"])
-        result = subprocess.run(["gh", "run", "download", str(row["signingRunId"]),
-            "--repo", build.SIGNER, "--name", "windows-signed-release", "--dir", str(root)],
+        result = subprocess.run([sys.executable, "tools/private_release_transport.py",
+            "download", "--kind", "signed", "--sha", row["sourceSha"],
+            "--run-id", str(row["signingRunId"]), "--dir", str(root)],
             check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
             env=private_env, timeout=240)
-        need(result.returncode == 0, "verified_private_signed_artifact_unavailable")
+        need(result.returncode == 0, "verified_private_signed_release_unavailable")
         path = root / "publish-candidate-metadata.json"
         need(path.is_file() and not path.is_symlink() and path.stat().st_size <= 16384,
              "signed_candidate_metadata_invalid")
