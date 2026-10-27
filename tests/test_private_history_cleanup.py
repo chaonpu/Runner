@@ -134,5 +134,22 @@ class Tests(unittest.TestCase):
         self.assertEqual(len(calls), 2)
 
 
+
+    def test_runner_itself_keeps_all_production_paths(self):
+        repo = 'chaonpu/Runner'
+        keep = c.REPOSITORIES[repo]['keep']
+        self.assertEqual(keep, {
+            'android-production.yml', 'android-publish.yml', 'calendar-health.yml',
+            'private-history-cleanup.yml', 'production-dispatch.yml', 'stock-us.yml',
+        })
+        self.assertTrue(c.permitted(repo, '/actions/runs/123', 'DELETE'))
+        self.assertFalse(c.permitted(repo, '/actions/artifacts/123', 'DELETE'))
+        current = {'.github/workflows/' + name for name in keep}
+        protected = {'status': 'completed', 'path': '.github/workflows/stock-us.yml'}
+        retired = {'status': 'completed', 'path': '.github/workflows/verify-prebusiness-retry.yml'}
+        self.assertFalse(c.eligible(protected, current, keep))
+        self.assertTrue(c.eligible(retired, current, keep))
+
+
 if __name__ == '__main__':
     unittest.main()
