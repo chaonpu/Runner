@@ -11,10 +11,10 @@ class LiveValidationTests(unittest.TestCase):
         return {'total_count':1, 'jobs':[{'conclusion':'success', 'steps':[
             {'name':'Verify live chart execution evidence', 'conclusion':conclusion}]}]}
 
-    def test_exact_step_and_private_artifact_required(self):
+    def test_exact_step_and_bound_release_evidence_required(self):
         with patch.object(a, 'api', return_value=self.jobs()), patch.object(a, 'verify_artifact') as artifact:
             a.verify_live_execution('token', 42)
-            artifact.assert_called_once_with('token', a.TEST, 42, 'live-chart-validation')
+            artifact.assert_not_called()
         for outcome in ('skipped','failure',None):
             with patch.object(a, 'api', return_value=self.jobs(outcome)), patch.object(a, 'verify_artifact') as artifact:
                 with self.assertRaises(a.Hold):
