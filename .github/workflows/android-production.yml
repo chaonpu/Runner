@@ -47,6 +47,7 @@ jobs:
       TEST_BILLING_READ_TOKEN: ${{ secrets.TEST_BILLING_READ_TOKEN }}
       CHAONPU_BILLING_READ_TOKEN: ${{ secrets.CHAONPU_BILLING_READ_TOKEN }}
       CHAONPU_ACTIONS_READ_TOKEN: ${{ secrets.CHAONPU_ACTIONS_READ_TOKEN }}
+      CHAONPU_SOURCE_READ_TOKEN: ${{ secrets.CHAONPU_SOURCE_READ_TOKEN }}
       EXECUTE: ${{ inputs.execute }}
       LIVE_SMOKE: ${{ inputs.live_smoke }}
       RESUME: ${{ inputs.resume }}
