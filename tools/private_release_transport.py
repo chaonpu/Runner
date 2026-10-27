@@ -244,7 +244,7 @@ def main(argv=None):
             source = root / "source"
             source.mkdir()
             for name in TEST_FILES:
-                (source / name).write_bytes(b"verified-test-data" * 100)
+                (source / name).write_bytes(os.urandom(2048))
             archive = build("test", source)
             extracted = root / "downloaded"
             unpack(archive, "test", extracted)
