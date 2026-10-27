@@ -1,4 +1,4 @@
-"""Remove completed runs only for deleted private workflows; use Actions permissions only."""
+"""Remove completed runs only for retired workflows in strictly scoped repositories."""
 import argparse
 import json
 import os
@@ -12,6 +12,11 @@ ROOT = 'chaonpu/Runner'
 WORKFLOW = ROOT + '/.github/workflows/private-history-cleanup.yml@refs/heads/main'
 LIMIT = 500
 REPOSITORIES = {
+    'chaonpu/Runner': {
+        'actions': 'RUNNER_ACTIONS_TOKEN',
+        'keep': {'android-production.yml', 'android-publish.yml', 'calendar-health.yml',
+                 'private-history-cleanup.yml', 'production-dispatch.yml', 'stock-us.yml'},
+    },
     'chaonpu/Stock': {
         'actions': 'CHAONPU_ACTIONS_READ_TOKEN',
         'keep': {'run-a-share.yml', 'run-us.yml', 'production-readiness-a.yml',
@@ -215,7 +220,7 @@ def main():
     finally:
         if env.get('GITHUB_STEP_SUMMARY'):
             with open(env['GITHUB_STEP_SUMMARY'], 'a', encoding='utf-8') as out:
-                out.write('### 三个私有仓库历史清理\n\n'
+                out.write('### Runner 及三个私有仓库历史清理\n\n'
                           '仅清理已删除工作流的已完成运行；保留全部未删除流程及固定保护名单。\n\n'
                           '| 仓库 | 状态 | 扫描 | 待清理 | 已删除 | 延后 |\n'
                           '|---|---|---:|---:|---:|---:|\n')
