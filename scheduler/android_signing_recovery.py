@@ -162,7 +162,7 @@ def perform(env, source, test_id, failed_id):
                   previousSigningRunId=failed_id, testRunId=test_id)
     wait_run(signer_token, SIGNER, SIGN_WORKFLOW, new_id)
     verify_execution_runner(signer_token, SIGNER, new_id, runner_name)
-    verify_artifact(signer_token, SIGNER, new_id, "windows-signed-release", source)
+    verify_artifact(env.get("CHAONPU_SOURCE_READ_TOKEN") or signer_token, SIGNER, new_id, "windows-signed-release", source)
     put_state(public, source, "signed_verified")
     record_public(source, "signed_verified", signingRunId=new_id,
                   testRunId=test_id, publication="not_authorized_no_public_apk")
