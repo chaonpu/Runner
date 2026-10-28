@@ -8,8 +8,51 @@ from scheduler import android_production as a
 
 class LiveValidationTests(unittest.TestCase):
     def jobs(self, conclusion='success'):
-        return {'total_count':1, 'jobs':[{'conclusion':'success', 'steps':[
-            {'name':'Verify live chart execution evidence', 'conclusion':conclusion}]}]}
+        return {'total_count':1, 'jobs':[{'name':'test', 'run_id':42,
+            'status':'completed', 'conclusion':'success', 'steps':[
+            {'name':'Verify live chart execution evidence', 'status':'completed',
+             'conclusion':conclusion}]}]}
+
+    def skipped_chart(self):
+        return {'name':'Verify real-source chart continuity without artifacts',
+                'run_id':42, 'status':'completed', 'conclusion':'skipped', 'steps':[]}
+
+    def test_dispatch_allows_only_the_known_skipped_push_chart_job(self):
+        for chart_first in (False, True):
+            data=self.jobs()
+            data['jobs'].insert(0 if chart_first else 1, self.skipped_chart())
+            data['total_count']=2
+            with self.subTest(chart_first=chart_first), patch.object(a,'api',return_value=data):
+                a.verify_live_execution('token',42)
+
+    def test_extra_jobs_cannot_hide_failure_or_replace_live_evidence(self):
+        changes=[{'name':'unexpected job'}, {'conclusion':'success'},
+                 {'conclusion':'failure'}, {'conclusion':'cancelled'},
+                 {'status':'in_progress'}, {'run_id':43},
+                 {'steps':[{'name':'unexpected work','conclusion':'success'}]}]
+        for change in changes:
+            data=self.jobs()
+            chart=self.skipped_chart();chart.update(change)
+            data['jobs'].append(chart);data['total_count']=2
+            with self.subTest(change=change), patch.object(a,'api',return_value=data):
+                with self.assertRaises(a.Hold):
+                    a.verify_live_execution('token',42)
+
+    def test_incomplete_or_ambiguous_job_metadata_stays_blocked(self):
+        cases=[]
+        data=self.jobs();data['total_count']=2;cases.append(data)
+        data=self.jobs();data['total_count']=True;cases.append(data)
+        data=self.jobs();data['jobs']*=2;data['total_count']=2;cases.append(data)
+        data=self.jobs();data['jobs'][0]['run_id']=43;cases.append(data)
+        data=self.jobs();data['jobs'][0]['status']='in_progress';cases.append(data)
+        data=self.jobs();data['jobs'][0]['steps']*=2;cases.append(data)
+        data=self.jobs();data['jobs'][0]['steps'][0]['status']='in_progress';cases.append(data)
+        data=self.jobs('skipped');data['jobs'].append(self.skipped_chart());data['total_count']=2;cases.append(data)
+        data=self.jobs();data['jobs']=[None];cases.append(data)
+        for data in cases:
+            with self.subTest(data=data), patch.object(a,'api',return_value=data):
+                with self.assertRaises(a.Hold):
+                    a.verify_live_execution('token',42)
 
     def test_exact_step_and_bound_release_evidence_required(self):
         with patch.object(a, 'api', return_value=self.jobs()), patch.object(a, 'verify_artifact') as artifact:

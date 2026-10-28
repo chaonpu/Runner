@@ -581,12 +581,29 @@ def verify_live_execution(token, rid):
     """Read only step/artifact metadata; evidence details stay in private Test."""
     value = api(token, TEST, "/actions/runs/" + str(rid) + "/jobs?per_page=100")
     jobs = value.get("jobs")
-    require(value.get("total_count") == 1 and isinstance(jobs, list)
-            and len(jobs) == 1 and jobs[0].get("conclusion") == "success",
+    require(type(value.get("total_count")) is int and isinstance(jobs, list)
+            and value["total_count"] == len(jobs) and 1 <= len(jobs) <= 2
+            and all(isinstance(job, dict) and job.get("run_id") == rid for job in jobs),
             "live_validation_job_unverified")
-    steps = [x for x in jobs[0].get("steps", [])
+    marker = "Verify live chart execution evidence"
+    builds = [job for job in jobs if isinstance(job.get("steps"), list)
+              and any(isinstance(step, dict) and step.get("name") == marker
+                      for step in job["steps"])]
+    require(len(builds) == 1, "live_validation_execution_missing_or_skipped")
+    build = builds[0]
+    require(build.get("status") == "completed" and build.get("conclusion") == "success",
+            "live_validation_job_unverified")
+    # workflow_dispatch also lists the push-only chart job. Only that exact,
+    # completed/skipped job may accompany the fully verified build.
+    others = [job for job in jobs if job is not build]
+    require(all(job.get("name") == "Verify real-source chart continuity without artifacts"
+                and job.get("status") == "completed" and job.get("conclusion") == "skipped"
+                and job.get("steps") in (None, []) for job in others),
+            "live_validation_job_unverified")
+    steps = [x for x in build["steps"] if isinstance(x, dict)
              if x.get("name") == "Verify live chart execution evidence"]
-    require(len(steps) == 1 and steps[0].get("conclusion") == "success",
+    require(len(steps) == 1 and steps[0].get("status") == "completed"
+            and steps[0].get("conclusion") == "success",
             "live_validation_execution_missing_or_skipped")
     # The bound private Release contains live chart evidence in verification.json.
 
