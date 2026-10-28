@@ -199,8 +199,8 @@ def verify_metadata(kind, sha, run_id, token):
               "release_tag_source_sha_mismatch")
     return asset
 
-def download(kind, sha, run_id, folder, token):
-    asset = verify_metadata(kind, sha, run_id, token)
+def read_asset(kind, sha, run_id, asset, token):
+    """Read only the exact verified asset, including CLI redirect recovery."""
     try:
         raw = gh("https://api.github.com/repos/" + REPOS[kind] +
                  "/releases/assets/" + str(asset["id"]), token,
@@ -225,6 +225,7 @@ def download(kind, sha, run_id, folder, token):
                 target = Path(temp) / ASSETS[kind]
                 check(result.returncode == 0 and target.is_file()
                       and not target.is_symlink()
+                      and not target.is_symlink()
                       and target.stat().st_size == asset["size"],
                       "private_release_cli_download_unverified")
                 raw = target.read_bytes()
@@ -233,8 +234,24 @@ def download(kind, sha, run_id, folder, token):
     check(len(raw) == asset["size"], "release_asset_length_mismatch")
     if asset.get("digest") is not None:
         check(sha256(raw) == asset["digest"][7:], "release_asset_sha256_mismatch")
+    return raw
+
+def download(kind, sha, run_id, folder, token):
+    asset = verify_metadata(kind, sha, run_id, token)
+    raw = read_asset(kind, sha, run_id, asset, token)
     unpack(raw, kind, folder)
     return sha256(raw)
+
+def verify_published_bytes(kind, sha, run_id, data, token):
+    stored = verify_metadata(kind, sha, run_id, token)
+    check(stored["size"] == len(data), "release_readback_size_mismatch")
+    if stored.get("digest"):
+        check(stored["digest"] == "sha256:" + sha256(data),
+              "release_readback_sha256_mismatch")
+    # A complete all-bytes readback is mandatory, even after an ambiguous POST.
+    remote = read_asset(kind, sha, run_id, stored, token)
+    check(remote == data, "release_readback_bytes_mismatch")
+    return sha256(data)
 
 def publish(kind, sha, run_id, folder, token, target):
     tag = identity(kind, sha, run_id)
@@ -251,31 +268,36 @@ def publish(kind, sha, run_id, folder, token, target):
             "body": "Private CI handoff for exact run and source SHA. Not a public app release.",
             "draft": False, "prerelease": True, "make_latest": "false"}
     # One create and one asset upload: failures require inspection; never overwrite.
-    result = gh_json("https://api.github.com/repos/" + repo + "/releases",
-                     token, method="POST", body=body)
+    try:
+        result = gh_json("https://api.github.com/repos/" + repo + "/releases",
+                         token, method="POST", body=body)
+    except TransportError as exc:
+        if str(exc) != "github_release_transport_unavailable":
+            raise
+        # Never replay an uncertain create. Accept only a complete exact-identity
+        # asset whose full bytes match the bundle built in this invocation.
+        return verify_published_bytes(kind, sha, run_id, data, token)
     check(result.get("tag_name") == tag and result.get("prerelease") is True
           and result.get("draft") is False and isinstance(result.get("id"), int),
           "private_release_creation_unverified")
     asset_url = ("https://uploads.github.com/repos/" + repo + "/releases/" +
                  str(result["id"]) + "/assets?name=" + ASSETS[kind])
-    uploaded = gh(asset_url, token, method="POST", data=data,
-                  content_type="application/zip")
+    try:
+        uploaded = gh(asset_url, token, method="POST", data=data,
+                      content_type="application/zip")
+    except TransportError as exc:
+        if str(exc) != "github_release_transport_unavailable":
+            raise
+        # GitHub can finish storing an upload before the client loses its
+        # response. Reconcile by reads only; never upload, overwrite or delete.
+        return verify_published_bytes(kind, sha, run_id, data, token)
     try:
         descriptor = json.loads(uploaded)
         check(descriptor.get("name") == ASSETS[kind] and
               descriptor.get("size") == len(data), "release_upload_unverified")
     except (ValueError, UnicodeError, AttributeError):
         raise TransportError("release_upload_unverified") from None
-    stored = verify_metadata(kind, sha, run_id, token)
-    check(stored["size"] == len(data), "release_readback_size_mismatch")
-    if stored.get("digest"):
-        check(stored["digest"] == "sha256:" + sha256(data),
-              "release_readback_sha256_mismatch")
-    # All-bytes readback; fail closed if upload response was premature.
-    remote = gh("https://api.github.com/repos/" + repo + "/releases/assets/" +
-                str(stored["id"]), token, accept="application/octet-stream")
-    check(remote == data, "release_readback_bytes_mismatch")
-    return sha256(data)
+    return verify_published_bytes(kind, sha, run_id, data, token)
 
 def main(argv=None):
     parser = argparse.ArgumentParser()
