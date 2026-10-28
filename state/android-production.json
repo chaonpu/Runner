@@ -86,7 +86,7 @@
         "stage": "test"
       },
       "liveSmoke": true,
-      "phase": "test_retry_reserved",
+      "phase": "test_started",
       "route": "windows",
       "sourceSha": "4df3b97fc21e2993f0fd70adaaef2867ac9e47b0",
       "testLiveRecovery": {
@@ -100,8 +100,8 @@
         }
       },
       "testLiveRetries": 1,
-      "testRunId": 40656153092,
-      "updatedAt": "2026-10-28T08:57:12.343043+00:00"
+      "testRunId": 40660506738,
+      "updatedAt": "2026-10-28T08:57:16.744697+00:00"
     },
     "538b3ded770fdf7b54885ca773755fd7587ffae5": {
       "createdAt": "2026-10-17T16:49:57.822450+00:00",
