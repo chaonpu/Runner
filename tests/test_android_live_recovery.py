@@ -250,4 +250,36 @@ class Tests(unittest.TestCase):
         self.assertTrue(all(call.args[1] == 42 for call in self.live.call_args_list))
 
 
+class StateReadTests(unittest.TestCase):
+    def head(self, sha):
+        return dict(ref="refs/heads/main", object=dict(type="commit", sha=sha))
+
+    def file(self, value):
+        return dict(type="file", sha="c"*40, encoding="base64",
+                    content=base64.b64encode(json.dumps(value).encode()).decode())
+
+    def test_reads_immutable_commit_instead_of_cached_branch_contents(self):
+        with patch.object(a, "api", side_effect=[self.head("a"*40), self.file({"new": True})]) as api:
+            self.assertEqual(a.json_file("token", a.STATE_PATH), ({"new": True}, "c"*40))
+        self.assertEqual(api.call_args_list[0].args, ("token", a.RUNNER, "/git/ref/heads/main"))
+        self.assertEqual(api.call_args_list[1].args,
+                         ("token", a.RUNNER, "/contents/"+a.STATE_PATH+"?ref="+"a"*40))
+
+    def test_resolves_head_again_for_read_after_write(self):
+        responses = [self.head("a"*40), self.file({"phase": "test_started"}),
+                     self.head("b"*40), self.file({"phase": "test_retry_reserved"})]
+        with patch.object(a, "api", side_effect=responses) as api:
+            a.json_file("token", a.STATE_PATH)
+            value, _ = a.json_file("token", a.STATE_PATH)
+            self.assertEqual(value["phase"], "test_retry_reserved")
+            self.assertTrue(api.call_args.args[2].endswith("?ref="+"b"*40))
+
+    def test_invalid_head_stops_before_contents_read(self):
+        for head in ({}, {"object": None}, self.head("not-a-sha"), dict(ref="refs/heads/main", object=dict(type="tag", sha="a"*40))):
+            with self.subTest(head=head), patch.object(a, "api", return_value=head) as api:
+                with self.assertRaisesRegex(a.Hold, "branch_reference_invalid"):
+                    a.json_file("token", a.STATE_PATH)
+                api.assert_called_once()
+
+
 if __name__ == "__main__": unittest.main()

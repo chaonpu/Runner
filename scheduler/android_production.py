@@ -64,6 +64,7 @@ def api(token, repo, path, *, method="GET", payload=None):
                  "Accept": "application/vnd.github+json",
                  "X-GitHub-Api-Version": "2026-03-10",
                  "Content-Type": "application/json",
+                 "Cache-Control": "no-cache",
                  "User-Agent": "ziwuxilv-android-controlled-coordinator/1.0"})
     try:
         with urllib.request.build_opener(NoRedirect()).open(req, timeout=20) as response:
@@ -87,7 +88,18 @@ def api(token, repo, path, *, method="GET", payload=None):
 
 
 def json_file(token, path):
-    item = api(token, RUNNER, "/contents/" + path)
+    # A branch-name Contents response can lag immediately after a successful
+    # CAS write. Resolve main first and read its immutable commit, so a confirmed
+    # reservation and the next transition cannot observe different cached main.
+    head = api(token, RUNNER, "/git/ref/heads/main")
+    reference = head.get("object")
+    require(isinstance(reference, dict), "state_branch_reference_invalid")
+    commit = reference.get("sha")
+    require(head.get("ref") == "refs/heads/main"
+            and reference.get("type") == "commit"
+            and isinstance(commit, str) and bool(SHA.fullmatch(commit)),
+            "state_branch_reference_invalid")
+    item = api(token, RUNNER, "/contents/" + path + "?ref=" + commit)
     require(item.get("type") == "file"
             and re.fullmatch(r"[0-9a-f]{40}", str(item.get("sha", "")))
             and item.get("encoding") == "base64",
