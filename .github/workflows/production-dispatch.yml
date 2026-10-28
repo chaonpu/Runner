@@ -1,4 +1,4 @@
-name: A股策略（手动）
+name: 动量轮动策略-A股（手动）
 
 on:
   workflow_dispatch:
