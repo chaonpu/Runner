@@ -101,6 +101,52 @@ class RecoveryTests(unittest.TestCase):
         self.assertIs(validate(cfg, memory[0]), memory[0])
         obj.requester.assert_called_once()
 
+    def setup_jobs(self):
+        trace = jobs()
+        trace["jobs"][0]["steps"] = [{"name": "Set up job", "number": 1,
+            "status": "completed", "conclusion": "failure"}]
+        return trace
+
+    def test_setup_download_failure_archives_original_without_dispatch(self):
+        cfg, obj, memory = self.fixture(job_value=self.setup_jobs())
+        proof = self.retire(obj)
+        self.assertEqual(proof["dispatches"], 0)
+        self.assertFalse(proof["businessVerified"])
+        self.assertEqual(memory[0]["tasks"], [])
+        self.assertEqual(memory[0]["retiredPrebusinessFailures"], data()[1]["tasks"])
+        self.assertIs(validate(cfg, memory[0]), memory[0])
+        obj.requester.assert_called_once()
+
+    def test_setup_failure_with_any_additional_step_or_incomplete_trace_denied(self):
+        traces = []
+        for key, value in (("number", 2), ("status", "in_progress"),
+                           ("conclusion", "success"), ("name", "Unknown setup")):
+            trace = self.setup_jobs()
+            trace["jobs"][0]["steps"][0][key] = value
+            traces.append(trace)
+        for conclusion in ("success", "failure", "skipped"):
+            trace = self.setup_jobs()
+            trace["jobs"][0]["steps"].append({
+                "name": "Run A-share strategy with retry", "conclusion": conclusion})
+            traces.append(trace)
+        empty = self.setup_jobs()
+        empty["jobs"][0]["steps"] = []
+        traces.append(empty)
+        for trace in traces:
+            with self.subTest(trace=trace):
+                _, obj, memory = self.fixture(job_value=trace)
+                with self.assertRaises(RegistryGuard):
+                    self.retire(obj)
+                obj.requester.assert_not_called()
+
+    def test_setup_recovery_is_still_once_per_session(self):
+        _, obj, memory = self.fixture(job_value=self.setup_jobs())
+        self.retire(obj)
+        memory[0]["tasks"] = deepcopy(data()[1]["tasks"])
+        with self.assertRaisesRegex(RegistryGuard, "once_per_session"):
+            self.retire(obj)
+        self.assertEqual(obj.requester.call_count, 1)
+
     def test_second_recovery_for_same_session_denied(self):
         cfg, obj, memory = self.fixture()
         self.retire(obj)
@@ -278,3 +324,4 @@ class RecoveryTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
