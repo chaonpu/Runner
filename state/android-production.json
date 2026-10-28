@@ -76,6 +76,9 @@
     },
     "4df3b97fc21e2993f0fd70adaaef2867ac9e47b0": {
       "createdAt": "2026-10-28T08:21:04.164245+00:00",
+      "failedTestRunIds": [
+        40656153092
+      ],
       "lastFailure": {
         "code": "android_live_validation_failed_or_skipped",
         "recordedAt": "2026-10-28T08:53:29.986851+00:00",
@@ -83,11 +86,22 @@
         "stage": "test"
       },
       "liveSmoke": true,
-      "phase": "test_started",
+      "phase": "test_retry_reserved",
       "route": "windows",
       "sourceSha": "4df3b97fc21e2993f0fd70adaaef2867ac9e47b0",
+      "testLiveRecovery": {
+        "mode": "explicit_reviewed_full_rebuild",
+        "originalTestRunId": 40656153092,
+        "reviewedFailure": {
+          "code": "android_live_validation_failed_or_skipped",
+          "recordedAt": "2026-10-28T08:53:29.986851+00:00",
+          "runId": 40656153092,
+          "stage": "test"
+        }
+      },
+      "testLiveRetries": 1,
       "testRunId": 40656153092,
-      "updatedAt": "2026-10-28T08:21:07.757556+00:00"
+      "updatedAt": "2026-10-28T08:57:12.343043+00:00"
     },
     "538b3ded770fdf7b54885ca773755fd7587ffae5": {
       "createdAt": "2026-10-17T16:49:57.822450+00:00",
