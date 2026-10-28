@@ -1,10 +1,6 @@
 name: 工作流废弃记录清理（每日）
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - '.github/workflows/private-history-cleanup.yml'
   schedule:
     # Daily 04:30 Asia/Shanghai = previous day 20:30 UTC.
     - cron: '30 20 * * *'
@@ -33,16 +29,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ github.sha }}
-          fetch-depth: 2
           persist-credentials: false
-      - name: Verify exceptional one-shot push is exactly the cleanup workflow change
-        if: github.event_name == 'push'
-        env:
-          HEAD_COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
-        run: |
-          set -euo pipefail
-          test "$HEAD_COMMIT_MESSAGE" = 'chore(actions): execute one-shot retired workflow history cleanup'
-          test "$(git diff --name-only HEAD^ HEAD)" = '.github/workflows/private-history-cleanup.yml'
       - name: Verify deletion boundaries
         run: python3 -m unittest discover -s tests -p test_private_history_cleanup.py -v
       - name: Clean retired workflow history across four repositories or preview
@@ -50,8 +37,7 @@ jobs:
           RUNNER_ACTIONS_TOKEN: ${{ github.token }}
           CHAONPU_ACTIONS_READ_TOKEN: ${{ secrets.CHAONPU_ACTIONS_READ_TOKEN }}
           TEST_ACTIONS_READ_TOKEN: ${{ secrets.TEST_ACTIONS_READ_TOKEN }}
-          EXECUTE: "${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && !inputs.dry_run) || (github.event_name == 'push' && github.event.head_commit.message == 'chore(actions): execute one-shot retired workflow history cleanup') }}"
-          GITHUB_ONE_SHOT_RETIREMENT: "${{ github.event_name == 'push' && github.event.head_commit.message == 'chore(actions): execute one-shot retired workflow history cleanup' }}"
+          EXECUTE: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && !inputs.dry_run) }}
         shell: bash
         run: |
           set -euo pipefail

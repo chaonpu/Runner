@@ -140,18 +140,6 @@ class Tests(unittest.TestCase):
         with self.assertRaises(c.Stop):
             c.validate_context(env, True)
 
-    def test_one_shot_push_needs_trusted_workflow_flag(self):
-        env = {'GITHUB_REPOSITORY': c.ROOT, 'GITHUB_REF': 'refs/heads/main',
-               'GITHUB_WORKFLOW_REF': c.WORKFLOW, 'GITHUB_ACTOR': 'chaonpu',
-               'GITHUB_EVENT_NAME': 'push'}
-        with self.assertRaisesRegex(c.Stop, 'untrusted_event'):
-            c.validate_context(env, True)
-        env['GITHUB_ONE_SHOT_RETIREMENT'] = 'true'
-        c.validate_context(env, True)
-        env['GITHUB_ACTOR'] = 'other'
-        with self.assertRaisesRegex(c.Stop, 'untrusted_context'):
-            c.validate_context(env, True)
-
     def test_all_pages_are_snapshotted_before_deletion(self):
         calls = []
         def reader(repo, path):
