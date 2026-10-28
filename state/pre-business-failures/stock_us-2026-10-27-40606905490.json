@@ -1,0 +1,230 @@
+{
+  "schema": 1,
+  "taskId": "stock_us:2026-10-27",
+  "originalCoordinatorRunId": 40605947766,
+  "originalRunId": 40606905490,
+  "originalSourceSha": "e949df31edc1856718b5fea984af794567201853",
+  "originalJobId": 122548557983,
+  "failurePhase": "Admit exact RUNNER task and Stock run binding before coordinated business",
+  "failureReason": "recovery_completion_metadata_invalid",
+  "allBusinessStepsSkipped": true,
+  "strategyExecuted": false,
+  "databasePublicationAttempted": false,
+  "mailAttempted": false,
+  "repairSourceSha": "5eba5f874ffb3841f929d70223b0d25aa9c626fa",
+  "action": "preserve_original_hold_in_retiredPrebusinessFailures_and_allow_one_fresh_coordinator_attempt",
+  "steps": [
+    {
+      "name": "Set up job",
+      "conclusion": "success"
+    },
+    {
+      "name": "Enable Git Bash on Windows without changing system PATH",
+      "conclusion": "success"
+    },
+    {
+      "name": "Validate optional Runner task identity",
+      "conclusion": "success"
+    },
+    {
+      "name": "Prefer verified exact-SHA local Stock commit",
+      "conclusion": "success"
+    },
+    {
+      "name": "Checkout repository",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "Reconstruct exact source commit from verified GitHub API deltas",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "Bootstrap job-scoped Git route; probe only when source fetch is required",
+      "conclusion": "success"
+    },
+    {
+      "name": "Windows Stock source checkout attempt 1 (pre-business only)",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "Windows Stock source connection backoff after failed attempt 1",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "Refresh verified Git route before Windows win_source retry 2",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "Windows Stock source checkout attempt 2 (pre-business only)",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "Windows Stock source connection backoff after failed attempt 2",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "Refresh verified Git route before Windows win_source retry 3",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "Windows Stock source checkout attempt 3 (pre-business only)",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "Verify bounded Windows Stock source recovery before strategy",
+      "conclusion": "success"
+    },
+    {
+      "name": "Verify private database write token",
+      "conclusion": "success"
+    },
+    {
+      "name": "Checkout theoretical-holdings repository",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "Restore exact private database from same-session verified Windows cache",
+      "conclusion": "success"
+    },
+    {
+      "name": "Windows private database checkout attempt 1 (pre-business only)",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "Windows private database connection backoff after failed attempt 1",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "Refresh verified Git route before Windows win_db retry 2",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "Windows private database checkout attempt 2 (pre-business only)",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "Windows private database connection backoff after failed attempt 2",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "Refresh verified Git route before Windows win_db retry 3",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "Windows private database checkout attempt 3 (pre-business only)",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "Verify bounded Windows private database recovery before strategy",
+      "conclusion": "success"
+    },
+    {
+      "name": "Verify authoritative database bytes before business changes",
+      "conclusion": "success"
+    },
+    {
+      "name": "Use hosted Python 3.13 from the tool cache",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "Restore isolated cloud pip downloads",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "Use verified cached Windows Node 22",
+      "conclusion": "success"
+    },
+    {
+      "name": "Select hosted Node 22 from the tool cache",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "Prepare isolated Windows Python strategy runtime",
+      "conclusion": "success"
+    },
+    {
+      "name": "Install coordinator-pinned public calendar snapshot",
+      "conclusion": "success"
+    },
+    {
+      "name": "Attest calendar snapshot 25dbb068bd947197e5e9fc3cf24493787fb4383bf4d64c8adf81b390035ecc18",
+      "conclusion": "success"
+    },
+    {
+      "name": "Admit exact RUNNER task and Stock run binding before coordinated business",
+      "conclusion": "failure"
+    },
+    {
+      "name": "Check coordinated settled inputs are still current",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "Reconcile verified US ledger projection",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "Skip completed US session",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "Install dependencies",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "Save isolated cloud pip downloads",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "Validate cloud catalog",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "Run US strategy with retry",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "Show generated result summary",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "Verify approved mobile HTML full report",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "Verify private snapshot contract",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "Publish verified snapshot and ledger to private database",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "Synchronize coordinated inputs to the confirmed settled ledger",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "Save successful strategy state",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "Save failure-safe caches",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "Verify and attest published ledger receipt",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "Send US mail only after verified ledger publication",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "Seal postrun-verified US code and rule fingerprint",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "Complete job",
+      "conclusion": "success"
+    }
+  ]
+}
