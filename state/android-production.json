@@ -453,9 +453,9 @@
         40629551493
       ],
       "lastFailure": {
-        "code": "android_live_validation_failed_or_skipped",
-        "recordedAt": "2026-10-28T04:15:49.630238+00:00",
-        "runId": 40629551493,
+        "code": "android_test_or_artifact_failed_manual_review",
+        "recordedAt": "2026-10-28T07:55:40.704145+00:00",
+        "runId": 40650287218,
         "stage": "test"
       },
       "liveSmoke": true,
