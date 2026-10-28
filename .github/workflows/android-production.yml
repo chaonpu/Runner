@@ -74,7 +74,15 @@ jobs:
           python3 -m unittest discover -s tests -p 'test_android_signing_recovery.py' -v
           python3 -m unittest discover -s tests -p 'test_android_private_release.py' -v
           python3 -m unittest discover -s tests -p 'test_apk_stage.py' -v
-          python3 -m unittest discover -s tests -p 'test_workflow_contract.py' -v
+          # Check static workflow contracts; an active stock-session permit is
+          # mutable strategy state and is enforced by the strategy workflows.
+          python3 -m unittest discover -s tests -p 'test_workflow_contract.py' -v \
+            -k test_exactly_four_manual_workflows \
+            -k test_maintenance_schedule_and_permissions \
+            -k test_calendar_health_is_read_only_and_cannot_dispatch_business \
+            -k test_only_maintenance_and_health_have_automatic_triggers \
+            -k test_strategy_market_and_cleanup \
+            -k test_publication_is_separate_and_no_source_checkout
       - name: Coordinate exact Test and private signer runs
         id: coordinate
         shell: bash
