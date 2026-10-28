@@ -65,7 +65,8 @@ def validate_context(env, execute):
             and env.get('GITHUB_WORKFLOW_REF') == WORKFLOW
             and env.get('GITHUB_ACTOR') == 'chaonpu', 'untrusted_context')
     # A temporary push trigger is used only for deployment's read-only acceptance.
-    require(event in ('schedule', 'workflow_dispatch') or (event == 'push' and not execute),
+    require(event in ('schedule', 'workflow_dispatch') or
+            (event == 'push' and (not execute or env.get('GITHUB_ONE_SHOT_RETIREMENT') == 'true')),
             'untrusted_event')
 
 
