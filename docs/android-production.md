@@ -8,7 +8,7 @@
 - `execute=true`：仅 `chaonpu` 可启动。需 Test 与签名两个独立 Windows Runner 在线且空闲，相关私有工作流无其他活跃运行。
 - `source_sha` 留空：仅当既有凭据可读取 Test/main SHA 时自动选择当前提交。目前 Test Actions/Runner/Billing 令牌在该端点仍缺少 `Contents: Read`，只读预检会报告 `manualSourceShaRequired=true`；**不能在 SHA 为空时执行生产构建**。
 - `source_sha` 填写完整 40 位 SHA：当源分支 SHA 无法读取时，以人工确认的 SHA 建立唯一预约；在派发后必须校验 GitHub 返回的**原始 Test Run 的 `head_sha` 等于人工指定值**，且 Run 属于 main 的指定工作流。否则立即停止，不进入签名。可从私有 [Test/main](https://github.com/anwpustudent-lab/Test/commits/main) 复制当前最新 SHA（提交可能随时间变化）。
-- `resume=true`：必须提供登记的原始 `source_sha`，仅继续核验原始 Test Run 或原始签名 Run，不重新发送已派发的 Test。若已在 POST 后发生未确认的网络错误或尚未登记 Run ID，必须人工核对，不能自动重派。
+- `resume=true`：必须提供登记的原始 `source_sha`，默认仅继续核验原始 Test Run 或原始签名 Run，不重新发送已派发的 Test。仅另行显式选择下述 `recover_live_validation` 且全部边界核验通过时，允许一次完整重建。若已在 POST 后发生未确认的网络错误或尚未登记 Run ID，必须人工核对，不能自动重派。
 - 同一源码 SHA 的构建身份只保留一项公开状态登记；已签名成功的 SHA 不自动重复构建。
 
 ## 安全派发顺序
@@ -27,6 +27,7 @@
 
 - 源码已预约，但 GitHub POST 返回不确定：原预约保留；不自动重试，先从私有仓库核实是否已经开始运行。
 - Test 有精确 Run ID 但执行中断：手动 `resume=true` + 原 SHA，继续监控同一 Run，禁止新建 Test Run。
+- 在线验证已失败且已人工复核私有日志时，可显式设置 `execute=true`、`resume=true`、`recover_live_validation=true` 和原始 SHA，申请**仅一次完整重建**。默认续跑不会重派。仅限 Windows、原任务已请求实时验证、首次 Test 的源码/Release 编译/版本及日历验证通过、失败步骤恰为单元/静态检查组及实时证据验证、handoff 全部跳过、没有 Artifact、尚未预约签名；只读步骤元数据不被冒充为网络故障证明。恢复前 CAS 预约并保留原失败 Run 和分类；任何预约/POST 不确定都停止。新 Test 仍必须为 main、原始 SHA、首次尝试、受信任 Runner，重新通过全部单元测试、Lint、Debug、实时验证及 handoff 检查后才允许签名。它与既有源码下载恢复合计最多一次；不复用失败 APK、不接受 GitHub Re-run 的第二次尝试、不自动发布。
 - Test 已成功，签名机离线：保留 Test Run ID，待签名机重新在线后按原 SHA 手动恢复；须在私有 Artifact 有效期内完成。
 - 已进入 `signer_reserved` 而未登记签名 Run ID：必须人工查看签名仓库有无原始派发及副作用；调度器不接受自动恢复重派。
 - 签名有 Run ID 但状态不明：仅观察原始签名 Run，不能重复签名。

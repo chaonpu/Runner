@@ -461,7 +461,8 @@ def retry_checkout_before_business(pub, test, source, entry, test_account, env, 
     arts = api(test, TEST, "/actions/runs/" + str(old) + "/artifacts?per_page=100")
     require(arts.get("total_count") == 0 and arts.get("artifacts") == [],
             "checkout_retry_original_artifacts_exist")
-    require(entry.get("testRetries", 0) == 0, "checkout_retry_limit_reached")
+    require(entry.get("testRetries", 0) == 0 and entry.get("testLiveRetries", 0) == 0,
+            "checkout_retry_limit_reached")
     # Dispatched workflow_dispatch on main must still be this exact original source.
     tokens = (env.get("TEST_SOURCE_READ_TOKEN", ""), test,
               env.get("TEST_RUNNER_READ_TOKEN", ""), env.get("TEST_BILLING_READ_TOKEN", ""))
@@ -486,6 +487,117 @@ def retry_checkout_before_business(pub, test, source, entry, test_account, env, 
     record_public(source, "test_checkout_recovered", previousTestRunId=old,
                   testRunId=fresh, retryCount=1, publication="not_authorized")
     return fresh
+
+def recover_reviewed_live_test(pub, test, source, entry, test_account, sign_account, env, task):
+    """One explicit full rebuild after a reviewed live-validation failure.
+
+    This does not infer a transient network error from public step names. An
+    operator must inspect the private failure and opt in on an exact-SHA resume.
+    The failed attempt remains in history; no APK, test result or signing state
+    is reused. The replacement is a first-attempt run with all original gates.
+    """
+    require(bool(SHA.fullmatch(source)) and entry.get("sourceSha") == source and entry.get("phase") == "test_started"
+            and entry.get("route") == "windows" and entry.get("liveSmoke") is True,
+            "live_recovery_original_entry_invalid")
+    require(not any(key in entry for key in ("signingRunId", "signingRoute",
+                "signingRecoveryHistory", "recoveryFromSigningRunId")),
+            "live_recovery_signer_already_reserved")
+    require(type(entry.get("testRetries", 0)) is int and entry.get("testRetries", 0) == 0
+            and type(entry.get("testLiveRetries", 0)) is int
+            and entry.get("testLiveRetries", 0) == 0
+            and not entry.get("failedTestRunIds") and not entry.get("testLiveRecovery"),
+            "live_recovery_limit_reached")
+    old = entry.get("testRunId")
+    failure = entry.get("lastFailure")
+    require(type(old) is int and old > 0 and isinstance(failure, dict)
+            and failure.get("runId") == old and failure.get("stage") == "test"
+            and failure.get("code") == "android_live_validation_failed_or_skipped",
+            "live_recovery_reviewed_failure_missing")
+    original = api(test, TEST, "/actions/runs/" + str(old))
+    validate_run(original, TEST, TEST_WORKFLOW, old, source)
+    require(original.get("status") == "completed" and original.get("conclusion") == "failure",
+            "live_recovery_original_not_failed")
+    evidence = api(test, TEST, "/actions/runs/" + str(old) + "/jobs?per_page=100")
+    jobs = evidence.get("jobs")
+    require(type(evidence.get("total_count")) is int and isinstance(jobs, list)
+            and len(jobs) == evidence["total_count"] and 1 <= len(jobs) <= 2
+            and all(isinstance(job, dict) for job in jobs),
+            "live_recovery_job_proof_incomplete")
+    builds = [job for job in jobs if job.get("name") == "test"]
+    require(len(builds) == 1, "live_recovery_build_job_missing")
+    job = builds[0]
+    require(job.get("status") == "completed" and job.get("conclusion") == "failure"
+            and job.get("runner_name") == task["runnerName"]
+            and all(other.get("name") == "Verify real-source chart continuity without artifacts"
+                    and other.get("status") == "completed" and other.get("conclusion") == "skipped"
+                    for other in jobs if other is not job),
+            "live_recovery_execution_mismatch")
+    steps = job.get("steps")
+    require(isinstance(steps, list) and all(isinstance(step, dict) for step in steps),
+            "live_recovery_step_proof_missing")
+    results = {step.get("name"): step.get("conclusion") for step in steps}
+    require(len(results) == len(steps), "live_recovery_duplicate_steps")
+    required = (
+        "Verify exact checked out commit", "Verify release version and Test source guardrails",
+        "Build unsigned Release APK on Windows", "Test live chart evidence verifier",
+        "Clear prior test reports before validation", "Verify actual public calendar network execution",
+    )
+    failed = {name for name, outcome in results.items() if outcome == "failure"}
+    require(all(results.get(name) == "success" for name in required)
+            and failed == {"Run unit tests, release lint and debug APK build",
+                           "Verify live chart execution evidence"},
+            "live_recovery_failure_boundary_unverified")
+    guarded = (
+        "Verify release and debug notification manifests",
+        "Prepare private verified Windows signing handoff",
+        "Verify private Release transport policy",
+        "Publish verified Test handoff to PRIVATE Release Assets (not Actions Artifact)",
+    )
+    require(all(results.get(name) == "skipped" for name in guarded),
+            "live_recovery_handoff_already_started")
+    artifacts = api(test, TEST, "/actions/runs/" + str(old) + "/artifacts?per_page=100")
+    require(artifacts.get("total_count") == 0 and artifacts.get("artifacts") == [],
+            "live_recovery_original_artifacts_exist")
+    # Readable main must still match. When Contents:read is unavailable, use the
+    # same manual-SHA contract as a new build: validate the new Run's head_sha
+    # before accepting any evidence or entering signing.
+    try:
+        current = current_source((env.get("TEST_SOURCE_READ_TOKEN", ""), test,
+                                 env.get("TEST_RUNNER_READ_TOKEN", ""),
+                                 env.get("TEST_BILLING_READ_TOKEN", "")))
+        require(current == source, "live_recovery_source_no_longer_main")
+    except Hold as error:
+        if str(error) != "test_main_contents_read_permission_missing":
+            raise
+    for repo, workflow, account in (
+            (TEST, TEST_WORKFLOW, test_account), (TEST, HOSTED_WORKFLOW, test_account),
+            (SIGNER, SIGN_WORKFLOW, sign_account), (SIGNER, CLOUD_SIGN_WORKFLOW, sign_account)):
+        check_idle(repo, workflow, account, env)
+    require(runner_ready(TEST, task["runnerName"], test_account, env),
+            "live_recovery_windows_runner_not_ready")
+    state, blob = json_file(pub, STATE_PATH)
+    row = state.get("builds", {}).get(source)
+    require(state.get("version") == 1 and row == entry,
+            "live_recovery_record_changed_no_repeat")
+    row.update(phase="test_retry_reserved", testLiveRetries=1, failedTestRunIds=[old],
+               testLiveRecovery={"originalTestRunId": old, "reviewedFailure": dict(failure),
+                                 "mode": "explicit_reviewed_full_rebuild"},
+               updatedAt=datetime.now(timezone.utc).isoformat())
+    payload = {"branch": "main", "sha": blob,
+               "message": "Reserve one reviewed exact-SHA live-validation rebuild",
+               "content": base64.b64encode((json.dumps(state, indent=2, sort_keys=True)+"\n").encode()).decode()}
+    saved = api(pub, RUNNER, "/contents/" + STATE_PATH, method="PUT", payload=payload)
+    require(bool(saved.get("commit", {}).get("sha")), "live_recovery_reservation_uncertain")
+    confirmed, _ = json_file(pub, STATE_PATH)
+    require(confirmed == state, "live_recovery_reservation_unconfirmed")
+    fresh = dispatch(test, TEST, TEST_WORKFLOW, test_inputs(True))
+    require(fresh != old, "live_recovery_new_run_id_not_distinct")
+    put_state(pub, source, "test_started", test_run_id=fresh)
+    record_public(source, "test_live_recovery_started", previousTestRunId=old,
+                  testRunId=fresh, retryCount=1, liveValidationRequested=True,
+                  publication="not_authorized")
+    return fresh
+
 
 def verify_execution_runner(token, repo, rid, expected):
     """A successful job must actually have run on the approved private service."""
@@ -608,7 +720,10 @@ def verify_live_execution(token, rid):
     # The bound private Release contains live chart evidence in verification.json.
 
 
-def run(env, *, execute=False, resume=False, requested_sha="", live_smoke=False):
+def run(env, *, execute=False, resume=False, requested_sha="", live_smoke=False,
+        recover_live_validation=False):
+    require(not recover_live_validation or (execute and resume),
+            "live_recovery_requires_explicit_execute_resume")
     pub = env.get("GH_TOKEN", "")
     test = env.get("TEST_ACTIONS_READ_TOKEN", "")
     sign = env.get("CHAONPU_ACTIONS_READ_TOKEN", "")
@@ -704,6 +819,10 @@ def run(env, *, execute=False, resume=False, requested_sha="", live_smoke=False)
                           TEST, HOSTED_WORKFLOW, test_account, env).get("status"))
         return
 
+    if recover_live_validation:
+        require(isinstance(entry, dict) and entry.get("phase") == "test_started",
+                "live_recovery_no_failed_test_to_review")
+
     # A signed and verified exact-SHA source is already complete. This is a
     # truthful no-op, not an error and never a second dispatch/build/sign.
     if entry is not None and entry.get("phase") == "signed_verified":
@@ -744,6 +863,11 @@ def run(env, *, execute=False, resume=False, requested_sha="", live_smoke=False)
                       liveValidationRequested=live_smoke,
                       route=route, quotaBasis=plan["reason"])
         entry = {"phase": "test_started", "testRunId": test_run, "route": route}
+
+    if recover_live_validation:
+        recover_reviewed_live_test(pub, test, source, entry, test_account, sign_account, env, task)
+        state, _ = json_file(pub, STATE_PATH)
+        entry = state["builds"][source]
 
     if entry["phase"] == "test_started":
         test_run = entry.get("testRunId")
@@ -836,12 +960,14 @@ def main():
     parser.add_argument("--execute", action="store_true")
     parser.add_argument("--resume", action="store_true")
     parser.add_argument("--live-smoke", action="store_true")
+    parser.add_argument("--recover-live-validation", action="store_true")
     parser.add_argument("--source-sha", default="")
     args = parser.parse_args()
     try:
         require(not args.resume or args.execute, "resume_requires_execute")
         run(os.environ, execute=args.execute, resume=args.resume,
-            requested_sha=args.source_sha, live_smoke=args.live_smoke)
+            requested_sha=args.source_sha, live_smoke=args.live_smoke,
+            recover_live_validation=args.recover_live_validation)
         return 0
     except Hold as exc:
         reason = str(exc)

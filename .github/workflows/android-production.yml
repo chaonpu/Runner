@@ -18,6 +18,11 @@ on:
         type: boolean
         required: true
         default: false
+      recover_live_validation:
+        description: "已复核在线验证失败，限一次全量重建（须选续跑）"
+        type: boolean
+        required: true
+        default: false
       source_sha:
         description: "源码 SHA（通常留空；续跑填原40位）"
         type: string
@@ -51,6 +56,7 @@ jobs:
       EXECUTE: ${{ inputs.execute }}
       LIVE_SMOKE: ${{ inputs.live_smoke }}
       RESUME: ${{ inputs.resume }}
+      RECOVER_LIVE_VALIDATION: ${{ inputs.recover_live_validation }}
       SOURCE_SHA: ${{ inputs.source_sha }}
     steps:
       - name: Checkout only trusted public coordinator
@@ -62,6 +68,7 @@ jobs:
         run: |
           python3 -m unittest discover -s tests -p test_android_production.py -v
           python3 -m unittest discover -s tests -p test_android_live_validation.py -v
+          python3 -m unittest discover -s tests -p test_android_live_recovery.py -v
           python3 tools/private_release_transport.py self-test
           python3 -m unittest discover -s tests -p 'test_android_signing_recovery.py' -v
           python3 -m unittest discover -s tests -p 'test_android_private_release.py' -v
@@ -76,6 +83,7 @@ jobs:
           if [[ "$EXECUTE" == 'true' ]]; then args+=(--execute); fi
           if [[ "$LIVE_SMOKE" == 'true' ]]; then args+=(--live-smoke); fi
           if [[ "$RESUME" == 'true' ]]; then args+=(--resume); fi
+          if [[ "$RECOVER_LIVE_VALIDATION" == 'true' ]]; then args+=(--recover-live-validation); fi
           python3 -m scheduler.android_production "${args[@]}" 2>&1 | tee "$RUNNER_TEMP/entry-result.jsonl"
       - name: Explain next manual step
         if: always()
