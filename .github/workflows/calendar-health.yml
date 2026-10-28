@@ -1,4 +1,4 @@
-name: 交易日历独立巡检
+name: 交易日历独立巡检（自动）
 
 on:
   workflow_dispatch:
