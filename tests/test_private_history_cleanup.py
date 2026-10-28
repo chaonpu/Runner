@@ -116,6 +116,23 @@ class Tests(unittest.TestCase):
         self.assertEqual(row['reason'], 'protected_workflow_inventory_incomplete')
         self.assertFalse(self.deleted)
 
+    def test_explicit_stale_runner_records_need_default_branch_absence(self):
+        repo = 'chaonpu/Runner'
+        keep = c.REPOSITORIES[repo]['keep']
+        names = c.STALE_RETIRED[repo]
+        self.assertEqual(len(names), 3)
+        self.assertNotIn('.github/workflows/stock-us.yml', names)
+        for path in names:
+            endpoint = '/contents/' + path + '?ref=main'
+            self.assertTrue(c.permitted(repo, endpoint, 'GET'))
+            self.assertFalse(c.permitted(repo, endpoint, 'DELETE'))
+            self.assertFalse(c.permitted(REPO, endpoint, 'GET'))
+            run = {'status': 'completed', 'path': path}
+            self.assertFalse(c.eligible(run, {path}, keep))
+            self.assertTrue(c.eligible(run, {path}, keep, {path}))
+            self.assertFalse(c.eligible(dict(run, status='in_progress'), {path}, keep, {path}))
+        self.assertFalse(c.permitted(repo, '/contents/.github/workflows/stock-us.yml?ref=main', 'GET'))
+
     def test_push_can_only_preview(self):
         env = {'GITHUB_REPOSITORY': c.ROOT, 'GITHUB_REF': 'refs/heads/main',
                'GITHUB_WORKFLOW_REF': c.WORKFLOW, 'GITHUB_ACTOR': 'chaonpu', 'GITHUB_EVENT_NAME': 'push'}
