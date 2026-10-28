@@ -430,26 +430,11 @@
       "updatedAt": "2026-10-27T18:35:53.336914+00:00"
     },
     "dda1309ede07326003def829c024c7ae347b80fb": {
-      "createdAt": "2026-10-28T03:57:05.581413+00:00",
-      "lastFailure": {
-        "code": "android_live_validation_failed_or_skipped",
-        "recordedAt": "2026-10-28T04:15:49.630238+00:00",
-        "runId": 40629551493,
-        "stage": "test"
-      },
-      "liveSmoke": true,
-      "phase": "test_started",
-      "route": "windows",
-      "sourceSha": "dda1309ede07326003def829c024c7ae347b80fb",
-      "testLiveRetries": 0,
-      "testRunId": 40629551493,
-      "updatedAt": "2026-10-28T07:26:14.000Z",
       "abortedTestLiveRecoveryReservations": [
         {
           "coordinatorRunId": 40649596427,
-          "reason": "live_recovery_reservation_unconfirmed",
           "dispatchStatus": "not_dispatched_verified_before_post",
-          "reservedAt": "2026-10-28T07:22:16.106230+00:00",
+          "reason": "live_recovery_reservation_unconfirmed",
           "reservation": {
             "mode": "explicit_reviewed_full_rebuild",
             "originalTestRunId": 40629551493,
@@ -459,9 +444,37 @@
               "runId": 40629551493,
               "stage": "test"
             }
-          }
+          },
+          "reservedAt": "2026-10-28T07:22:16.106230+00:00"
         }
-      ]
+      ],
+      "createdAt": "2026-10-28T03:57:05.581413+00:00",
+      "failedTestRunIds": [
+        40629551493
+      ],
+      "lastFailure": {
+        "code": "android_live_validation_failed_or_skipped",
+        "recordedAt": "2026-10-28T04:15:49.630238+00:00",
+        "runId": 40629551493,
+        "stage": "test"
+      },
+      "liveSmoke": true,
+      "phase": "test_retry_reserved",
+      "route": "windows",
+      "sourceSha": "dda1309ede07326003def829c024c7ae347b80fb",
+      "testLiveRecovery": {
+        "mode": "explicit_reviewed_full_rebuild",
+        "originalTestRunId": 40629551493,
+        "reviewedFailure": {
+          "code": "android_live_validation_failed_or_skipped",
+          "recordedAt": "2026-10-28T04:15:49.630238+00:00",
+          "runId": 40629551493,
+          "stage": "test"
+        }
+      },
+      "testLiveRetries": 1,
+      "testRunId": 40629551493,
+      "updatedAt": "2026-10-28T07:28:17.149791+00:00"
     },
     "e20d59e487f3615ab1c5c594ea7e045e509c6b0e": {
       "createdAt": "2026-10-17T21:17:47.447639+00:00",
