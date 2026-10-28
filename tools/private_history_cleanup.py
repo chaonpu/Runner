@@ -32,6 +32,15 @@ REPOSITORIES = {
         'keep': {'windows-signing-verified-handoff.yml', 'cloud-signing-verified-handoff.yml'},
     },
 }
+# Exact retired workflow paths; a historical run is eligible only when its
+# default-branch YAML is independently confirmed absent via GitHub Contents API.
+STALE_RETIRED = {
+    'chaonpu/Runner': {
+        '.github/workflows/android-signing-recovery-launch.yml',
+        '.github/workflows/android-release-transport-check.yml',
+        '.github/workflows/verify-database-prebusiness-once.yml',
+    },
+}
 PATH = re.compile(r'\.github/workflows/[A-Za-z0-9_.-]+\.ya?ml\Z')
 
 
@@ -67,6 +76,10 @@ def permitted(repo, path, method):
         return bool(re.fullmatch(r'/actions/runs/[1-9][0-9]*', path))
     if method != 'GET':
         return False
+    if repo in STALE_RETIRED and path in {
+        '/contents/' + p + '?ref=main' for p in STALE_RETIRED[repo]
+    }:
+        return True
     return (bool(re.fullmatch(r'/actions/workflows\?per_page=100&page=[1-9][0-9]*', path))
             or bool(re.fullmatch(r'/actions/workflows/[1-9][0-9]*', path))
             or bool(re.fullmatch(r'/actions/runs\?per_page=100&page=[1-9][0-9]*', path))
@@ -143,10 +156,10 @@ def run_snapshot(reader, repo):
     raise Stop('run_inventory_page_limit')
 
 
-def eligible(run, current, keep):
+def eligible(run, current, keep, stale=()):
     path = run.get('path', '')
     return (run.get('status') == 'completed' and isinstance(path, str)
-            and bool(PATH.fullmatch(path)) and path not in current
+            and bool(PATH.fullmatch(path)) and (path not in current or path in stale)
             and path.rsplit('/', 1)[-1] not in keep)
 
 
@@ -157,9 +170,13 @@ def clean_repository(repo, env, execute, call=api):
            'deleted': 0, 'alreadyAbsent': 0, 'skippedAfterRecheck': 0, 'deferredByLimit': 0}
     try:
         current = workflow_inventory(actions, repo)
+        stale = {
+            p for p in STALE_RETIRED.get(repo, set())
+            if actions(repo, '/contents/' + p + '?ref=main') is None
+        }
         runs = run_snapshot(actions, repo)  # Snapshot every page before any deletion.
         row['scanned'] = len(runs)
-        selected = [r for r in runs if eligible(r, current, spec['keep'])]
+        selected = [r for r in runs if eligible(r, current, spec['keep'], stale)]
         row['candidates'] = len(selected)
         if execute:
             row['deferredByLimit'] = max(0, len(selected) - LIMIT)
@@ -174,7 +191,7 @@ def clean_repository(repo, env, execute, call=api):
                         and live.get('path') == expected.get('path')
                         and live.get('repository', {}).get('full_name') == repo,
                         'run_identity_mismatch')
-                if not eligible(live, current, spec['keep']):
+                if not eligible(live, current, spec['keep'], stale):
                     row['skippedAfterRecheck'] += 1
                     continue
                 wid = live.get('workflow_id')
@@ -183,14 +200,19 @@ def clean_repository(repo, env, execute, call=api):
                 if workflow is not None:
                     require(workflow.get('id') == wid and workflow.get('path') == live['path'],
                             'workflow_identity_mismatch')
-                    if workflow.get('state') != 'deleted':
+                    if workflow.get('state') != 'deleted' and live['path'] not in stale:
                         row['skippedAfterRecheck'] += 1
                         continue
                 # A successful full workflow listing (including every pinned workflow)
                 # is required again after a deleted/404 registration check. A 404 alone
                 # never authorizes deletion and a recreated path stays protected.
                 latest = workflow_inventory(actions, repo)
-                if not eligible(live, latest, spec['keep']):
+                if not eligible(live, latest, spec['keep'], stale):
+                    row['skippedAfterRecheck'] += 1
+                    continue
+                if live['path'] in stale and actions(
+                    repo, '/contents/' + live['path'] + '?ref=main'
+                ) is not None:
                     row['skippedAfterRecheck'] += 1
                     continue
                 actions(repo, path, 'DELETE')
