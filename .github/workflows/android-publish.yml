@@ -48,6 +48,9 @@ jobs:
           python3 -m unittest discover -s tests -p 'test_*publish*.py' -v
           python3 -m unittest discover -s tests -p 'test_entry_result.py' -v
           python3 -m unittest discover -s tests -p 'test_workflow_contract.py' -v
+          python3 tools/private_release_transport.py self-test
+          python3 -m unittest discover -s tests -p 'test_android_private_release.py' -v
+          python3 -m unittest discover -s tests -p 'test_apk_stage.py' -v
       - name: Verify signed APK and execute selected release mode
         shell: bash
         run: |

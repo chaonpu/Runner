@@ -1,4 +1,4 @@
-"""Four manual business entries plus audited maintenance, health, CI and recovery entrypoints."""
+"""Four manual business entries plus independently audited maintenance and health."""
 from pathlib import Path
 import json
 import re
@@ -9,8 +9,6 @@ WORKFLOWS = ROOT / '.github/workflows'
 MANUAL_ONLY = {'android-production.yml','android-publish.yml','production-dispatch.yml','stock-us.yml'}
 MAINTENANCE_ONLY = {'private-history-cleanup.yml'}
 HEALTH_ONLY = {'calendar-health.yml'}
-CI_ONLY = {'android-release-transport-check.yml'}
-CONTROLLED_RECOVERY = {'android-signing-recovery-launch.yml'}
 
 
 def event_keys(text):
@@ -26,7 +24,7 @@ class WorkflowContractTests(unittest.TestCase):
         files = {p.name:p for p in WORKFLOWS.glob('*.yml')}
         # Maintenance and read-only calendar health are independent of the
         # four owner-initiated business workflows; reject unknown entrypoints.
-        self.assertEqual(set(files), MANUAL_ONLY | MAINTENANCE_ONLY | HEALTH_ONLY | CI_ONLY | CONTROLLED_RECOVERY)
+        self.assertEqual(set(files), MANUAL_ONLY | MAINTENANCE_ONLY | HEALTH_ONLY)
         for name in sorted(MANUAL_ONLY):
             path = files[name]
             text = path.read_text()
@@ -86,39 +84,7 @@ class WorkflowContractTests(unittest.TestCase):
             path.name for path in WORKFLOWS.glob('*.yml')
             if event_keys(path.read_text()) - {'workflow_dispatch'}
         }
-        self.assertEqual(automatic, MAINTENANCE_ONLY | HEALTH_ONLY | CI_ONLY | CONTROLLED_RECOVERY)
-
-    def test_recovery_is_owner_gated_to_single_config_file_and_pre_key_evidence(self):
-        text = (WORKFLOWS/'android-signing-recovery-launch.yml').read_text()
-        self.assertEqual(event_keys(text), {'push'})
-        self.assertIn('branches: [main]', text)
-        self.assertIn("'config/android-signing-recovery.json'", text)
-        self.assertIn("github.repository == 'chaonpu/Runner'", text)
-        self.assertIn("github.actor == 'chaonpu'", text)
-        self.assertIn('contents: write', text)
-        self.assertNotIn('actions: write', text)
-        self.assertIn('cancel-in-progress: false', text)
-        self.assertIn('persist-credentials: false', text)
-        self.assertIn('fetch-depth: 2', text)
-        self.assertIn('scheduler.android_signing_recovery', text)
-        self.assertIn('test_android_signing_recovery.py', text)
-        self.assertNotIn('scheduler.android_publish', text)
-        self.assertNotIn('scheduler.android_production --', text)
-        self.assertNotIn('pull_request_target', text)
-
-    def test_offline_regression_has_no_business_credentials_or_write_permissions(self):
-        text = (WORKFLOWS/'android-release-transport-check.yml').read_text()
-        self.assertEqual(event_keys(text), {'push', 'workflow_dispatch'})
-        self.assertIn('branches: [main]', text)
-        self.assertIn('contents: read', text)
-        self.assertNotIn('contents: write', text)
-        self.assertNotIn('actions: write', text)
-        self.assertNotIn('secrets.', text)
-        self.assertNotIn('scheduler.android_publish --', text)
-        self.assertNotIn('/dispatches', text)
-        self.assertIn("test_workflow_contract.py", text)
-        self.assertIn('unittest discover', text)
-        self.assertNotIn('pull_request_target', text)
+        self.assertEqual(automatic, MAINTENANCE_ONLY | HEALTH_ONLY)
 
     def test_strategy_market_and_cleanup(self):
         for name, task in (('production-dispatch.yml','stock_a'),('stock-us.yml','stock_us')):

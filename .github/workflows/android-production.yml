@@ -62,6 +62,11 @@ jobs:
         run: |
           python3 -m unittest discover -s tests -p test_android_production.py -v
           python3 -m unittest discover -s tests -p test_android_live_validation.py -v
+          python3 tools/private_release_transport.py self-test
+          python3 -m unittest discover -s tests -p 'test_android_signing_recovery.py' -v
+          python3 -m unittest discover -s tests -p 'test_android_private_release.py' -v
+          python3 -m unittest discover -s tests -p 'test_apk_stage.py' -v
+          python3 -m unittest discover -s tests -p 'test_workflow_contract.py' -v
       - name: Coordinate exact Test and private signer runs
         id: coordinate
         shell: bash
