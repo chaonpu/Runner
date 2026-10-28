@@ -50,8 +50,8 @@ jobs:
           RUNNER_ACTIONS_TOKEN: ${{ github.token }}
           CHAONPU_ACTIONS_READ_TOKEN: ${{ secrets.CHAONPU_ACTIONS_READ_TOKEN }}
           TEST_ACTIONS_READ_TOKEN: ${{ secrets.TEST_ACTIONS_READ_TOKEN }}
-          EXECUTE: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && !inputs.dry_run) || (github.event_name == 'push' && github.event.head_commit.message == 'chore(actions): execute one-shot retired workflow history cleanup') }}
-          GITHUB_ONE_SHOT_RETIREMENT: ${{ github.event_name == 'push' && github.event.head_commit.message == 'chore(actions): execute one-shot retired workflow history cleanup' }}
+          EXECUTE: "${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && !inputs.dry_run) || (github.event_name == 'push' && github.event.head_commit.message == 'chore(actions): execute one-shot retired workflow history cleanup') }}"
+          GITHUB_ONE_SHOT_RETIREMENT: "${{ github.event_name == 'push' && github.event.head_commit.message == 'chore(actions): execute one-shot retired workflow history cleanup' }}"
         shell: bash
         run: |
           set -euo pipefail
