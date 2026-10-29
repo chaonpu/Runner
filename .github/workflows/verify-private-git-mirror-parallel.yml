@@ -1,0 +1,20 @@
+name: Verify parallel Git API mirror safety regressions
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/verify-private-git-mirror-parallel.yml'
+permissions:
+  contents: read
+jobs:
+  offline-safety:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Verify parallel blob upload, bounded read retries and digest gates
+        run: python3 -m unittest discover -s tests -p test_private_git_api_transport.py -v
+      - name: Verify Release transport still fails closed
+        run: python3 -m unittest discover -s tests -p test_private_release_transport.py -v
