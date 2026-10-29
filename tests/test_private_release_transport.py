@@ -179,4 +179,27 @@ class Tests(unittest.TestCase):
         self.assertTrue(all(t.REPOS["signed"] in url for _,url in calls))
 
 
+    def test_explicit_git_api_mirror_publish_still_compares_complete_bytes(self):
+        with patch.dict(os.environ, {"PREFER_GIT_API_MIRROR": "1"}), \
+             patch.object(t, "_git_api_mirror_publish", return_value=self.data) as mirror:
+            self.assertEqual(self.publish(), t.sha256(self.data))
+            mirror.assert_called_once()
+
+    def test_explicit_git_api_mirror_mismatch_never_authorizes_release(self):
+        wrong = b"x" * len(self.data)
+        with patch.dict(os.environ, {"PREFER_GIT_API_MIRROR": "1"}), \
+             patch.object(t, "_git_api_mirror_publish", return_value=wrong):
+            with self.assertRaisesRegex(t.TransportError, "bytes_mismatch"):
+                self.publish()
+
+    def test_explicit_git_api_mirror_read_avoids_broken_release_cdn(self):
+        with patch.dict(os.environ, {"PREFER_GIT_API_MIRROR": "1"}), \
+             patch.object(t, "_git_api_mirror_read", return_value=self.data) as mirror, \
+             patch.object(t, "gh", side_effect=AssertionError("unexpected CDN GET")):
+            self.assertEqual(
+                t.read_asset("test", self.sha, self.run, self.asset, "token"),
+                self.data)
+            mirror.assert_called_once()
+
+
 if __name__ == "__main__": unittest.main()
