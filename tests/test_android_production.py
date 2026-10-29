@@ -235,6 +235,34 @@ class Tests(unittest.TestCase):
                     self.assertEqual(a.classify_failed_run("private", repo, 321), expected)
                     self.assertIn("/jobs?per_page=100", request.call_args.args[2])
 
+    def test_setup_only_failure_is_not_called_apk_compile_or_artifact_failure(self):
+        for repo, expected in (
+            (a.TEST, "android_test_job_setup_failed_manual_review"),
+            (a.SIGNER, "android_signer_job_setup_failed_manual_review"),
+        ):
+            with self.subTest(repo=repo):
+                response = {"total_count": 2, "jobs": [
+                    {"conclusion": "failure",
+                     "steps": [{"name": "Set up job",
+                                "conclusion": "failure"}]},
+                    {"conclusion": "skipped", "steps": []},
+                ]}
+                with patch.object(a, "api", return_value=response):
+                    self.assertEqual(a.classify_failed_run("t", repo, 9), expected)
+
+    def test_partial_business_execution_is_not_mistaken_for_setup_only_failure(self):
+        response = {"total_count": 1, "jobs": [
+            {"conclusion": "failure", "steps": [
+                {"name": "Set up job", "conclusion": "failure"},
+                {"name": "Build unsigned Release APK on Windows",
+                 "conclusion": "failure"},
+            ]},
+        ]}
+        with patch.object(a, "api", return_value=response):
+            self.assertEqual(
+                a.classify_failed_run("t", a.TEST, 9),
+                "android_compile_failed_manual_review")
+
     def test_checkout_failure_not_automatically_called_network_error(self):
         jobs = {"total_count": 1, "jobs": [{
             "conclusion": "failure", "steps": [
