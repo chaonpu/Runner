@@ -30,6 +30,29 @@ class Tests(unittest.TestCase):
                         self.assertEqual(report.call_args.kwargs["reason"], expected)
                         self.assertEqual(report.call_args.kwargs["probe"], probe)
 
+    def test_chart_push_ci_does_not_block_manual_apk_dispatch(self):
+        with patch.object(a, "existing_attempt",
+                          return_value={"status": "no_active_run",
+                                        "read": "readable"}) as probe:
+            a.check_idle(a.TEST, a.TEST_WORKFLOW, {}, {})
+        probe.assert_called_once_with(a.TEST, a.TEST_WORKFLOW, {}, {},
+                                      event="workflow_dispatch")
+
+    def test_manual_apk_is_still_blocked_if_a_second_manual_apk_is_active(self):
+        with patch.object(a, "existing_attempt",
+                          return_value={"status": "active"}) as probe:
+            with self.assertRaisesRegex(a.Hold, "active_or_unknown_private_workflow"):
+                a.check_idle(a.TEST, a.TEST_WORKFLOW, {}, {})
+        probe.assert_called_once_with(a.TEST, a.TEST_WORKFLOW, {}, {},
+                                      event="workflow_dispatch")
+
+    def test_signer_workflow_keeps_original_all_event_safety_probe(self):
+        with patch.object(a, "existing_attempt",
+                          return_value={"status": "no_active_run"}) as probe:
+            a.check_idle(a.SIGNER, a.SIGN_WORKFLOW, {}, {})
+        probe.assert_called_once_with(a.SIGNER, a.SIGN_WORKFLOW, {}, {},
+                                      event=None)
+
     def record(self, repo, workflow, rid, sha):
         return dict(id=rid, repository={"full_name": repo},
                     path=".github/workflows/" + workflow, head_branch="main",
