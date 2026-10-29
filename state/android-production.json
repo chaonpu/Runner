@@ -75,7 +75,7 @@
     "3e41553fcd3c88ca828a7af45a9b57e303da77ee": {
       "createdAt": "2026-10-29T09:57:22.252260+00:00",
       "lastFailure": {
-        "code": "android_test_or_artifact_failed_manual_review",
+        "code": "private_workflow_cancelled_manual_review",
         "recordedAt": "2026-10-29T10:10:06.060597+00:00",
         "runId": 40853679953,
         "stage": "test"
