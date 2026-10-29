@@ -402,6 +402,9 @@ def classify_failed_run(token, repo, rid):
     if repo == TEST:
         if any(x.startswith("Verify live chart execution evidence") for x in failures):
             return "android_live_validation_failed_or_skipped"
+        if any(x.startswith("Publish verified Test handoff to PRIVATE Release Assets")
+               for x in failures):
+            return "android_test_private_handoff_failed_manual_review"
         if any(x.startswith("Build unsigned Release APK") for x in failures):
             return "android_compile_failed_manual_review"
         if any(x.startswith(("Run unit tests", "Verify release and debug",
