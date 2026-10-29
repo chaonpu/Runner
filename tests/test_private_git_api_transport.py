@@ -112,6 +112,39 @@ class Tests(TestCase):
             with self.assertRaisesRegex(m.MirrorError, "tree_identity_invalid"):
                 m.read("test", self.sha, "42", self.asset, "fake-token")
 
+    def test_readonly_git_blob_404_is_retried_with_same_sha(self):
+        data = b"verified-readonly-retry" * 100
+        blob = m.git_hash(data)
+        response = {"sha": blob, "encoding": "base64", "size": len(data),
+                    "content": base64.b64encode(data).decode()}
+        with patch.object(m, "call", side_effect=[
+                m.MirrorError("http_404_blob_read"), response]) as calls, \
+             patch.object(m.time, "sleep") as sleep:
+            self.assertEqual(m.get_blob(m.REPOS["test"], blob, "token"), data)
+            self.assertEqual(calls.call_count, 2)
+            sleep.assert_called_once()
+
+    def test_git_blob_auth_denial_never_retries(self):
+        blob = "c" * 40
+        with patch.object(m, "call",
+                          side_effect=m.MirrorError("http_403_blob_read")) as calls, \
+             patch.object(m.time, "sleep") as sleep:
+            with self.assertRaisesRegex(m.MirrorError, "http_403_blob_read"):
+                m.get_blob(m.REPOS["test"], blob, "token")
+            calls.assert_called_once()
+            sleep.assert_not_called()
+
+    def test_multi_chunk_upload_failure_cannot_create_tag(self):
+        error = m.MirrorError("transport_unavailable")
+        with patch.object(m, "call", side_effect=self.server.call), \
+             patch.object(m, "put_blob", side_effect=error):
+            with self.assertRaisesRegex(m.MirrorError, "transport_unavailable"):
+                m.publish("test", self.sha, "42", self.asset,
+                          self.data, "fake-token", self.sha)
+        self.assertIsNone(self.server.tree)
+        self.assertIsNone(self.server.commit)
+        self.assertEqual(self.server.ref_posts, 0)
+
     def test_missing_ref_never_falls_back_to_an_unverified_source(self):
         with patch.object(m, "call", side_effect=self.server.call):
             with self.assertRaisesRegex(m.MirrorError, "ref_missing"):
