@@ -65,6 +65,41 @@ class ExactStatusRunProbeTests(unittest.TestCase):
                 self.assertEqual(r["status"], "unknown")
                 self.assertNotEqual(r["status"], "no_active_run")
 
+    def test_event_filter_excludes_push_only_regressions(self):
+        paths = []
+        reader = reader_factory({}, paths)
+        result = existing_attempt(REPO, WORKFLOW, SPEC, ENV,
+                                  event="workflow_dispatch",
+                                  reader_factory=reader)
+        self.assertEqual(result["status"], "no_active_run")
+        self.assertEqual(len(paths), len(ACTIVE_RUN_STATES))
+        self.assertTrue(all("&event=workflow_dispatch&per_page=1" in path
+                            for path in paths))
+
+    def test_event_filtered_manual_build_blocks_dispatch(self):
+        paths = []
+        responses = {"queued": (1, [{"status": "queued",
+                                    "event": "workflow_dispatch"}])}
+        result = existing_attempt(REPO, WORKFLOW, SPEC, ENV,
+                                  event="workflow_dispatch",
+                                  reader_factory=reader_factory(responses, paths))
+        self.assertEqual(result["status"], "active")
+
+    def test_event_filter_fails_closed_if_server_ignores_filter(self):
+        paths = []
+        responses = {"queued": (1, [{"status": "queued", "event": "push"}])}
+        result = existing_attempt(REPO, WORKFLOW, SPEC, ENV,
+                                  event="workflow_dispatch",
+                                  reader_factory=reader_factory(responses, paths))
+        self.assertEqual(result["status"], "unknown")
+        self.assertNotEqual(result["status"], "no_active_run")
+
+    def test_unsupported_event_filter_cannot_claim_no_active_runs(self):
+        result = existing_attempt(REPO, WORKFLOW, SPEC, ENV,
+                                  event="push",
+                                  reader_factory=lambda _: self.fail("unexpected query"))
+        self.assertEqual(result["status"], "unknown")
+
     def test_network_failure_must_hold_without_inference(self):
         r, _ = self.query({"requested": TimeoutError("synthetic unavailable")})
         self.assertEqual(r["status"], "unknown")
