@@ -60,6 +60,8 @@ jobs:
           python3 -m unittest discover -s tests -p 'test_apk_stage.py' -v
       - name: Verify signed APK and execute selected release mode
         shell: bash
+        env:
+          PREFER_GIT_API_MIRROR: "1"
         run: |
           set -euo pipefail
           case "$RELEASE_MODE" in
