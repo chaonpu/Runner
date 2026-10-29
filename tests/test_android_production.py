@@ -221,6 +221,25 @@ class Tests(unittest.TestCase):
             self.assertEqual(a.classify_failed_run("t", a.TEST, 9),
                              "android_test_or_artifact_failed_manual_review")
 
+    def test_cancelled_private_test_run_is_not_misclassified_as_build_failure(self):
+        sha = "a" * 40
+        item = self.record(a.TEST, a.TEST_WORKFLOW, 9, sha)
+        item.update(status="completed", conclusion="cancelled")
+        with patch.object(a, "api", return_value=item) as request:
+            with self.assertRaisesRegex(a.Hold, "private_workflow_cancelled_manual_review"):
+                a.wait_run("private", a.TEST, a.TEST_WORKFLOW, 9, sha)
+            # Cancelled runs must never pass to signing or be diagnosed
+            # as a genuine compile failure from incomplete step evidence.
+            self.assertEqual(request.call_count, 1)
+
+    def test_cancelled_private_signer_run_is_never_success(self):
+        sha = "a" * 40
+        item = self.record(a.SIGNER, a.SIGN_WORKFLOW, 9, sha)
+        item.update(status="completed", conclusion="cancelled")
+        with patch.object(a, "api", return_value=item):
+            with self.assertRaisesRegex(a.Hold, "private_workflow_cancelled_manual_review"):
+                a.wait_run("private", a.SIGNER, a.SIGN_WORKFLOW, 9)
+
     def test_failed_exact_run_never_returns_success(self):
         sha = "a" * 40
         item = self.record(a.TEST, a.TEST_WORKFLOW, 9, sha)
