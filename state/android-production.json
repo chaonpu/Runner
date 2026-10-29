@@ -43,7 +43,7 @@
     "2faa6ecc2785ac53889b976d418727b6dbd8987e": {
       "createdAt": "2026-10-29T11:21:46.004312+00:00",
       "lastFailure": {
-        "code": "android_test_or_artifact_failed_manual_review",
+        "code": "android_test_job_setup_failed_manual_review",
         "recordedAt": "2026-10-29T11:27:25.904657+00:00",
         "runId": 40864801588,
         "stage": "test"
