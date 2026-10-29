@@ -5,6 +5,7 @@ Release metadata and digest remain mandatory; this is a second transport,
 NOT a substitute for the trusted Test run or signing policy.
 """
 import base64
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import hashlib
 import json
 import os
@@ -13,6 +14,7 @@ import re
 import shutil
 import subprocess
 import tempfile
+import time
 
 CHUNK_SIZE = 256 * 1024
 MAX_ASSET = 240 * 1024 * 1024
@@ -104,7 +106,17 @@ def call(repo, path, token, *, payload=None, missing_ok=False):
 
 def get_blob(repo, blob_sha, token):
     require(bool(SHA40.fullmatch(blob_sha)), "blob_sha_invalid")
-    item = call(repo, "/git/blobs/" + blob_sha, token)
+    # A GET is read-only and may be retried if a CDN/API stream stalls or a
+    # newly written content-addressed object is briefly not visible.
+    # Never retry 401/403, bad hashes or any POST here.
+    for attempt in range(3):
+        try:
+            item = call(repo, "/git/blobs/" + blob_sha, token)
+            break
+        except MirrorError as exc:
+            if str(exc) not in ("transport_unavailable", "http_404_blob_read") or attempt == 2:
+                raise
+            time.sleep(1 + attempt)
     require(item.get("sha") == blob_sha and item.get("encoding") == "base64",
             "blob_identity_invalid")
     try:
@@ -180,20 +192,29 @@ def read(kind, sha, run, asset, token):
     require(tree.get("sha") == tree_sha and tree.get("truncated") is not True
             and isinstance(entries, list) and len(entries) == count
             and 0 < count <= 1024, "tree_identity_invalid")
-    result = bytearray()
-    for n, entry in enumerate(sorted(entries, key=lambda x: x.get("path", ""))):
+    ordered = sorted(entries, key=lambda x: x.get("path", ""))
+    for n, entry in enumerate(ordered):
         require(entry.get("path") == "bundle-%05d.bin" % n
                 and entry.get("mode") == "100644"
                 and entry.get("type") == "blob"
                 and isinstance(entry.get("sha"), str)
                 and SHA40.fullmatch(entry["sha"]),
                 "tree_entry_invalid")
-        part = get_blob(repo, entry["sha"], token)
-        expected_length = min(CHUNK_SIZE, asset["size"] - n * CHUNK_SIZE)
-        require(len(part) == expected_length, "chunk_length_mismatch")
-        result.extend(part)
-        if (n + 1) % 12 == 0:
-            print("Private Git API mirror read:", n + 1, "/", count, flush=True)
+    chunks = [None] * count
+    with ThreadPoolExecutor(max_workers=3) as pool:
+        futures = {pool.submit(get_blob, repo, entry["sha"], token): n
+                   for n, entry in enumerate(ordered)}
+        for finished in as_completed(futures):
+            n = futures[finished]
+            part = finished.result()
+            expected_length = min(CHUNK_SIZE, asset["size"] - n * CHUNK_SIZE)
+            require(len(part) == expected_length, "chunk_length_mismatch")
+            chunks[n] = part
+            completed = sum(x is not None for x in chunks)
+            if completed == 1 or completed % 12 == 0:
+                print("Private Git API mirror read:", completed, "/", count, flush=True)
+    require(all(x is not None for x in chunks), "missing_mirror_chunks")
+    result = b"".join(chunks)
     require(len(result) == asset["size"] and checksum(result) == expected,
             "mirror_sha256_mismatch")
     return bytes(result)
@@ -211,15 +232,24 @@ def publish(kind, sha, run, asset, data, token, target):
                 "existing_mirror_bytes_mismatch")
         return checksum(data)
     print("Private Git API mirror: original Release metadata validated; starting immutable blob transfer", flush=True)
-    entries = []
-    for n, begin in enumerate(range(0, len(data), CHUNK_SIZE)):
-        chunk = data[begin:begin + CHUNK_SIZE]
-        blob_sha = put_blob(repo, chunk, token)
-        entries.append({"path": "bundle-%05d.bin" % n,
-                        "mode": "100644", "type": "blob", "sha": blob_sha})
-        if n == 0 or (n + 1) % 12 == 0:
-            print("Private Git API mirror uploaded:", n + 1, "/", 
-                  (len(data) + CHUNK_SIZE - 1) // CHUNK_SIZE, flush=True)
+    pieces = [data[i:i + CHUNK_SIZE] for i in range(0, len(data), CHUNK_SIZE)]
+    entries = [None] * len(pieces)
+    # The same bounded 3-way pipeline passed the full 10.9 MB Windows probe.
+    # Git blobs are content-addressed. Ambiguous POSTs are reconciled by GET
+    # in put_blob, never blindly repeated.
+    with ThreadPoolExecutor(max_workers=3) as pool:
+        futures = {pool.submit(put_blob, repo, part, token): n
+                   for n, part in enumerate(pieces)}
+        for finished in as_completed(futures):
+            n = futures[finished]
+            blob_sha = finished.result()
+            entries[n] = {"path": "bundle-%05d.bin" % n,
+                          "mode": "100644", "type": "blob", "sha": blob_sha}
+            completed = sum(x is not None for x in entries)
+            if completed == 1 or completed % 12 == 0:
+                print("Private Git API mirror uploaded:", completed, "/", len(pieces),
+                      flush=True)
+    require(all(x is not None for x in entries), "missing_uploaded_chunks")
     tree = call(repo, "/git/trees", token, payload={"tree": entries})
     tree_sha = tree.get("sha")
     require(isinstance(tree_sha, str) and SHA40.fullmatch(tree_sha),
