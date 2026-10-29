@@ -86,6 +86,8 @@ jobs:
       - name: Coordinate exact Test and private signer runs
         id: coordinate
         shell: bash
+        env:
+          PREFER_GIT_API_MIRROR: "1"
         run: |
           set -euo pipefail
           args=(--source-sha "$SOURCE_SHA")
