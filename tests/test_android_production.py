@@ -263,6 +263,20 @@ class Tests(unittest.TestCase):
                 a.classify_failed_run("t", a.TEST, 9),
                 "android_compile_failed_manual_review")
 
+    def test_verified_build_handoff_failure_is_distinct_from_compile_failure(self):
+        response = {"total_count": 1, "jobs": [{
+            "conclusion": "failure",
+            "steps": [
+                {"name": "Build unsigned Release APK on Windows", "conclusion": "success"},
+                {"name": "Run unit tests, release lint and debug APK build", "conclusion": "success"},
+                {"name": "Publish verified Test handoff to PRIVATE Release Assets (not Actions Artifact)",
+                 "conclusion": "failure"},
+            ],
+        }]}
+        with patch.object(a, "api", return_value=response):
+            self.assertEqual(a.classify_failed_run("token", a.TEST, 99),
+                             "android_test_private_handoff_failed_manual_review")
+
     def test_checkout_failure_not_automatically_called_network_error(self):
         jobs = {"total_count": 1, "jobs": [{
             "conclusion": "failure", "steps": [
