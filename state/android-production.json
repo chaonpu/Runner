@@ -14,7 +14,7 @@
     "1f0ced06728c54b6615554361cbd2d83b1cea015": {
       "createdAt": "2026-10-29T12:13:38.005167+00:00",
       "lastFailure": {
-        "code": "android_test_or_artifact_failed_manual_review",
+        "code": "android_test_private_handoff_failed_manual_review",
         "recordedAt": "2026-10-29T12:41:32.029671+00:00",
         "runId": 40871527741,
         "stage": "test"
