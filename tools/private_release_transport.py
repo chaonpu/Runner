@@ -313,6 +313,13 @@ def publish(kind, sha, run_id, folder, token, target):
           "release_publish_context_invalid")
     data = build(kind, folder)
     repo = REPOS[kind]
+    # A repeated signer run must reconcile the immutable exact-identity asset
+    # before attempting any new Release/asset POST. Never replace or overwrite.
+    try:
+        return verify_published_bytes(kind, sha, run_id, data, token)
+    except TransportError as exc:
+        if str(exc) != "private_release_not_found":
+            raise
     body = {"tag_name": tag, "target_commitish": target,
             "name": "PRIVATE VERIFIED " + kind + " handoff " + run_id,
             "body": "Private CI handoff for exact run and source SHA. Not a public app release.",

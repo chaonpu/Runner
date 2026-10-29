@@ -15,6 +15,8 @@ class Tests(unittest.TestCase):
         self.data = bytes(range(256)) * 8
         self.calls = []
         self.create_error = self.upload_error = self.read_error = None
+        self.existing = False
+        self.lookup_error = None
         self.remote = self.data
         self.asset = dict(id=123, name=t.ASSETS["test"], size=len(self.data),
                           state="uploaded", digest="sha256:"+t.sha256(self.data))
@@ -29,7 +31,11 @@ class Tests(unittest.TestCase):
             body = json.loads(data)
             self.assertEqual(body["tag_name"], self.metadata["tag_name"])
             self.assertEqual(body["target_commitish"], self.sha)
-            if self.create_error: raise self.create_error
+            if self.create_error:
+                if str(self.create_error) == "github_release_transport_unavailable":
+                    self.existing = True
+                raise self.create_error
+            self.existing = True
             return json.dumps(dict(id=12, tag_name=body["tag_name"],
                                    prerelease=True, draft=False)).encode()
         if method == "POST" and url.startswith("https://uploads.github.com/"):
@@ -38,6 +44,10 @@ class Tests(unittest.TestCase):
             if self.upload_error: raise self.upload_error
             return json.dumps(dict(name=t.ASSETS["test"], size=len(self.data))).encode()
         if method == "GET" and "/releases/tags/" in url:
+            if self.lookup_error:
+                raise self.lookup_error
+            if not self.existing:
+                raise t.TransportError("private_release_not_found")
             return json.dumps(self.metadata).encode()
         if method == "GET" and "/git/ref/tags/" in url:
             return json.dumps(dict(ref="refs/tags/"+self.metadata["tag_name"],
@@ -55,6 +65,44 @@ class Tests(unittest.TestCase):
 
     def posts(self):
         return [url for method, url in self.calls if method == "POST"]
+
+    def test_existing_release_reuses_verified_bytes_without_post(self):
+        self.existing = True
+        self.assertEqual(self.publish(), t.sha256(self.data))
+        self.assertEqual(self.posts(), [])
+
+    def test_second_publish_of_same_run_never_reposts(self):
+        self.assertEqual(self.publish(), t.sha256(self.data))
+        self.assertEqual(self.publish(), t.sha256(self.data))
+        self.assertEqual(len(self.posts()), 2)
+
+    def test_existing_release_digest_mismatch_fails_closed(self):
+        self.existing = True
+        self.asset["digest"] = "sha256:" + "b" * 64
+        with self.assertRaisesRegex(t.TransportError, "readback_sha256_mismatch"):
+            self.publish()
+        self.assertEqual(self.posts(), [])
+
+    def test_existing_release_missing_asset_fails_closed(self):
+        self.existing = True
+        self.metadata["assets"] = []
+        with self.assertRaisesRegex(t.TransportError, "asset_count_invalid"):
+            self.publish()
+        self.assertEqual(self.posts(), [])
+
+    def test_existing_release_content_mismatch_fails_closed(self):
+        self.existing = True
+        self.asset["digest"] = None
+        self.remote = b"x" * len(self.data)
+        with self.assertRaisesRegex(t.TransportError, "bytes_mismatch"):
+            self.publish()
+        self.assertEqual(self.posts(), [])
+
+    def test_preflight_permission_failure_never_creates(self):
+        self.lookup_error = t.TransportError("github_release_http_403")
+        with self.assertRaisesRegex(t.TransportError, "http_403"):
+            self.publish()
+        self.assertEqual(self.posts(), [])
 
     def test_normal_publish_reads_all_bytes_and_posts_once_each(self):
         self.assertEqual(self.publish(), t.sha256(self.data))
@@ -81,10 +129,11 @@ class Tests(unittest.TestCase):
         for status in (401, 403, 422, 429):
             with self.subTest(status=status):
                 self.calls = []
+                self.existing = False
                 self.upload_error = t.TransportError("github_release_http_"+str(status))
                 with self.assertRaisesRegex(t.TransportError, "http_"+str(status)): self.publish()
                 self.assertEqual(len(self.posts()), 2)
-                self.assertTrue(all(method == "POST" for method, _ in self.calls))
+                self.assertEqual(len([method for method, _ in self.calls if method == "GET"]), 1)
 
     def test_wrong_digest_never_authorizes_lost_response_recovery(self):
         self.upload_error = t.TransportError("github_release_transport_unavailable")
@@ -96,7 +145,7 @@ class Tests(unittest.TestCase):
         for key, value in (("size", len(self.data)+1), ("state", "starter"),
                            ("name", "another.zip")):
             with self.subTest(key=key):
-                self.calls=[]; original=self.asset[key]; self.asset[key]=value
+                self.calls=[]; self.existing=False; original=self.asset[key]; self.asset[key]=value
                 self.upload_error=t.TransportError("github_release_transport_unavailable")
                 with self.assertRaises(t.TransportError): self.publish()
                 self.assertEqual(len(self.posts()), 2); self.asset[key]=original
@@ -142,6 +191,7 @@ class Tests(unittest.TestCase):
             with self.subTest(cli=cli), self.assertRaises(t.TransportError): self.publish(cli=cli)
 
     def test_download_uses_the_same_checked_byte_reader_before_unpack(self):
+        self.existing = True
         with patch.object(t, "gh", side_effect=self.gh), patch.object(t, "unpack") as unpack:
             self.assertEqual(t.download("test", self.sha, self.run, Path("output"), "token"),
                              t.sha256(self.data))
@@ -171,10 +221,11 @@ class Tests(unittest.TestCase):
             return self.data
         with patch.dict(os.environ,env), patch.object(t,"build",return_value=self.data), \
              patch.object(t,"gh",side_effect=gh), \
-             patch.object(t,"verify_metadata",return_value=asset) as metadata:
+             patch.object(t,"verify_metadata",side_effect=[
+                 t.TransportError("private_release_not_found"), asset]) as metadata:
             self.assertEqual(t.publish("signed",self.sha,self.run,Path("unused"),"token","b"*40),
                              t.sha256(self.data))
-            metadata.assert_called_once_with("signed",self.sha,self.run,"token")
+            self.assertEqual(metadata.call_count, 2)
         self.assertEqual(len([x for x in calls if x[0]=="POST"]),2)
         self.assertTrue(all(t.REPOS["signed"] in url for _,url in calls))
 
