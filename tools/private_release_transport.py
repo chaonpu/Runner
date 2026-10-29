@@ -201,6 +201,12 @@ def verify_metadata(kind, sha, run_id, token):
 
 def read_asset(kind, sha, run_id, asset, token):
     """Read only the exact verified asset, including CLI redirect recovery."""
+    if os.environ.get("PREFER_GIT_API_MIRROR") == "1":
+        raw = _git_api_mirror_read(kind, sha, run_id, asset, token)
+        check(len(raw) == asset["size"], "release_asset_length_mismatch")
+        if asset.get("digest") is not None:
+            check(sha256(raw) == asset["digest"][7:], "release_asset_sha256_mismatch")
+        return raw
     try:
         raw = gh("https://api.github.com/repos/" + REPOS[kind] +
                  "/releases/assets/" + str(asset["id"]), token,
@@ -242,6 +248,43 @@ def download(kind, sha, run_id, folder, token):
     unpack(raw, kind, folder)
     return sha256(raw)
 
+def _git_api_mirror():
+    # Work both as an imported module and as a script invoked from tools/.
+    try:
+        from tools import private_git_api_transport
+    except ModuleNotFoundError:
+        import private_git_api_transport
+    return private_git_api_transport
+
+
+def _git_api_mirror_read(kind, sha, run_id, asset, token):
+    mirror = _git_api_mirror()
+    try:
+        return mirror.read(kind, sha, run_id, asset, token)
+    except mirror.MirrorError as exc:
+        raise TransportError("private_git_api_mirror_" + str(exc)) from None
+
+
+def _git_api_mirror_publish(kind, sha, run_id, stored, data, token):
+    mirror = _git_api_mirror()
+    release_tag = identity(kind, sha, run_id)
+    ref = gh_json("https://api.github.com/repos/" + REPOS[kind] +
+                  "/git/ref/tags/" + release_tag, token)
+    check(ref.get("ref") == "refs/tags/" + release_tag
+          and (ref.get("object") or {}).get("type") == "commit"
+          and isinstance((ref.get("object") or {}).get("sha"), str)
+          and SHA40.fullmatch(ref["object"]["sha"]),
+          "release_tag_commit_invalid")
+    original_target = ref["object"]["sha"]
+    if kind == "test":
+        check(original_target == sha, "release_tag_source_sha_mismatch")
+    try:
+        mirror.publish(kind, sha, run_id, stored, data, token, original_target)
+        return mirror.read(kind, sha, run_id, stored, token)
+    except mirror.MirrorError as exc:
+        raise TransportError("private_git_api_mirror_" + str(exc)) from None
+
+
 def verify_published_bytes(kind, sha, run_id, data, token):
     stored = verify_metadata(kind, sha, run_id, token)
     check(stored["size"] == len(data), "release_readback_size_mismatch")
@@ -249,7 +292,14 @@ def verify_published_bytes(kind, sha, run_id, data, token):
         check(stored["digest"] == "sha256:" + sha256(data),
               "release_readback_sha256_mismatch")
     # A complete all-bytes readback is mandatory, even after an ambiguous POST.
-    remote = read_asset(kind, sha, run_id, stored, token)
+    if os.environ.get("PREFER_GIT_API_MIRROR") == "1":
+        # Complete readback from immutable Git API blobs, independently
+        # checked against GitHub's server-computed Release asset digest.
+        # This never accepts a missing/incorrect Release or reruns an upload.
+        check(stored.get("digest") is not None, "release_digest_required")
+        remote = _git_api_mirror_publish(kind, sha, run_id, stored, data, token)
+    else:
+        remote = read_asset(kind, sha, run_id, stored, token)
     check(remote == data, "release_readback_bytes_mismatch")
     return sha256(data)
 
