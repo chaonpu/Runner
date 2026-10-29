@@ -149,7 +149,8 @@ ACTIVE_RUN_STATES = ("queued", "in_progress", "waiting", "pending", "requested")
 
 
 def existing_attempt(repo: str, workflow: str | None, spec: dict, env: dict,
-                     *, reader_factory=GitHubReadOnly) -> dict:
+                     *, event: str | None = None,
+                     reader_factory=GitHubReadOnly) -> dict:
     """Query ALL active statuses explicitly; never infer absence from newest N runs.
 
     GitHub's unfiltered list only returns the newest page, so an older stalled
@@ -160,6 +161,9 @@ def existing_attempt(repo: str, workflow: str | None, spec: dict, env: dict,
               "matchingTaskVerified": False}
     if not workflow:
         return result
+    # Only a specific known GitHub event is accepted as a filter.
+    if event not in (None, "workflow_dispatch"):
+        return result
     token = env.get(spec["actionsSecret"], "")
     if not token:
         result["read"] = "secret_missing"
@@ -168,7 +172,9 @@ def existing_attempt(repo: str, workflow: str | None, spec: dict, env: dict,
         reader = reader_factory(token)
         for status in ACTIVE_RUN_STATES:
             path = (f"/repos/{repo}/actions/workflows/{workflow}/runs"
-                    f"?status={status}&per_page=1")
+                    f"?status={status}" +
+                    ("&event=workflow_dispatch" if event else "") +
+                    "&per_page=1")
             record = reader.get(path)
             count = record.get("total_count")
             rows = record.get("workflow_runs")
@@ -177,6 +183,8 @@ def existing_attempt(repo: str, workflow: str | None, spec: dict, env: dict,
             if count > 0:
                 if not rows or not isinstance(rows[0], dict) or rows[0].get("status") != status:
                     raise ValueError("filtered_run_missing_confirmed_status")
+                if event and rows[0].get("event") != event:
+                    raise ValueError("filtered_run_event_unverified")
                 result.update(read="readable", status="active")
                 return result
             if rows:
