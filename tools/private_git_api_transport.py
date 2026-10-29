@@ -77,7 +77,19 @@ def call(repo, path, token, *, payload=None, missing_ok=False):
         if missing_ok and status == "404":
             return None
         if status in ("401", "403", "404", "409", "422", "429"):
-            raise MirrorError("http_" + status)
+            # Endpoint class is safe to log; never log private object URLs,
+            # signed redirects, tokens or the actual blob body.
+            endpoint = (
+                "tag_read" if path.startswith("/git/ref/tags/") else
+                "blob_write" if path == "/git/blobs" else
+                "blob_read" if path.startswith("/git/blobs/") else
+                "tree_write" if path == "/git/trees" else
+                "tree_read" if path.startswith("/git/trees/") else
+                "commit_write" if path == "/git/commits" else
+                "commit_read" if path.startswith("/git/commits/") else
+                "ref_write" if path == "/git/refs" else "other"
+            )
+            raise MirrorError("http_" + status + "_" + endpoint)
         require(result.returncode == 0 and status in
                 (("201",) if payload is not None else ("200",)),
                 "transport_unavailable")
@@ -198,13 +210,14 @@ def publish(kind, sha, run, asset, data, token, target):
         require(read(kind, sha, run, asset, token) == data,
                 "existing_mirror_bytes_mismatch")
         return checksum(data)
+    print("Private Git API mirror: original Release metadata validated; starting immutable blob transfer", flush=True)
     entries = []
     for n, begin in enumerate(range(0, len(data), CHUNK_SIZE)):
         chunk = data[begin:begin + CHUNK_SIZE]
         blob_sha = put_blob(repo, chunk, token)
         entries.append({"path": "bundle-%05d.bin" % n,
                         "mode": "100644", "type": "blob", "sha": blob_sha})
-        if (n + 1) % 12 == 0:
+        if n == 0 or (n + 1) % 12 == 0:
             print("Private Git API mirror uploaded:", n + 1, "/", 
                   (len(data) + CHUNK_SIZE - 1) // CHUNK_SIZE, flush=True)
     tree = call(repo, "/git/trees", token, payload={"tree": entries})
