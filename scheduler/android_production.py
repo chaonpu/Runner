@@ -377,6 +377,19 @@ def classify_failed_run(token, repo, rid):
         if isinstance(step, dict) and step.get("conclusion") == "failure"
         and isinstance(step.get("name"), str)
     ]
+    # A self-hosted job which failed at GitHub's Set up job phase never
+    # reached any project script. Do not call it a compile, test, or artifact
+    # failure. It still needs manual Runner/backend inspection before retry.
+    failed_jobs = [j for j in jobs if isinstance(j, dict)
+                   and j.get("conclusion") == "failure"]
+    if failed_jobs and all(
+        isinstance(j.get("steps"), list) and j["steps"] and
+        all(isinstance(step, dict) and step.get("name") == "Set up job"
+            and step.get("conclusion") == "failure" for step in j["steps"])
+        for j in failed_jobs
+    ):
+        return ("android_test_job_setup_failed_manual_review" if repo == TEST
+                else "android_signer_job_setup_failed_manual_review")
     # A network code is trusted only when a dedicated failing diagnosis step
     # recorded it, not merely because actions/checkout or a download failed.
     if any(x.startswith(("NETWORK_TRANSIENT_PREFLIGHT",
