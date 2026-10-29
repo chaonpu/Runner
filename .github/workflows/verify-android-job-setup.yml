@@ -1,0 +1,20 @@
+name: Verify Android Test setup failure classification
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/verify-android-job-setup.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Run coordinator safety and setup failure tests
+        run: python3 -m unittest discover -s tests -p test_android_production.py -v
+      - name: Run active workflow filtering regression
+        run: python3 -m unittest discover -s tests -p test_active_run_filters.py -v
