@@ -203,7 +203,11 @@ def current_source(tokens):
 
 
 def check_idle(repo, workflow, account, env):
-    record = existing_attempt(repo, workflow, account, env)
+    # Test uses one workflow for push-only chart regressions AND manual builds.
+    # A queued chart regression is not an APK build; do not conflate them.
+    # All five active statuses are still checked, but only for manual Test jobs.
+    event = "workflow_dispatch" if repo == TEST and workflow == TEST_WORKFLOW else None
+    record = existing_attempt(repo, workflow, account, env, event=event)
     require(record.get("status") == "no_active_run",
             "active_or_unknown_private_workflow_no_dispatch")
 
