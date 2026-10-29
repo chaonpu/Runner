@@ -343,7 +343,12 @@ def wait_run(token, repo, workflow, rid, source=None):
         item = api(token, repo, "/actions/runs/" + str(rid))
         validate_run(item, repo, workflow, rid, source)
         if item.get("status") == "completed":
-            if item.get("conclusion") != "success":
+            conclusion = item.get("conclusion")
+            if conclusion == "cancelled":
+                # A cancelled Test/Signer run is NOT a compile, lint or
+                # Release transport failure. Do not infer who cancelled it.
+                raise Hold("private_workflow_cancelled_manual_review")
+            if conclusion != "success":
                 raise Hold(classify_failed_run(token, repo, rid))
             return
         require(item.get("status") in ("queued", "waiting", "pending", "in_progress", "requested"),
