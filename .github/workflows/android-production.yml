@@ -8,11 +8,6 @@ on:
         type: boolean
         required: true
         default: false
-      live_smoke:
-        description: "构建后验证实时行情（失败则停止签名）"
-        type: boolean
-        required: true
-        default: true
       resume:
         description: "继续旧任务（新构建勿选，需填原 SHA）"
         type: boolean
@@ -54,7 +49,6 @@ jobs:
       CHAONPU_ACTIONS_READ_TOKEN: ${{ secrets.CHAONPU_ACTIONS_READ_TOKEN }}
       CHAONPU_SOURCE_READ_TOKEN: ${{ secrets.CHAONPU_SOURCE_READ_TOKEN }}
       EXECUTE: ${{ inputs.execute }}
-      LIVE_SMOKE: ${{ inputs.live_smoke }}
       RESUME: ${{ inputs.resume }}
       RECOVER_LIVE_VALIDATION: ${{ inputs.recover_live_validation }}
       SOURCE_SHA: ${{ inputs.source_sha }}
@@ -92,7 +86,6 @@ jobs:
           set -euo pipefail
           args=(--source-sha "$SOURCE_SHA")
           if [[ "$EXECUTE" == 'true' ]]; then args+=(--execute); fi
-          if [[ "$LIVE_SMOKE" == 'true' ]]; then args+=(--live-smoke); fi
           if [[ "$RESUME" == 'true' ]]; then args+=(--resume); fi
           if [[ "$RECOVER_LIVE_VALIDATION" == 'true' ]]; then args+=(--recover-live-validation); fi
           python3 -m scheduler.android_production "${args[@]}" 2>&1 | tee "$RUNNER_TEMP/entry-result.jsonl"
