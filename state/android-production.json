@@ -393,12 +393,13 @@
     "9e3ebb62510de56e5d697ff771d54cf9084d46ce": {
       "createdAt": "2026-10-31T01:30:36.714054+00:00",
       "liveSmoke": false,
-      "phase": "signer_reserved",
+      "phase": "signer_started",
       "route": "windows",
       "signingRoute": "windows",
+      "signingRunId": 41156709091,
       "sourceSha": "9e3ebb62510de56e5d697ff771d54cf9084d46ce",
       "testRunId": 41155686409,
-      "updatedAt": "2026-10-31T01:43:23.896177+00:00"
+      "updatedAt": "2026-10-31T01:43:26.696555+00:00"
     },
     "9f9234e9443b321570d3154173b2bc01dc9b8c44": {
       "createdAt": "2026-10-18T08:58:36.822883+00:00",
