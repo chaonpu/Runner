@@ -474,9 +474,11 @@
     "c1bfc578e1448b7ed85cef4387cd89927ac8cce8": {
       "createdAt": "2026-10-31T00:58:38.597819+00:00",
       "liveSmoke": true,
-      "phase": "reserved",
+      "phase": "test_started",
       "route": "windows",
-      "sourceSha": "c1bfc578e1448b7ed85cef4387cd89927ac8cce8"
+      "sourceSha": "c1bfc578e1448b7ed85cef4387cd89927ac8cce8",
+      "testRunId": 41153011990,
+      "updatedAt": "2026-10-31T00:58:41.598266+00:00"
     },
     "c569c0b6caca21cf7f32d32b6d7426c41b5076c7": {
       "createdAt": "2026-10-18T07:47:34.582706+00:00",
