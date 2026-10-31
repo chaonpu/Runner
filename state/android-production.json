@@ -393,11 +393,11 @@
     "9e3ebb62510de56e5d697ff771d54cf9084d46ce": {
       "createdAt": "2026-10-31T01:30:36.714054+00:00",
       "liveSmoke": false,
-      "phase": "test_started",
+      "phase": "test_verified",
       "route": "windows",
       "sourceSha": "9e3ebb62510de56e5d697ff771d54cf9084d46ce",
       "testRunId": 41155686409,
-      "updatedAt": "2026-10-31T01:30:40.134167+00:00"
+      "updatedAt": "2026-10-31T01:43:17.378502+00:00"
     },
     "9f9234e9443b321570d3154173b2bc01dc9b8c44": {
       "createdAt": "2026-10-18T08:58:36.822883+00:00",
