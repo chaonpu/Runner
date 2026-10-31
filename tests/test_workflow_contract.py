@@ -43,6 +43,19 @@ class WorkflowContractTests(unittest.TestCase):
             self.assertNotIn('pull_request_target', text)
             self.assertNotIn('actions: write', text)
 
+    def test_android_manual_build_never_offers_live_quote_smoke(self):
+        text = (WORKFLOWS/'android-production.yml').read_text()
+        inputs = text.split('    inputs:\n', 1)[1].split('\npermissions:', 1)[0]
+        self.assertEqual(set(re.findall(r'(?m)^      (\w+):', inputs)),
+                         {'execute', 'resume', 'recover_live_validation', 'source_sha'})
+        self.assertNotIn('live_smoke', text)
+        self.assertNotIn('LIVE_SMOKE', text)
+        self.assertNotIn('--live-smoke', text)
+        self.assertIn('scheduler.android_production', text)
+        # Existing exact-run live verification stays available solely to
+        # resume historically registered builds, never as a new-build toggle.
+        self.assertIn('--recover-live-validation', text)
+
     def test_maintenance_schedule_and_permissions(self):
         text = (WORKFLOWS/'private-history-cleanup.yml').read_text()
         self.assertEqual(event_keys(text), {'schedule', 'workflow_dispatch'})
