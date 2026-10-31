@@ -590,7 +590,7 @@
       "signingRunId": 41156709091,
       "updateLog": "v2.5.7\uff1a\n1. \u4fee\u590d A50 \u671f\u8d27 CFD \u7684\u5f00\u76d8\u3001\u6536\u76d8\u53ca\u76d8\u95f4\u72b6\u6001\uff0c\u7edf\u4e00\u5b9e\u9645\u62a5\u4ef7\u65f6\u6bb5\u4e0e\u5206\u65f6\u56fe\u3002\n2. \u4fee\u590d\u8de8\u65e5\u4ea4\u6613\u65e5\u5386\u5f52\u5c5e\uff0c\u907f\u514d\u5468\u4e94\u591c\u76d8\u5ef6\u7eed\u81f3\u5468\u516d\u51cc\u6668\u65f6\u8bef\u5224\u4f11\u5e02\u3002\n3. \u65b0\u589e A50 \u4ea4\u6613\u72b6\u6001\u8fb9\u754c\u56de\u5f52\u6d4b\u8bd5\u3002",
       "forceUpdate": false,
-      "phase": "dispatch_reserved",
+      "phase": "publishing",
       "publishRequest": {
         "sourceUrl": "https://github.com/chaonpu/Runner/releases/download/staged-apk-v2.5.7-signrun-41156709091/ziwuxilv-verified-v2.5.7.zip",
         "artifactSha256": "7e232fc7f37aa72b1bdbcc1316e8c7b4535a32c65dd00af5c94a74f8e84f4f7f",
@@ -601,7 +601,8 @@
         "signingCertificateSha256": "bef3f5cbb2989734f20740eddaac3e105dfecb6c63ea9275e178eedd892ec105",
         "updateLog": "v2.5.7\uff1a\n1. \u4fee\u590d A50 \u671f\u8d27 CFD \u7684\u5f00\u76d8\u3001\u6536\u76d8\u53ca\u76d8\u95f4\u72b6\u6001\uff0c\u7edf\u4e00\u5b9e\u9645\u62a5\u4ef7\u65f6\u6bb5\u4e0e\u5206\u65f6\u56fe\u3002\n2. \u4fee\u590d\u8de8\u65e5\u4ea4\u6613\u65e5\u5386\u5f52\u5c5e\uff0c\u907f\u514d\u5468\u4e94\u591c\u76d8\u5ef6\u7eed\u81f3\u5468\u516d\u51cc\u6668\u65f6\u8bef\u5224\u4f11\u5e02\u3002\n3. \u65b0\u589e A50 \u4ea4\u6613\u72b6\u6001\u8fb9\u754c\u56de\u5f52\u6d4b\u8bd5\u3002",
         "forceUpdate": false
-      }
+      },
+      "publicRunId": 41158253049
     }
   }
 }
