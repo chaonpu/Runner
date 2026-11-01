@@ -617,7 +617,7 @@
       "signingRunId": 41336478167,
       "updateLog": "v2.5.8\uff1a\n1. K\u7ebf\u5341\u5b57\u5149\u6807\u540c\u6b65\u5ef6\u4f38\u81f3\u6210\u4ea4\u91cf\u526f\u56fe\uff0c\u652f\u6301\u5728\u6210\u4ea4\u91cf\u533a\u57df\u957f\u6309\u4e0e\u62d6\u52a8\u67e5\u770b\u3002\n2. \u6210\u4ea4\u91cf\u6807\u9898\u663e\u793a\u6240\u9009\u5468\u671f\u7684\u6210\u4ea4\u91cf\u6570\u503c\uff0c\u672a\u9009\u4e2d\u65f6\u663e\u793a\u6700\u65b0\u6210\u4ea4\u91cf\u3002\n3. \u6536\u76ca\u66f2\u7ebf\u91c7\u7528\u865a\u7ebf\u5341\u5b57\u6e38\u6807\uff0c\u6a2a\u7ebf\u4e24\u7aef\u663e\u793a\u51c0\u503c\u548c\u6536\u76ca\u7387\uff0c\u70b9\u51fb\u7a7a\u767d\u533a\u57df\u53d6\u6d88\u9009\u4e2d\u3002",
       "forceUpdate": false,
-      "phase": "prepared",
+      "phase": "dispatch_reserved",
       "publishRequest": {
         "sourceUrl": "https://github.com/chaonpu/Runner/releases/download/staged-apk-v2.5.8-signrun-41336478167/ziwuxilv-verified-v2.5.8.zip",
         "artifactSha256": "8f3e820a85724e5c6e94dee48a2e91744b05381058aecfb81c4cee798b960ba4",
