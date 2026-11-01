@@ -53,6 +53,12 @@
     },
     "28ab1bb7053ce0ca5655521fc45667783cc073f1": {
       "createdAt": "2026-11-01T19:35:56.015587+00:00",
+      "lastFailure": {
+        "code": "android_test_or_artifact_failed_manual_review",
+        "recordedAt": "2026-11-01T19:36:31.660562+00:00",
+        "runId": 41342545762,
+        "stage": "test"
+      },
       "liveSmoke": false,
       "phase": "test_started",
       "route": "hosted",
