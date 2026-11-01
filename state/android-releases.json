@@ -644,7 +644,18 @@
       "signingRunId": 41344087699,
       "updateLog": "v2.5.9\uff1a\n1. \u56fe\u8868\u5e95\u90e8\u6539\u4e3a\u7b80\u6d01\u540c\u6b65\u72b6\u6001\u680f\uff0c\u663e\u793a\u884c\u60c5\u4e0e\u56fe\u8868\u540c\u6b65\u72b6\u6001\u3002\n2. \u65b0\u589e\u53ef\u70b9\u51fb\u7684\u201c\u6765\u6e90\u8be6\u60c5\u201d\uff0c\u96c6\u4e2d\u5c55\u793a\u6570\u636e\u6e90\u3001\u66f4\u65b0\u65f6\u95f4\u548c\u56fe\u8868\u6838\u9a8c\u8bf4\u660e\u3002\n3. \u5bf9\u52a0\u8f7d\u4e2d\u3001\u7f3a\u6570\u53ca\u6807\u7684\u4e0d\u4e00\u81f4\u7b49\u60c5\u51b5\u663e\u793a\u5bf9\u5e94\u72b6\u6001\uff0c\u907f\u514d\u9519\u8bef\u63d0\u793a\u5df2\u540c\u6b65\u3002",
       "forceUpdate": false,
-      "phase": "staging_reserved"
+      "phase": "prepared",
+      "publishRequest": {
+        "sourceUrl": "https://github.com/chaonpu/Runner/releases/download/staged-apk-v2.5.9-signrun-41344087699/ziwuxilv-verified-v2.5.9.zip",
+        "artifactSha256": "ec2dd3b14d80f6b27ad2e8862efc3940c20c2ffbf95078ce9206b29dd72d42e0",
+        "sourceCommit": "f075627ce2cd05db9b14e2d69cd540ec9d4bce86",
+        "versionName": "2.5.9",
+        "versionCode": 142,
+        "apkSha256": "683c4283c276945c9529318717c42ebed5c66370ab7edb3cfcb434266570d52f",
+        "signingCertificateSha256": "bef3f5cbb2989734f20740eddaac3e105dfecb6c63ea9275e178eedd892ec105",
+        "updateLog": "v2.5.9\uff1a\n1. \u56fe\u8868\u5e95\u90e8\u6539\u4e3a\u7b80\u6d01\u540c\u6b65\u72b6\u6001\u680f\uff0c\u663e\u793a\u884c\u60c5\u4e0e\u56fe\u8868\u540c\u6b65\u72b6\u6001\u3002\n2. \u65b0\u589e\u53ef\u70b9\u51fb\u7684\u201c\u6765\u6e90\u8be6\u60c5\u201d\uff0c\u96c6\u4e2d\u5c55\u793a\u6570\u636e\u6e90\u3001\u66f4\u65b0\u65f6\u95f4\u548c\u56fe\u8868\u6838\u9a8c\u8bf4\u660e\u3002\n3. \u5bf9\u52a0\u8f7d\u4e2d\u3001\u7f3a\u6570\u53ca\u6807\u7684\u4e0d\u4e00\u81f4\u7b49\u60c5\u51b5\u663e\u793a\u5bf9\u5e94\u72b6\u6001\uff0c\u907f\u514d\u9519\u8bef\u63d0\u793a\u5df2\u540c\u6b65\u3002",
+        "forceUpdate": false
+      }
     }
   }
 }
