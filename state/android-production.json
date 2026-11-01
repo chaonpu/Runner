@@ -716,11 +716,11 @@
     "f075627ce2cd05db9b14e2d69cd540ec9d4bce86": {
       "createdAt": "2026-11-01T19:39:26.440339+00:00",
       "liveSmoke": false,
-      "phase": "test_started",
+      "phase": "test_verified",
       "route": "hosted",
       "sourceSha": "f075627ce2cd05db9b14e2d69cd540ec9d4bce86",
       "testRunId": 41342832983,
-      "updatedAt": "2026-11-01T19:39:29.513760+00:00"
+      "updatedAt": "2026-11-01T19:54:10.228897+00:00"
     },
     "f265d85eb85f36121df5f5d2118a052d7b2476ed": {
       "createdAt": "2026-10-20T18:17:40.728612+00:00",
