@@ -73,7 +73,8 @@ def prepare(ports, cfg, task, day, mode, state):
                   or proof.get("alreadyCurrent") is True)
                  and proof["sourceSha"] == run["head_sha"], "fresh_private_readiness_not_verified")
             return {**proof, "readinessRunId": rid, "readinessRoute": route}
-        time.sleep(30)
+        # Poll promptly after a completed private preflight without weakening evidence checks.
+        time.sleep(10)
     raise RegistryGuard("private_readiness_deadline")
 
 
@@ -166,7 +167,8 @@ def execute(env, task, day, mode):
         session = start(ports,task,day,env)
         print(json.dumps({"phase":"business_started","taskId":session["taskId"],"runId":session["runId"],
                           "publicationMode":mode}),flush=True)
-        watched = watch(ports,session,env,deadline_seconds=14400)
+        # The bounded observer still checks the exact original run and never re-dispatches.
+        watched = watch(ports,session,env,interval=15,deadline_seconds=14400)
         need(watched["status"] == "awaiting_effect_verification", "business_run_failed_or_unverified")
         result = ports.finish(session)
         # Timing is diagnostic only. An Actions API hiccup must not change the
