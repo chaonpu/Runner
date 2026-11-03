@@ -404,6 +404,19 @@
       "task": "stock_a",
       "updatedAt": "2026-11-03T07:05:00.436930+00:00",
       "workflow": "run-a-share.yml"
+    },
+    {
+      "coordinatorRunId": 41742263317,
+      "createdAt": "2026-11-03T23:51:39.271582+00:00",
+      "id": "stock_us:2026-11-03",
+      "publicationMode": "formal",
+      "repo": "chaonpu/Stock",
+      "route": "cloud",
+      "sourceSha": "2f3fd3935ee6434e763290edf7bef7acd1521e25",
+      "status": "reserved",
+      "task": "stock_us",
+      "updatedAt": "2026-11-03T23:51:39.271582+00:00",
+      "workflow": "run-us.yml"
     }
   ]
 }
