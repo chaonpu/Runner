@@ -39,6 +39,12 @@
     },
     "236a9575106f3224ba849b0beb4a594696ae1ea7": {
       "createdAt": "2026-11-04T09:37:19.192083+00:00",
+      "lastFailure": {
+        "code": "android_signer_setup_or_handoff_failed_manual_review",
+        "recordedAt": "2026-11-04T09:48:25.882684+00:00",
+        "runId": 41809856551,
+        "stage": "signer"
+      },
       "liveSmoke": false,
       "phase": "signer_started",
       "route": "hosted",
