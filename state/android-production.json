@@ -540,11 +540,11 @@
     "bcc67b18bf12c5e132bb4f2fe032c62ec7427a31": {
       "createdAt": "2026-11-04T16:58:44.784251+00:00",
       "liveSmoke": false,
-      "phase": "test_started",
+      "phase": "test_verified",
       "route": "hosted",
       "sourceSha": "bcc67b18bf12c5e132bb4f2fe032c62ec7427a31",
       "testRunId": 41872931657,
-      "updatedAt": "2026-11-04T16:58:48.444550+00:00"
+      "updatedAt": "2026-11-04T17:12:00.247251+00:00"
     },
     "c171d335ab220b696580ab62ddb64f8faad4c32e": {
       "createdAt": "2026-10-29T08:44:44.252403+00:00",
