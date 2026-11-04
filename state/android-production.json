@@ -39,20 +39,14 @@
     },
     "236a9575106f3224ba849b0beb4a594696ae1ea7": {
       "createdAt": "2026-11-04T09:37:19.192083+00:00",
-      "lastFailure": {
-        "code": "android_signer_setup_or_handoff_failed_manual_review",
-        "recordedAt": "2026-11-04T09:53:20.652634+00:00",
-        "runId": 41809856551,
-        "stage": "signer"
-      },
       "liveSmoke": false,
-      "phase": "signer_started",
+      "phase": "signed_verified",
       "route": "hosted",
       "signingRoute": "cloud",
-      "signingRunId": 41809856551,
+      "signingRunId": 41810579287,
       "sourceSha": "236a9575106f3224ba849b0beb4a594696ae1ea7",
       "testRunId": 41808961732,
-      "updatedAt": "2026-11-04T09:46:51.825192+00:00"
+      "updatedAt": "2026-11-04T10:00:37+00:00"
     },
     "24a0f2102b6dd8b18d8cc693f0d824c994522cee": {
       "createdAt": "2026-10-18T06:45:53.325270+00:00",
