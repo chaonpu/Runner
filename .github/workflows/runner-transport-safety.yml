@@ -49,4 +49,7 @@ jobs:
             test_production_recovery \
             test_prebusiness_retry \
             test_production_registry \
-            test_production_store
+            test_production_store \
+            test_production_noop \
+            test_calendar_watchdog \
+            test_workflow_contract
