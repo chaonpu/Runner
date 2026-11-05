@@ -159,8 +159,8 @@ def execute(env, task, day, mode):
          'native_publication_window_not_open')
     prepared = prepare(ports,config,task,day,mode,state)
     print(json.dumps({"phase": "readiness_evidence_verified",
-                      "runId": prepared["readinessRunId"],
-                      "route": prepared["readinessRoute"]}), flush=True)
+                      "runId": prepared.get("readinessRunId"),
+                      "route": prepared.get("readinessRoute")}), flush=True)
     if prepared.get("alreadyCurrent") is True:
         return skip_result(env, task, day, "authoritative_market_already_current",
                            readinessRunId=prepared["readinessRunId"], authoritativeStateChecked=True)
