@@ -14,6 +14,7 @@ import hashlib
 import json
 import os
 import re
+import time
 import urllib.request
 
 from scheduler.exchange_schedule import evaluate
@@ -22,7 +23,7 @@ from scheduler.policies import hosted_capacity
 from scheduler.production_registry import RegistryGuard, validate, observe_run
 from scheduler.production_session import context, dispatch_inputs, readiness, WORKFLOWS, SHA, RUN_ID
 from scheduler.production_store import save as registry_save, verify_change
-from scheduler.probes import GitHubReadOnly, account_usage, runner_for_repo, existing_attempt
+from scheduler.probes import GitHubReadOnly, account_usage, runner_for_repo, existing_attempt, retryable_get_error, safe_error
 
 PUBLIC = "/repos/chaonpu/Runner"
 PRIVATE = "/repos/chaonpu/Stock"
@@ -65,12 +66,18 @@ def request(token, method, path, body=None, *, opener=bounded_open):
                  "Accept": "application/vnd.github+json", "X-GitHub-Api-Version": "2026-03-10",
                  "Content-Type": "application/json", "User-Agent": "ziwuxilv-production-ports/1.0"})
     try:
-        with opener(req, timeout=20) as response:
-            raw = response.read(2_000_001)
-        need(len(raw) <= 2_000_000, "ports_response_oversized")
-        value = json.loads(raw) if raw else {}
-        need(isinstance(value, dict), "ports_response_invalid")
-        return value
+        for attempt in range(2 if method == "GET" else 1):
+            try:
+                with opener(req, timeout=20) as response:
+                    raw = response.read(2_000_001)
+                need(len(raw) <= 2_000_000, "ports_response_oversized")
+                value = json.loads(raw) if raw else {}
+                need(isinstance(value, dict), "ports_response_invalid")
+                return value
+            except Exception as exc:
+                if method != "GET" or attempt or not retryable_get_error(exc):
+                    raise
+                time.sleep(0.35)
     except Exception:
         raise RegistryGuard("ports_response_uncertain_no_retry") from None
 
@@ -121,7 +128,10 @@ class ReadOnlyPorts:
     def run(self, repo, rid):
         need(repo == "chaonpu/Stock" and type(rid) is int and RUN_ID.fullmatch(str(rid)),
              "ports_run_target_invalid")
-        result = self.private_reader().get(PRIVATE + f"/actions/runs/{rid}")
+        try:
+            result = self.private_reader().get(PRIVATE + f"/actions/runs/{rid}")
+        except (OSError, ValueError) as exc:
+            raise RegistryGuard("private_actions_read_" + safe_error(exc)) from None
         need(isinstance(result, dict) and type(result.get("id")) is int and result["id"] == rid
              and result.get("repository", {}).get("full_name") == repo, "ports_run_response_invalid")
         return result

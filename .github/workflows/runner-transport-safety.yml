@@ -1,0 +1,52 @@
+name: Coordinator read-only transport safety
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scheduler/probes.py'
+      - 'scheduler/production_ports.py'
+      - 'scheduler/production_coordinator.py'
+      - 'tests/test_read_transport.py'
+      - '.github/workflows/runner-transport-safety.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: coordinator-transport-safety-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  safe-transport:
+    name: Check bounded GET recovery without strategy effects
+    if: github.repository == 'chaonpu/Runner' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Check exact checked-out SHA
+        shell: bash
+        run: test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+      - name: Run isolated transport, original-run and readiness guards
+        shell: bash
+        env:
+          PYTHONPATH: .:tests
+        run: |
+          set -euo pipefail
+          python -m unittest -v \
+            test_read_transport \
+            test_production_auto \
+            test_production_evidence \
+            test_production_ports \
+            test_production_session \
+            test_production_recovery \
+            test_prebusiness_retry \
+            test_production_registry \
+            test_production_store

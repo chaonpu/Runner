@@ -9,12 +9,18 @@ import json
 from datetime import datetime, timezone
 import math
 import os
+import time
 import urllib.error
 import urllib.request
 from typing import Any
 
 API_ROOT = "https://api.github.com"
 VERSION = "2026-03-10"
+
+def retryable_get_error(exc):
+    if isinstance(exc, urllib.error.HTTPError):
+        return exc.code in (500, 502, 503, 504)
+    return isinstance(exc, (urllib.error.URLError, TimeoutError, OSError))
 
 def safe_error(exc: Exception) -> str:
     if isinstance(exc, urllib.error.HTTPError):
@@ -58,11 +64,17 @@ class GitHubReadOnly:
             },
             method="GET",
         )
-        with urllib.request.urlopen(req, timeout=12) as resp:
-            result = json.load(resp)
-        if not isinstance(result, dict):
-            raise ValueError("invalid GitHub result type")
-        return result
+        for attempt in range(2):
+            try:
+                with urllib.request.urlopen(req, timeout=12) as resp:
+                    result = json.load(resp)
+                if not isinstance(result, dict):
+                    raise ValueError("invalid GitHub result type")
+                return result
+            except Exception as exc:
+                if attempt or not retryable_get_error(exc):
+                    raise
+                time.sleep(0.35)
 
 def account_usage(account: str, spec: dict, env: dict, *, now=None) -> dict:
     token = env.get(spec["billingSecret"], "")

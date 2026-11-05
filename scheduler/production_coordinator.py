@@ -158,12 +158,17 @@ def execute(env, task, day, mode):
     need((mode=='formal' and today==day) or (mode=='theoretical_catchup' and today>day),
          'native_publication_window_not_open')
     prepared = prepare(ports,config,task,day,mode,state)
+    print(json.dumps({"phase": "readiness_evidence_verified",
+                      "runId": prepared["readinessRunId"],
+                      "route": prepared["readinessRoute"]}), flush=True)
     if prepared.get("alreadyCurrent") is True:
         return skip_result(env, task, day, "authoritative_market_already_current",
                            readinessRunId=prepared["readinessRunId"], authoritativeStateChecked=True)
     lease = Lease(ports)
     try:
+        print(json.dumps({"phase": "permit_arm_started", "taskId": task + ":" + day}), flush=True)
         lease.arm(task,day,mode)
+        print(json.dumps({"phase": "permit_armed", "taskId": task + ":" + day}), flush=True)
         session = start(ports,task,day,env)
         print(json.dumps({"phase":"business_started","taskId":session["taskId"],"runId":session["runId"],
                           "publicationMode":mode}),flush=True)
@@ -216,7 +221,20 @@ def main():
         return 0
     except Exception as exc:
         code=str(exc) if isinstance(exc,RegistryGuard) else "coordinator_stopped_manual_review"
-        print(json.dumps({"status":"hold","reason":code,"safeToRetry":False,"businessVerified":False}),flush=True)
+        # Report a safe failure category, never exception text or private API
+        # responses. The reason and all no-redispatch guards stay unchanged.
+        from scheduler.probes import safe_error
+        from urllib.error import HTTPError, URLError
+        if isinstance(exc, RegistryGuard):
+            kind = "guard"
+        elif isinstance(exc, (HTTPError, URLError, TimeoutError, OSError)):
+            kind = "read_transport_" + safe_error(exc)
+        elif isinstance(exc, (KeyError, TypeError, ValueError, IndexError, AttributeError)):
+            kind = "unexpected_" + type(exc).__name__.lower()
+        else:
+            kind = "unexpected_other"
+        print(json.dumps({"status":"hold","reason":code,"failureKind":kind,
+                          "safeToRetry":False,"businessVerified":False}),flush=True)
         return 2
 
 
