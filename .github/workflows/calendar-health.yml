@@ -10,7 +10,11 @@ on:
       - 'scheduler/calendar_watchdog.py'
       - 'tests/test_calendar_watchdog.py'
       - 'scheduler/production_ports.py'
+      - 'scheduler/production_coordinator.py'
+      - 'scheduler/probes.py'
       - 'tests/test_production_ports.py'
+      - 'tests/test_read_transport.py'
+      - 'tests/test_production_noop.py'
       - '.github/workflows/calendar-health.yml'
 
 permissions:
@@ -33,6 +37,10 @@ jobs:
         run: python3 -m unittest discover -s tests -p 'test_calendar_watchdog.py' -v
       - name: Verify real dispatch adapter with pinned calendar without business execution
         run: python3 -m unittest discover -s tests -p 'test_production_*.py' -q
+      - name: Verify read-only API retries, no repeated dispatch and workflow entry contract
+        run: |
+          python3 -m unittest discover -s tests -p 'test_read_transport.py' -v
+          python3 -m unittest discover -s tests -p 'test_workflow_contract.py' -v
       - name: Read actual calendar coverage, source health and successful workflow history
         env:
           GH_TOKEN: ${{ github.token }}
