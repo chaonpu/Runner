@@ -887,7 +887,7 @@
       "signingRunId": 41971716368,
       "updateLog": "v2.6.8\uff1a\n1. ETF\u5168\u5c40\u884c\u60c5\u3001\u6301\u4ed3\u53ca\u81ea\u9009\u4ef7\u683c\u7edf\u4e00\u7cbe\u786e\u5230\u5398\uff08\u5c0f\u6570\u70b9\u540e\u4e09\u4f4d\uff09\u3002\n2. ETF\u5206\u65f6\u4e0eK\u7ebf\u56fe\u7684\u4ef7\u683c\u5750\u6807\u3001\u6e38\u6807\u3001\u6700\u9ad8\u6700\u4f4e\u4ef7\u3001\u6628\u6536\u548c\u5165\u573a\u4ef7\u7edf\u4e00\u663e\u793a\u4e09\u4f4d\u5c0f\u6570\u3002\n3. \u6210\u4ea4\u989d\u5bf9\u6bd4\u66f2\u7ebf\u6807\u6ce8\u4e0a\u4e00\u4ea4\u6613\u65e5\u6700\u7ec8\u6210\u4ea4\u989d\uff0c\u62d6\u52a8\u6e38\u6807\u65f6\u4fdd\u6301\u56fa\u5b9a\u3002",
       "forceUpdate": false,
-      "phase": "prepared",
+      "phase": "dispatch_reserved",
       "publishRequest": {
         "sourceUrl": "https://github.com/chaonpu/Runner/releases/download/staged-apk-v2.6.8-signrun-41971716368/ziwuxilv-verified-v2.6.8.zip",
         "artifactSha256": "2954d75140a94cfc6ffa8ed95d86b566e2c4b06ff7d602547591ecbc4f999d5f",
