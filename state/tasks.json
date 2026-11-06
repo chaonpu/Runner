@@ -496,10 +496,11 @@
       "publicationMode": "formal",
       "repo": "chaonpu/Stock",
       "route": "cloud",
+      "runId": 42314628536,
       "sourceSha": "8fc9c733523157de77bf2aa9dfa45c576078d72d",
-      "status": "reserved",
+      "status": "dispatched",
       "task": "stock_us",
-      "updatedAt": "2026-11-06T23:51:32.875908+00:00",
+      "updatedAt": "2026-11-06T23:51:50.340253+00:00",
       "workflow": "run-us.yml"
     }
   ]
