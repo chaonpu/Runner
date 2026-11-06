@@ -774,11 +774,11 @@
     "d0638f406be9a1e3481a8cc92cdef2f8a56c154f": {
       "createdAt": "2026-11-06T18:00:01.965755+00:00",
       "liveSmoke": false,
-      "phase": "test_started",
+      "phase": "test_verified",
       "route": "hosted",
       "sourceSha": "d0638f406be9a1e3481a8cc92cdef2f8a56c154f",
       "testRunId": 42266703490,
-      "updatedAt": "2026-11-06T18:00:05.610154+00:00"
+      "updatedAt": "2026-11-06T18:13:45.715079+00:00"
     },
     "d0713580b2957ca5dd5711bb4c1a0e7e5af872e4": {
       "createdAt": "2026-10-17T21:46:14.717552+00:00",
