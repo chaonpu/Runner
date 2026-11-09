@@ -706,11 +706,12 @@
     "b3c2baddbfdcd8ee1a8a6aabbc5971aff51947b8": {
       "createdAt": "2026-11-09T20:10:56.625069+00:00",
       "liveSmoke": false,
-      "phase": "test_verified",
+      "phase": "signer_reserved",
       "route": "hosted",
+      "signingRoute": "cloud",
       "sourceSha": "b3c2baddbfdcd8ee1a8a6aabbc5971aff51947b8",
       "testRunId": 42686132203,
-      "updatedAt": "2026-11-09T20:43:46.504125+00:00",
+      "updatedAt": "2026-11-09T20:43:56.338174+00:00",
       "verifiedTestRecovery": {
         "failedTestRunId": 42690473723,
         "method": "explicit_owner_resume_after_independent_full_verification",
