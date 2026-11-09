@@ -23,6 +23,11 @@ on:
         type: string
         required: false
         default: ""
+      verified_test_run_id:
+        description: "仅异常恢复：另一个独立通过的同源码 Test Run ID（需选执行+续跑）"
+        type: string
+        required: false
+        default: ""
 
 permissions:
   contents: write
@@ -52,6 +57,7 @@ jobs:
       RESUME: ${{ inputs.resume }}
       RECOVER_LIVE_VALIDATION: ${{ inputs.recover_live_validation }}
       SOURCE_SHA: ${{ inputs.source_sha }}
+      VERIFIED_TEST_RUN_ID: ${{ inputs.verified_test_run_id }}
     steps:
       - name: Checkout only trusted public coordinator
         uses: actions/checkout@v4
@@ -61,6 +67,7 @@ jobs:
       - name: Offline safety regressions
         run: |
           python3 -m unittest discover -s tests -p test_android_production.py -v
+          python3 -m unittest discover -s tests -p test_android_verified_test_recovery.py -v
           python3 -m unittest discover -s tests -p test_android_live_validation.py -v
           python3 -m unittest discover -s tests -p test_android_live_recovery.py -v
           python3 tools/private_release_transport.py self-test
@@ -88,6 +95,7 @@ jobs:
           if [[ "$EXECUTE" == 'true' ]]; then args+=(--execute); fi
           if [[ "$RESUME" == 'true' ]]; then args+=(--resume); fi
           if [[ "$RECOVER_LIVE_VALIDATION" == 'true' ]]; then args+=(--recover-live-validation); fi
+          if [[ -n "$VERIFIED_TEST_RUN_ID" ]]; then args+=(--verified-test-run-id "$VERIFIED_TEST_RUN_ID"); fi
           python3 -m scheduler.android_production "${args[@]}" 2>&1 | tee "$RUNNER_TEMP/entry-result.jsonl"
       - name: Explain next manual step
         if: always()

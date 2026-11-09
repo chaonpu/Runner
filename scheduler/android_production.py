@@ -465,6 +465,122 @@ def wait_recorded(public_token, source, stage, private_token, repo, workflow,
 
 
 
+
+def recover_independent_verified_test(public_token, test_token, source, entry,
+                                      successful_run_id, env):
+    """Explicit owner-approved reconciliation of an independently successful Test run.
+
+    No failed run is reclassified as successful. Both run IDs remain on record,
+    and the replacement must match the SAME source, approved workflow, one
+    fully verified hosted job and exact private Release tag. The private signer
+    will independently download and hash-check every byte before using a key.
+    """
+    require(type(successful_run_id) is int and successful_run_id > 0,
+            "recovery_success_run_id_invalid")
+    require(isinstance(entry, dict) and entry.get("phase") == "test_started"
+            and entry.get("route") == "hosted"
+            and entry.get("sourceSha") == source
+            and entry.get("liveSmoke") is False
+            and not entry.get("verifiedTestRecovery"),
+            "verified_test_recovery_not_eligible")
+    failed = entry.get("testRunId")
+    failure = entry.get("lastFailure")
+    require(type(failed) is int and failed > 0 and failed != successful_run_id
+            and isinstance(failure, dict)
+            and failure.get("stage") == "test"
+            and failure.get("runId") == failed
+            and failure.get("code") == "android_test_private_handoff_failed_manual_review",
+            "verified_test_recovery_failure_not_proven")
+
+    previous = api(test_token, TEST, f"/actions/runs/{failed}")
+    validate_run(previous, TEST, HOSTED_WORKFLOW, failed, source)
+    require(previous.get("status") == "completed"
+            and previous.get("conclusion") == "failure",
+            "verified_test_recovery_original_not_failed")
+    prior_jobs = api(test_token, TEST, f"/actions/runs/{failed}/jobs?per_page=100")
+    require(prior_jobs.get("total_count") == 1
+            and isinstance(prior_jobs.get("jobs"), list)
+            and len(prior_jobs["jobs"]) == 1,
+            "verified_test_recovery_original_jobs_invalid")
+    old_job = prior_jobs["jobs"][0]
+    require(old_job.get("conclusion") == "failure"
+            and isinstance(old_job.get("steps"), list),
+            "verified_test_recovery_original_job_not_failed")
+    old_failures = [s.get("name") for s in old_job["steps"]
+                    if isinstance(s, dict) and s.get("conclusion") == "failure"]
+    publish_step = "Publish verified Test handoff to PRIVATE Release Assets (not Actions Artifact)"
+    compiled = "Run unit tests, release lint, and build unsigned and debug APKs"
+    prepared = "Prepare immutable signed-chain compatible Test handoff"
+    require(old_failures == [publish_step]
+            and sum(s.get("name") == compiled and s.get("conclusion") == "success"
+                    for s in old_job["steps"] if isinstance(s, dict)) == 1
+            and sum(s.get("name") == prepared and s.get("conclusion") == "success"
+                    for s in old_job["steps"] if isinstance(s, dict)) == 1,
+            "verified_test_recovery_original_failure_not_isolated")
+
+    proven = api(test_token, TEST, f"/actions/runs/{successful_run_id}")
+    validate_run(proven, TEST, HOSTED_WORKFLOW, successful_run_id, source)
+    require(proven.get("status") == "completed" and proven.get("conclusion") == "success",
+            "verified_test_recovery_success_not_proven")
+    verify_hosted_execution(test_token, TEST, successful_run_id)
+    passing_jobs = api(test_token, TEST,
+                       f"/actions/runs/{successful_run_id}/jobs?per_page=100")
+    require(passing_jobs.get("total_count") == 1
+            and isinstance(passing_jobs.get("jobs"), list)
+            and len(passing_jobs["jobs"]) == 1
+            and passing_jobs["jobs"][0].get("conclusion") == "success"
+            and isinstance(passing_jobs["jobs"][0].get("steps"), list),
+            "verified_test_recovery_success_jobs_invalid")
+    steps = passing_jobs["jobs"][0]["steps"]
+    critical_steps = (
+        "Verify exact Test source commit and no signing secrets",
+        "Verify source version, Android policy, and notification checks",
+        compiled, prepared, "Verify private Release transport policy", publish_step,
+    )
+    require(all(sum(s.get("name") == name and s.get("conclusion") == "success"
+                    for s in steps if isinstance(s, dict)) == 1
+                for name in critical_steps)
+            and all(s.get("conclusion") != "failure" for s in steps if isinstance(s, dict)),
+            "verified_test_recovery_success_steps_incomplete")
+
+    verify_artifact(env.get("TEST_SOURCE_READ_TOKEN") or test_token,
+                    TEST, successful_run_id, "cloud-test-verified", source)
+    # A proof is never accepted if the success result changes mid-verification.
+    require(api(test_token, TEST, f"/actions/runs/{successful_run_id}") == proven,
+            "verified_test_recovery_success_changed")
+
+    state, state_blob = json_file(public_token, STATE_PATH)
+    require(state.get("version") == 1 and isinstance(state.get("builds"), dict)
+            and state["builds"].get(source) == entry,
+            "verified_test_recovery_state_changed")
+    row = state["builds"][source]
+    row["verifiedTestRecovery"] = {
+        "failedTestRunId": failed,
+        "verifiedTestRunId": successful_run_id,
+        "originalFailure": failure["code"],
+        "method": "explicit_owner_resume_after_independent_full_verification",
+    }
+    row["phase"] = "test_verified"
+    row["testRunId"] = successful_run_id
+    row.pop("lastFailure", None)
+    row["updatedAt"] = datetime.now(timezone.utc).isoformat()
+    body = {"branch": "main", "sha": state_blob,
+            "message": "Reconcile exact separately verified Test handoff (preserve failed run)",
+            "content": base64.b64encode((
+                json.dumps(state, indent=2, sort_keys=True) + "\n"
+            ).encode()).decode()}
+    result = api(public_token, RUNNER, "/contents/" + STATE_PATH,
+                 method="PUT", payload=body)
+    require(bool(result.get("commit", {}).get("sha")),
+            "verified_test_recovery_write_uncertain")
+    confirmed, _ = json_file(public_token, STATE_PATH)
+    require(confirmed == state, "verified_test_recovery_write_unconfirmed")
+    record_public(source, "verified_test_independent_recovered",
+                  failedTestRunId=failed, testRunId=successful_run_id,
+                  publication="not_authorized")
+    return confirmed["builds"][source]
+
+
 def retry_checkout_before_business(pub, test, source, entry, test_account, env, source_workflow):
     """At most one same-SHA retry, only after an attested pre-build HTTPS failure.
 
@@ -758,9 +874,14 @@ def verify_live_execution(token, rid):
 
 
 def run(env, *, execute=False, resume=False, requested_sha="", live_smoke=False,
-        recover_live_validation=False):
+        recover_live_validation=False, verified_test_run_id=0):
     require(not recover_live_validation or (execute and resume),
             "live_recovery_requires_explicit_execute_resume")
+    require(type(verified_test_run_id) is int and verified_test_run_id >= 0,
+            "verified_test_run_id_invalid")
+    require(not verified_test_run_id or
+            (execute and resume and bool(requested_sha) and not recover_live_validation),
+            "verified_test_recovery_requires_explicit_owner_resume")
     pub = env.get("GH_TOKEN", "")
     test = env.get("TEST_ACTIONS_READ_TOKEN", "")
     sign = env.get("CHAONPU_ACTIONS_READ_TOKEN", "")
@@ -901,6 +1022,9 @@ def run(env, *, execute=False, resume=False, requested_sha="", live_smoke=False,
                       route=route, quotaBasis=plan["reason"])
         entry = {"phase": "test_started", "testRunId": test_run, "route": route}
 
+    if verified_test_run_id:
+        entry = recover_independent_verified_test(
+            pub, test, source, entry, verified_test_run_id, env)
     if recover_live_validation:
         recover_reviewed_live_test(pub, test, source, entry, test_account, sign_account, env, task)
         state, _ = json_file(pub, STATE_PATH)
@@ -999,12 +1123,14 @@ def main():
     parser.add_argument("--live-smoke", action="store_true")
     parser.add_argument("--recover-live-validation", action="store_true")
     parser.add_argument("--source-sha", default="")
+    parser.add_argument("--verified-test-run-id", type=int, default=0)
     args = parser.parse_args()
     try:
         require(not args.resume or args.execute, "resume_requires_execute")
         run(os.environ, execute=args.execute, resume=args.resume,
             requested_sha=args.source_sha, live_smoke=args.live_smoke,
-            recover_live_validation=args.recover_live_validation)
+            recover_live_validation=args.recover_live_validation,
+            verified_test_run_id=args.verified_test_run_id)
         return 0
     except Hold as exc:
         reason = str(exc)
