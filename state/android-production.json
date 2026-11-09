@@ -978,11 +978,12 @@
     "e6d31b91c4a73b67723e51a013854c3af847667f": {
       "createdAt": "2026-11-09T07:37:18.970218+00:00",
       "liveSmoke": false,
-      "phase": "test_verified",
+      "phase": "signer_reserved",
       "route": "hosted",
+      "signingRoute": "cloud",
       "sourceSha": "e6d31b91c4a73b67723e51a013854c3af847667f",
       "testRunId": 42580500619,
-      "updatedAt": "2026-11-09T07:50:32.716813+00:00"
+      "updatedAt": "2026-11-09T07:50:39.421572+00:00"
     },
     "ed516fc5f89b37a38d0dc54e9a1845b89f39594f": {
       "createdAt": "2026-10-18T09:11:41.357146+00:00",
