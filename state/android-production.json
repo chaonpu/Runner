@@ -705,18 +705,18 @@
     },
     "b3c2baddbfdcd8ee1a8a6aabbc5971aff51947b8": {
       "createdAt": "2026-11-09T20:10:56.625069+00:00",
-      "lastFailure": {
-        "code": "android_test_private_handoff_failed_manual_review",
-        "recordedAt": "2026-11-09T20:21:10.182217+00:00",
-        "runId": 42690473723,
-        "stage": "test"
-      },
       "liveSmoke": false,
-      "phase": "test_started",
+      "phase": "test_verified",
       "route": "hosted",
       "sourceSha": "b3c2baddbfdcd8ee1a8a6aabbc5971aff51947b8",
-      "testRunId": 42690473723,
-      "updatedAt": "2026-11-09T20:11:01.218791+00:00"
+      "testRunId": 42686132203,
+      "updatedAt": "2026-11-09T20:43:46.504125+00:00",
+      "verifiedTestRecovery": {
+        "failedTestRunId": 42690473723,
+        "method": "explicit_owner_resume_after_independent_full_verification",
+        "originalFailure": "android_test_private_handoff_failed_manual_review",
+        "verifiedTestRunId": 42686132203
+      }
     },
     "b47061ade922fb5831ee9d975d3a94b8270c989b": {
       "createdAt": "2026-11-09T06:43:04.997219+00:00",
