@@ -1252,9 +1252,8 @@
       },
       "publicRunId": 42565498891,
       "stagingCleanup": {
-        "status": "deleted",
-        "tag": "staged-apk-v2.8.2-signrun-42564998474",
-        "releaseId": 438762099
+        "status": "already_absent",
+        "tag": "staged-apk-v2.8.2-signrun-42564998474"
       }
     }
   }
