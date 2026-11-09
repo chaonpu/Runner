@@ -25,8 +25,8 @@ class VerifiedTestRecoveryTests(unittest.TestCase):
             },
         }
         self.state = {"version": 1, "builds": {self.sha: self.entry.copy()}}
-        self.prior = self.run(self.old, "failure")
-        self.passed = self.run(self.verified, "success")
+        self.prior = self.fake_run(self.old, "failure")
+        self.passed = self.fake_run(self.verified, "success")
         self.failed_steps = [
             {"name": self.compiled, "conclusion": "success"},
             {"name": self.prepared, "conclusion": "success"},
@@ -41,7 +41,7 @@ class VerifiedTestRecoveryTests(unittest.TestCase):
             )
         ]
 
-    def run(self, rid, conclusion):
+    def fake_run(self, rid, conclusion):
         return {
             "id": rid, "repository": {"full_name": a.TEST},
             "event": "workflow_dispatch", "head_branch": "main",
