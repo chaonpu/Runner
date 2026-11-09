@@ -35,6 +35,12 @@
     },
     "18588f306213bfbf079338f496e98f21cf950e8d": {
       "createdAt": "2026-11-09T19:14:43.266113+00:00",
+      "lastFailure": {
+        "code": "android_test_private_handoff_failed_manual_review",
+        "recordedAt": "2026-11-09T19:30:25.913623+00:00",
+        "runId": 42681483296,
+        "stage": "test"
+      },
       "liveSmoke": false,
       "phase": "test_started",
       "route": "hosted",
