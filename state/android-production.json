@@ -684,11 +684,11 @@
     "ba5f3bf04bed77b0d0d390ed209813129e344129": {
       "createdAt": "2026-11-09T10:16:21.656153+00:00",
       "liveSmoke": false,
-      "phase": "test_started",
+      "phase": "test_verified",
       "route": "hosted",
       "sourceSha": "ba5f3bf04bed77b0d0d390ed209813129e344129",
       "testRunId": 42599668979,
-      "updatedAt": "2026-11-09T10:16:25.239407+00:00"
+      "updatedAt": "2026-11-09T10:30:38.604143+00:00"
     },
     "bbdd7db8821c07b6a6159615aa1eab70c4746500": {
       "createdAt": "2026-10-28T02:22:50.190710+00:00",
