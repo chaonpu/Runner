@@ -1399,7 +1399,7 @@
       "signingRunId": 42748322901,
       "updateLog": "v2.8.9\uff1a\n1. \u4fee\u590dDAX\u548cCAC40\u5e38\u89c4\u5206\u949f\u7ebf17:30\u7ed3\u675f\u540e\u7684\u72b6\u6001\u8bef\u62a5\uff0c\u533a\u5206\u6536\u76d8\u9636\u6bb5\u4e0e\u771f\u6b63\u7f3a\u6570\u3002\n2. \u63a5\u5165STOXX\u548cEuronext\u5b98\u65b9\u6307\u6570\u62a5\u4ef7\uff0c\u6838\u9a8c\u540e\u5355\u72ec\u6807\u8bb0\u6700\u7ec8\u6307\u6570\u5feb\u7167\uff0c\u4e0d\u4f2a\u9020\u5206\u949fK\u7ebf\u3002\n3. \u5b8c\u5584\u5df2\u6536\u76d8\u62a5\u4ef7\u65b0\u9c9c\u5ea6\u3001\u771f\u5b9e\u5206\u65f6\u672b\u7aef\u4e0e\u62a5\u4ef7\u65f6\u95f4\u7684\u4e00\u81f4\u6027\u6821\u9a8c\u3002\n4. \u4f18\u5316\u7f8e\u5143\u6307\u6570\u3001\u5370\u5ea6SENSEX\u5206\u65f6\u8865\u6570\u548cCOMEX\u6307\u5b9a\u4ea4\u5272\u6708\u5b9e\u65f6\u91c7\u6837\u663e\u793a\u3002",
       "forceUpdate": false,
-      "phase": "publishing",
+      "phase": "published",
       "publishRequest": {
         "sourceUrl": "https://github.com/chaonpu/Runner/releases/download/staged-apk-v2.8.9-signrun-42748322901/ziwuxilv-verified-v2.8.9.zip",
         "artifactSha256": "f4b141ffda28b02249bfa6e34d14e18e1a2c622663a1bc5e01037110a10d32f1",
