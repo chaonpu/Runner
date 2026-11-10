@@ -105,7 +105,8 @@ def assess(snapshot, health, runs, now):
         missing=(str(now.year+1) not in cal['years']
                  or 'parsedYears' in record and str(now.year+1) not in record['parsedYears'])
         rolling=record.get('adapter')=='a50-cfd-reference'
-        daily = automatic and (rolling or now.month >= 10 and missing or record.get('recoverableSourceFailure',False))
+        daily = automatic and (rolling or record.get('adapter') == 'sgx-cash-source-monitor'
+            or now.month >= 10 and missing or record.get('recoverableSourceFailure',False))
         limit = 48 if daily else 192  # 2 days / 8 days, allowing scheduling jitter
         age = age_hours(record.get('lastAttemptAt'), now)
         overdue = age is None or age > limit

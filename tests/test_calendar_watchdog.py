@@ -142,6 +142,22 @@ class WatchdogTests(unittest.TestCase):
         self.assertEqual(cn['limitHours'], 48)
         self.assertEqual(report['status'], 'attention')
 
+    def test_singapore_cash_official_source_monitor_is_checked_daily(self):
+        self.snapshot = deepcopy(self.snapshot)
+        self.snapshot['data']['calendars']['SG_EQ'] = deepcopy(
+            self.snapshot['data']['calendars']['HK_EQ'])
+        self.health['calendars']['SG_EQ'] = {
+            'adapter': 'sgx-cash-source-monitor',
+            'lastAttemptAt': (self.now - timedelta(hours=49)).isoformat(),
+            'status': 'verified_no_change'
+        }
+        report = self.assess()
+        entry = next(x for x in report['calendars'] if x['calendarId'] == 'SG_EQ')
+        self.assertEqual(entry['limitHours'], 48)
+        self.assertTrue(entry['checkOverdue'])
+        self.assertIn('SG_EQ', report['overdueCalendars'])
+        self.assertEqual(report['recoveryDecision'], 'recovery_due')
+
     def test_q4_missing_year_overdue_but_covered_calendar_has_eight_days(self):
         for key in ('CN_EQ', 'US_EQ'):
             self.health['calendars'][key]['lastAttemptAt'] = (self.now - timedelta(hours=49)).isoformat()
