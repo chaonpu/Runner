@@ -540,9 +540,9 @@
       "route": "cloud",
       "runId": 42772505803,
       "sourceSha": "1068715c032cabf4ee841da5a27fe5745789a72d",
-      "status": "running",
+      "status": "awaiting_effect_verification",
       "task": "stock_a",
-      "updatedAt": "2026-11-10T07:02:30.979114+00:00",
+      "updatedAt": "2026-11-10T07:06:07.949628+00:00",
       "workflow": "run-a-share.yml"
     }
   ]
