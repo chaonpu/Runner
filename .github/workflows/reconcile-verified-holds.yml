@@ -1,0 +1,44 @@
+name: Reconcile independently attested held publications
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scheduler/production_hold_reconcile.py'
+      - 'tests/test_production_hold_reconcile.py'
+      - '.github/workflows/reconcile-verified-holds.yml'
+  schedule:
+    # 08:13 and 16:13 Beijing; after the normal US/A-share sessions
+    - cron: '13 0,8 * * 1-5'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: runner-production-single-task
+  cancel-in-progress: false
+
+jobs:
+  recover:
+    name: Check independent proof and reconcile at most one hold
+    if: github.repository == 'chaonpu/Runner' && github.ref == 'refs/heads/main' && github.run_attempt == 1
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PRIVATE_ACTIONS_TOKEN: ${{ secrets.CHAONPU_ACTIONS_READ_TOKEN }}
+    steps:
+      - name: Checkout coordinator source without persisted credentials
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Verify safe recovery contracts (no remote writes)
+        run: |
+          python3 -m unittest -q tests/test_production_recovery.py tests/test_production_hold_reconcile.py
+      - name: Reconcile only successful independent original publication proof
+        if: github.event_name != 'push'
+        run: |
+          python3 -m scheduler.production_hold_reconcile
