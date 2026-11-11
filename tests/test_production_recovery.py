@@ -103,6 +103,19 @@ class RecoveryTests(unittest.TestCase):
         with self.assertRaises(RegistryGuard):
             verify_change(self.config,self.state,result,self.row['coordinatorRunId'])
 
+    def test_a_formal_cloud_original_recovery_is_allowed_but_us_cloud_is_not(self):
+        self.make_a_share_formal()
+        self.row['route']='cloud'
+        after, proof=self.finish()
+        self.assertEqual(after['tasks'][0]['status'], 'verified')
+        self.assertTrue(proof['formalReportVerified'])
+        self.row['task']='stock_us'
+        self.row['id']='stock_us:2026-10-16'
+        self.row['workflow']='run-us.yml'
+        self.row['publicationMode']='theoretical_catchup'
+        with self.assertRaises(RegistryGuard):
+            self.finish()
+
     def test_a_share_requires_original_html_and_exact_recovery_workflow(self):
         self.make_a_share_formal()
         self.jobs['jobs'][0]['steps'][-1]['conclusion']='failure'
