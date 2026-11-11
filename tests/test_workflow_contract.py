@@ -1,4 +1,4 @@
-"""Allowlisted business, maintenance, health, verification and recovery workflows."""
+"""Allowlisted business, maintenance, health and recovery workflows."""
 from pathlib import Path
 import json
 import re
@@ -9,9 +9,8 @@ WORKFLOWS = ROOT / '.github/workflows'
 MANUAL_ONLY = {'android-production.yml','android-publish.yml','production-dispatch.yml','stock-us.yml'}
 MAINTENANCE_ONLY = {'private-history-cleanup.yml'}
 HEALTH_ONLY = {'calendar-health.yml'}
-READ_ONLY_VERIFICATION = {'verify-production-state.yml', 'verify-postpublication-recovery.yml'}
 RECOVERY_ONLY = {'reconcile-verified-holds.yml'}
-ALLOWED_WORKFLOWS = MANUAL_ONLY | MAINTENANCE_ONLY | HEALTH_ONLY | READ_ONLY_VERIFICATION | RECOVERY_ONLY
+ALLOWED_WORKFLOWS = MANUAL_ONLY | MAINTENANCE_ONLY | HEALTH_ONLY | RECOVERY_ONLY
 
 
 def event_keys(text):
@@ -26,7 +25,7 @@ class WorkflowContractTests(unittest.TestCase):
     def test_exactly_four_manual_workflows(self):
         files = {p.name:p for p in WORKFLOWS.glob('*.yml')}
         # Keep exactly four owner-initiated business workflows; reject
-        # unknown verification, recovery, or other entrypoints as well.
+        # unknown recovery, verification, or other entrypoints as well.
         self.assertEqual(set(files), ALLOWED_WORKFLOWS)
         for name in sorted(MANUAL_ONLY):
             path = files[name]
@@ -101,23 +100,8 @@ class WorkflowContractTests(unittest.TestCase):
             if event_keys(path.read_text()) - {'workflow_dispatch'}
         }
         self.assertEqual(
-            automatic, MAINTENANCE_ONLY | HEALTH_ONLY | READ_ONLY_VERIFICATION | RECOVERY_ONLY
+            automatic, MAINTENANCE_ONLY | HEALTH_ONLY | RECOVERY_ONLY
         )
-
-    def test_read_only_verifiers_restrict_events_and_permissions(self):
-        for name in sorted(READ_ONLY_VERIFICATION):
-            with self.subTest(name=name):
-                text = (WORKFLOWS/name).read_text()
-                self.assertEqual(event_keys(text), {'push', 'workflow_dispatch'})
-                self.assertIn('branches: [main]', text)
-                self.assertIn('contents: read', text)
-                self.assertNotRegex(text, r'(?m)^\s+[\w-]+:\s*write\s*$')
-                self.assertNotIn('secrets.', text)
-                self.assertIn('persist-credentials: false', text)
-                self.assertNotIn('/dispatches', text)
-                self.assertNotIn('gh workflow run', text)
-                self.assertNotIn('scheduler.production_coordinator', text)
-                self.assertNotIn('scheduler.production_hold_reconcile', text)
 
     def test_recovery_workflow_has_explicitly_limited_write_scope(self):
         text = (WORKFLOWS/'reconcile-verified-holds.yml').read_text()

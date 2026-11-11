@@ -1,4 +1,4 @@
-name: Reconcile independently attested held publications
+name: 生产任务已验证结果恢复（工作日）
 
 on:
   push:
@@ -22,7 +22,7 @@ concurrency:
 
 jobs:
   recover:
-    name: Check independent proof and reconcile at most one hold
+    name: 核验独立发布证据并恢复至多一项待处理任务
     if: github.repository == 'chaonpu/Runner' && github.ref == 'refs/heads/main' && github.run_attempt == 1
     runs-on: ubuntu-24.04
     timeout-minutes: 12
@@ -30,15 +30,15 @@ jobs:
       GH_TOKEN: ${{ github.token }}
       PRIVATE_ACTIONS_TOKEN: ${{ secrets.CHAONPU_ACTIONS_READ_TOKEN }}
     steps:
-      - name: Checkout coordinator source without persisted credentials
+      - name: 检出调度源码（不保留凭据）
         uses: actions/checkout@v4
         with:
           ref: ${{ github.sha }}
           persist-credentials: false
-      - name: Verify safe recovery contracts (no remote writes)
+      - name: 验证恢复安全契约（无远程写入）
         run: |
           python3 -m unittest -q tests/test_production_recovery.py tests/test_production_hold_reconcile.py
-      - name: Reconcile only successful independent original publication proof
+      - name: 仅依据原始发布成功的独立证据恢复任务
         if: github.event_name != 'push'
         run: |
           python3 -m scheduler.production_hold_reconcile

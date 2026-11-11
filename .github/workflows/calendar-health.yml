@@ -15,10 +15,13 @@ on:
       - 'tests/test_production_ports.py'
       - 'tests/test_read_transport.py'
       - 'tests/test_production_noop.py'
+      - 'tests/test_production_recovery.py'
+      - 'tests/test_production_hold_reconcile.py'
+      - 'scheduler/production_recovery.py'
+      - 'scheduler/production_registry.py'
+      - 'scheduler/production_hold_reconcile.py'
       - 'tests/test_workflow_contract.py'
       - '.github/workflows/reconcile-verified-holds.yml'
-      - '.github/workflows/verify-production-state.yml'
-      - '.github/workflows/verify-postpublication-recovery.yml'
       - '.github/workflows/calendar-health.yml'
 
 permissions:
@@ -39,7 +42,7 @@ jobs:
         with: {persist-credentials: false}
       - name: Test the same health policy independently of calendar maintenance
         run: python3 -m unittest discover -s tests -p 'test_calendar_watchdog.py' -v
-      - name: Verify real dispatch adapter with pinned calendar without business execution
+      - name: Verify dispatch adapters, recovery and hold reconciliation without business execution
         run: python3 -m unittest discover -s tests -p 'test_production_*.py' -q
       - name: Verify read-only API retries, no repeated dispatch and workflow entry contract
         run: |
