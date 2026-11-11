@@ -245,7 +245,7 @@ def save(env, key, row, previous):
         time.sleep(2)
     state["releases"][key] = row
     content = (json.dumps(state, indent=2) + "\n").encode()
-    digest = hashlib.sha1(b"blob " + str(len(content)).encode() + b"\\0" + content).hexdigest()
+    digest = hashlib.sha1(b"blob " + str(len(content)).encode() + b"\0" + content).hexdigest()
     receipt = build.api(env["GH_TOKEN"], build.RUNNER, "/contents/" + STATE,
                         method="PUT", payload={
         "branch": "main", "sha": blob, "message": "Record exact manual APK publication phase",
