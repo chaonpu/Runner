@@ -97,6 +97,10 @@ def reconcile_one(config, state, private_token):
     held = [r for r in state["tasks"] if r.get("status") == "hold"
             and (r.get("task"), r.get("publicationMode")) in SCOPES]
     for row in held:
+        # Pre-business holds with no original run never qualify for publication
+        # reconciliation; a new strategy run must not be inferred.
+        if type(row.get("runId")) is not int or row["runId"] <= 0:
+            continue
         original = request("chaonpu/Stock", "/actions/runs/" +
                            str(row["runId"]), private_token)
         original_jobs = request("chaonpu/Stock", "/actions/runs/" +
