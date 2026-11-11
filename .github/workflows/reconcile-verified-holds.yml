@@ -43,7 +43,7 @@ jobs:
       - name: 验证恢复安全契约（无远程写入）
         run: |
           python3 -m unittest -q tests/test_production_recovery.py tests/test_production_hold_reconcile.py
-          python3 -m unittest -q tests/test_android_publish.py tests/test_android_publish_verify.py
+          python3 -m unittest discover -s tests -p 'test_android_publish*.py' -q
       - name: 仅依据原始发布成功的独立证据恢复任务
         if: github.event_name != 'push'
         run: |
