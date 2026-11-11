@@ -6,6 +6,11 @@ on:
     paths:
       - 'scheduler/production_hold_reconcile.py'
       - 'tests/test_production_hold_reconcile.py'
+      # No business side effects on push: regression-check publication state
+      # transitions after the earlier cached-main false failure.
+      - 'scheduler/android_publish.py'
+      - 'tests/test_android_publish.py'
+      - 'tests/test_android_publish_verify.py'
       - '.github/workflows/reconcile-verified-holds.yml'
   schedule:
     # 08:13 and 16:13 Beijing; after the normal US/A-share sessions
@@ -38,6 +43,7 @@ jobs:
       - name: 验证恢复安全契约（无远程写入）
         run: |
           python3 -m unittest -q tests/test_production_recovery.py tests/test_production_hold_reconcile.py
+          python3 -m unittest -q tests/test_android_publish.py tests/test_android_publish_verify.py
       - name: 仅依据原始发布成功的独立证据恢复任务
         if: github.event_name != 'push'
         run: |
