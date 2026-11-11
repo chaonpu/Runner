@@ -15,6 +15,10 @@ on:
       - 'tests/test_production_ports.py'
       - 'tests/test_read_transport.py'
       - 'tests/test_production_noop.py'
+      - 'tests/test_workflow_contract.py'
+      - '.github/workflows/reconcile-verified-holds.yml'
+      - '.github/workflows/verify-production-state.yml'
+      - '.github/workflows/verify-postpublication-recovery.yml'
       - '.github/workflows/calendar-health.yml'
 
 permissions:
