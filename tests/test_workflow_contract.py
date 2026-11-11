@@ -1,4 +1,4 @@
-"""Four manual business entries plus independently audited maintenance and health."""
+"""Whitelist business, maintenance, health, verification and recovery entrypoints."""
 from pathlib import Path
 import json
 import re
@@ -9,6 +9,9 @@ WORKFLOWS = ROOT / '.github/workflows'
 MANUAL_ONLY = {'android-production.yml','android-publish.yml','production-dispatch.yml','stock-us.yml'}
 MAINTENANCE_ONLY = {'private-history-cleanup.yml'}
 HEALTH_ONLY = {'calendar-health.yml'}
+READ_ONLY_VERIFICATION = {'verify-production-state.yml', 'verify-postpublication-recovery.yml'}
+RECOVERY_ONLY = {'reconcile-verified-holds.yml'}
+ALLOWED_WORKFLOWS = MANUAL_ONLY | MAINTENANCE_ONLY | HEALTH_ONLY | READ_ONLY_VERIFICATION | RECOVERY_ONLY
 
 
 def event_keys(text):
@@ -22,9 +25,9 @@ def event_keys(text):
 class WorkflowContractTests(unittest.TestCase):
     def test_exactly_four_manual_workflows(self):
         files = {p.name:p for p in WORKFLOWS.glob('*.yml')}
-        # Maintenance and read-only calendar health are independent of the
-        # four owner-initiated business workflows; reject unknown entrypoints.
-        self.assertEqual(set(files), MANUAL_ONLY | MAINTENANCE_ONLY | HEALTH_ONLY)
+        # Four business workflows remain manual-only; independently audited
+        # health, verification and recovery entries must be explicitly listed.
+        self.assertEqual(set(files), ALLOWED_WORKFLOWS)
         for name in sorted(MANUAL_ONLY):
             path = files[name]
             text = path.read_text()
@@ -92,12 +95,87 @@ class WorkflowContractTests(unittest.TestCase):
         self.assertNotIn('/dispatches', text)
         self.assertNotIn('gh workflow run', text)
 
-    def test_only_maintenance_and_health_have_automatic_triggers(self):
+    def test_only_approved_nonbusiness_workflows_have_automatic_triggers(self):
         automatic = {
             path.name for path in WORKFLOWS.glob('*.yml')
             if event_keys(path.read_text()) - {'workflow_dispatch'}
         }
-        self.assertEqual(automatic, MAINTENANCE_ONLY | HEALTH_ONLY)
+        self.assertEqual(
+            automatic, MAINTENANCE_ONLY | HEALTH_ONLY | READ_ONLY_VERIFICATION | RECOVERY_ONLY
+        )
+
+    def test_read_only_verifiers_restrict_events_and_permissions(self):
+        for name in sorted(READ_ONLY_VERIFICATION):
+            with self.subTest(name=name):
+                text = (WORKFLOWS/name).read_text()
+                self.assertEqual(event_keys(text), {'push', 'workflow_dispatch'})
+                self.assertIn('branches: [main]', text)
+                self.assertIn('contents: read', text)
+                self.assertNotRegex(text, r'(?m)^\\s+[\\w-]+:\\s*write\\s*    def test_strategy_market_and_cleanup(self):
+        for name, task in (('production-dispatch.yml','stock_a'),('stock-us.yml','stock_us')):
+            text = (WORKFLOWS/name).read_text()
+            self.assertIn('TASK: '+task, text)
+            self.assertNotIn('inputs.task', text)
+            self.assertNotIn('bootstrap', text)
+            self.assertIn('scheduler.production_coordinator', text)
+            self.assertIn('scheduler.production_lease', text)
+            self.assertIn('if: always() && inputs.execute == true', text)
+            self.assertIn('group: runner-production-single-task', text)
+
+    def test_publication_is_separate_and_no_source_checkout(self):
+        text = (WORKFLOWS/'android-publish.yml').read_text()
+        self.assertIn('scheduler.android_publish', text)
+        inputs = text.split('    inputs:\n', 1)[1].split('\npermissions:', 1)[0]
+        self.assertEqual(set(re.findall(r'(?m)^      (\w+):', inputs)), {'update_log', 'release_mode'})
+        self.assertIn('type: choice', inputs)
+        self.assertIn('          - "预览"', inputs)
+        self.assertIn('          - "正式"', inputs)
+        self.assertIn('RELEASE_MODE: ${{ inputs.release_mode }}', text)
+        self.assertIn('--release-mode "$mode"', text)
+        self.assertNotIn('inputs.mode', text)
+        self.assertNotIn('inputs.source_sha', text)
+        self.assertIn('CHAONPU_ACTIONS_READ_TOKEN: ${{ secrets.CHAONPU_ACTIONS_READ_TOKEN }}', text)
+        self.assertNotIn('ZIWUXILV_ACTIONS_WRITE_TOKEN', text)
+        self.assertNotIn('ANDROID_SIGNING_KEYSTORE', text)
+        self.assertNotRegex(text, r'(?m)^\s+repository:')
+
+    def test_production_dispatch_stays_closed_between_runs(self):
+        config = json.loads((ROOT/'config/repositories.json').read_text())
+        self.assertIs(config['dispatchEnabled'], False)
+        self.assertTrue(all(t['enabledForDispatch'] is False for t in config['tasks'].values()))
+
+
+if __name__ == '__main__':
+    unittest.main()
+)
+                self.assertNotIn('secrets.', text)
+                self.assertIn('persist-credentials: false', text)
+                self.assertNotIn('/dispatches', text)
+                self.assertNotIn('gh workflow run', text)
+                self.assertNotIn('scheduler.production_coordinator', text)
+                self.assertNotIn('scheduler.production_hold_reconcile', text)
+
+    def test_recovery_workflow_has_explicitly_limited_write_scope(self):
+        text = (WORKFLOWS/'reconcile-verified-holds.yml').read_text()
+        self.assertEqual(event_keys(text), {'push', 'schedule', 'workflow_dispatch'})
+        self.assertIn('branches: [main]', text)
+        self.assertIn('contents: write', text)
+        self.assertIn('actions: read', text)
+        self.assertNotIn('actions: write', text)
+        self.assertIn("github.repository == 'chaonpu/Runner'", text)
+        self.assertIn("github.ref == 'refs/heads/main'", text)
+        self.assertIn('github.run_attempt == 1', text)
+        # Push triggers test the contract but must never execute reconciliation.
+        self.assertIn("if: github.event_name != 'push'", text)
+        self.assertIn('ref: ${{ github.sha }}', text)
+        self.assertIn('persist-credentials: false', text)
+        self.assertIn('cancel-in-progress: false', text)
+        self.assertIn('scheduler.production_hold_reconcile', text)
+        self.assertNotIn('scheduler.production_coordinator', text)
+        self.assertNotIn('scheduler.android_production', text)
+        self.assertNotIn('scheduler.android_publish', text)
+        self.assertNotIn('/dispatches', text)
+        self.assertNotIn('gh workflow run', text)
 
     def test_strategy_market_and_cleanup(self):
         for name, task in (('production-dispatch.yml','stock_a'),('stock-us.yml','stock_us')):
