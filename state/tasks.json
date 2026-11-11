@@ -560,6 +560,9 @@
       "workflow": "run-us.yml"
     },
     {
+      "completionMode": "recovered_original_commit",
+      "completionRunId": 42980280789,
+      "completionSourceSha": "b69b20d07a7fcc2cd3741891b2bdaf47b63f4e12",
       "coordinatorRunId": 42976362160,
       "createdAt": "2026-11-11T07:01:43.780631+00:00",
       "id": "stock_a:2026-11-11",
@@ -571,10 +574,20 @@
       "status": "verified",
       "task": "stock_a",
       "updatedAt": "2026-11-11T07:33:16Z",
-      "workflow": "run-a-share.yml",
-      "completionMode": "recovered_original_commit",
-      "completionRunId": 42980280789,
-      "completionSourceSha": "b69b20d07a7fcc2cd3741891b2bdaf47b63f4e12"
+      "workflow": "run-a-share.yml"
+    },
+    {
+      "coordinatorRunId": 43122839081,
+      "createdAt": "2026-11-11T23:54:46.445138+00:00",
+      "id": "stock_us:2026-11-11",
+      "publicationMode": "formal",
+      "repo": "chaonpu/Stock",
+      "route": "cloud",
+      "sourceSha": "b69b20d07a7fcc2cd3741891b2bdaf47b63f4e12",
+      "status": "reserved",
+      "task": "stock_us",
+      "updatedAt": "2026-11-11T23:54:46.445138+00:00",
+      "workflow": "run-us.yml"
     }
   ]
 }
