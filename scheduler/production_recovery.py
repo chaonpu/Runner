@@ -22,8 +22,15 @@ def verify(original,original_jobs,recovery,recovery_jobs,row,expected_source):
     scope=SCOPES.get((row.get('task'),row.get('publicationMode')))
     need(scope is not None,'recovery_scope_unapproved')
     workflow,recovery_workflow,strategy_step=scope
-    need(row.get('repo')=='chaonpu/Stock' and row.get('workflow')==workflow
-         and row.get('route')=='windows','recovery_scope_unapproved')
+    # The A-share formal proof may originate from the hosted cloud route.
+    # Historic US theoretical-catchup recovery remains Windows-only.
+    route_ok = (row.get('route') == 'windows'
+                or (row.get('task') == 'stock_a'
+                    and row.get('publicationMode') == 'formal'
+                    and row.get('route') == 'cloud'))
+    need(row.get('repo') == 'chaonpu/Stock'
+         and row.get('workflow') == workflow and route_ok,
+         'recovery_scope_unapproved')
     need(original.get('id')==row['runId'] and original.get('head_sha')==row['sourceSha']
          and original.get('repository',{}).get('full_name')==row['repo']
          and original.get('event')=='workflow_dispatch' and original.get('head_branch')=='main'
