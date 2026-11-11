@@ -227,15 +227,54 @@ def run_automatic(env, *, log="", execute=False, release_mode="formal"):
 
 
 def save(env, key, row, previous):
-    state, blob = build.json_file(env["GH_TOKEN"], STATE)
-    need(state.get("version") == 1 and isinstance(state.get("releases"), dict), "release_registry_invalid")
-    need(state["releases"].get(key) == previous, "release_registry_changed_no_retry")
+    """One CAS write, then confirm the immutable returned commit, not cached main.
+
+    GitHub's branch ref can briefly lag a successful contents PUT. That used to
+    turn an already dispatched public release into a false failed Runner job.
+    Never retry a write/dispatch just because a read is stale.
+    """
+    for attempt in range(6):
+        state, blob = build.json_file(env["GH_TOKEN"], STATE)
+        need(state.get("version") == 1 and isinstance(state.get("releases"), dict),
+             "release_registry_invalid")
+        if state["releases"].get(key) == previous:
+            break
+        need(attempt < 5, "release_registry_changed_no_retry")
+        # Bounded read-only propagation check; a different committed identity
+        # cannot be overwritten because every attempt rechecks the exact row.
+        time.sleep(2)
     state["releases"][key] = row
-    build.api(env["GH_TOKEN"], build.RUNNER, "/contents/" + STATE, method="PUT", payload={
+    content = (json.dumps(state, indent=2) + "\n").encode()
+    digest = hashlib.sha1(b"blob " + str(len(content)).encode() + b"\\0" + content).hexdigest()
+    receipt = build.api(env["GH_TOKEN"], build.RUNNER, "/contents/" + STATE,
+                        method="PUT", payload={
         "branch": "main", "sha": blob, "message": "Record exact manual APK publication phase",
-        "content": base64.b64encode((json.dumps(state, indent=2) + "\n").encode()).decode()})
-    after, _ = build.json_file(env["GH_TOKEN"], STATE)
-    need(after == state, "release_registry_confirmation_failed_no_retry")
+        "content": base64.b64encode(content).decode()})
+    commit = receipt.get("commit", {}).get("sha") if isinstance(receipt, dict) else None
+    confirmed_sha = receipt.get("content", {}).get("sha") if isinstance(receipt, dict) else None
+    need(isinstance(commit, str) and build.SHA.fullmatch(commit)
+         and confirmed_sha == digest, "release_registry_commit_receipt_unverified")
+    # A commit-pinned read does not depend on a stale default-branch alias.
+    # Missing pinned content may be retried *read-only*, never PUT or dispatch.
+    for attempt in range(6):
+        try:
+            verified = build.api(env["GH_TOKEN"], build.RUNNER,
+                "/contents/" + STATE + "?ref=" + commit)
+        except build.Hold as error:
+            if "github_http_404_" not in str(error) or attempt == 5:
+                raise
+            time.sleep(2)
+            continue
+        need(verified.get("type") == "file" and verified.get("path") == STATE
+             and verified.get("encoding") == "base64"
+             and verified.get("sha") == digest, "release_registry_pinned_sha_mismatch")
+        try:
+            raw = base64.b64decode(verified["content"], validate=False)
+        except (ValueError, KeyError, TypeError):
+            raise build.Hold("release_registry_pinned_content_invalid") from None
+        need(raw == content, "release_registry_pinned_content_mismatch")
+        return
+    raise build.Hold("release_registry_pinned_commit_unavailable_no_retry")
 
 
 def stage(env, req):
