@@ -30,7 +30,7 @@ class AutomaticRecoveryTests(unittest.TestCase):
     def test_public_json_blob_requires_actual_git_sha(self):
         data = b'{"schema":1,"tasks":[]}'
         sha = hashlib.sha1(b"blob " + str(len(data)).encode() +
-                           b"\\0" + data).hexdigest()
+                           b"\x00" + data).hexdigest()
         record = {"path": "state/tasks.json", "type": "file",
                   "encoding": "base64",
                   "sha": sha, "content": base64.b64encode(data).decode()}
