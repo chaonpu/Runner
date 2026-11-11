@@ -2,6 +2,7 @@
 from copy import deepcopy
 from pathlib import Path
 import tempfile
+import json
 import unittest
 from unittest.mock import patch
 from scheduler import android_publish as p
@@ -215,6 +216,82 @@ class Tests(unittest.TestCase):
         with self.assertRaisesRegex(p.build.Hold,'identity_conflict'):
             self.invoke(state=dict(REQ,sourceCommit='f'*40,phase='prepared'),execute=True)
         self.assertEqual(self.events,[])
+
+
+
+class RegistryCommitConfirmationTests(unittest.TestCase):
+    """Never falsely fail a completed dispatch because GitHub main is cached."""
+    def fixture(self):
+        previous = dict(REQ, phase="dispatch_reserved", publishRequest=PUBLISH)
+        newer = dict(previous, phase="publishing", publicRunId=789)
+        prior = {"version": 1, "releases": {"118": previous}}
+        return prior, previous, newer
+
+    def fake_api(self, events, *, corrupt_receipt=False, corrupt_pinned=False):
+        import base64
+        import hashlib
+
+        def api(token, repo, path, *, method="GET", payload=None):
+            self.assertEqual(repo, p.build.RUNNER)
+            if method == "PUT":
+                events.append("PUT")
+                self.assertEqual(path, "/contents/" + p.STATE)
+                self.assertEqual(payload["branch"], "main")
+                raw = base64.b64decode(payload["content"])
+                self.assertEqual(json.loads(raw)["releases"]["118"]["phase"], "publishing")
+                sha = hashlib.sha1(b"blob " + str(len(raw)).encode() + b"\0" + raw).hexdigest()
+                events.append((raw, sha))
+                return {"commit": {"sha": "d" * 40},
+                        "content": {"sha": "f" * 40 if corrupt_receipt else sha}}
+            self.assertEqual(method, "GET")
+            self.assertEqual(path, "/contents/" + p.STATE + "?ref=" + "d" * 40)
+            events.append("pinned_GET")
+            raw, sha = events[-2]
+            if corrupt_pinned:
+                raw = b'{"version":0}'
+            return {"type": "file", "path": p.STATE, "encoding": "base64",
+                    "sha": sha, "content": base64.b64encode(raw).decode()}
+        return api
+
+    def test_write_receipt_and_pinned_read_confirm_without_cached_main(self):
+        prior, previous, newer = self.fixture()
+        events = []
+        with patch.object(p.build, "json_file", return_value=(prior, "a" * 40)) as read,\
+             patch.object(p.build, "api", side_effect=self.fake_api(events)):
+            p.save(ENV, "118", newer, previous)
+        self.assertEqual(events.count("PUT"), 1)
+        self.assertEqual(events.count("pinned_GET"), 1)
+        self.assertEqual(read.call_count, 1)
+        # Confirming the immutable returned commit does not re-read stale main.
+        self.assertEqual(prior["releases"]["118"]["phase"], "publishing")
+
+    def test_stale_main_before_write_uses_only_bounded_read_retries(self):
+        prior, previous, newer = self.fixture()
+        stale = {"version": 1, "releases": {"118": dict(previous, phase="prepared")}}
+        events = []
+        with patch.object(p.build, "json_file", side_effect=[
+            (stale, "a" * 40), (prior, "b" * 40)]) as read,\
+             patch.object(p.build, "api", side_effect=self.fake_api(events)),\
+             patch.object(p.time, "sleep") as sleep:
+            p.save(ENV, "118", newer, previous)
+        self.assertEqual(read.call_count, 2)
+        sleep.assert_called_once_with(2)
+        self.assertEqual(events.count("PUT"), 1)
+
+    def test_wrong_write_receipt_or_pinned_bytes_fail_closed_once(self):
+        for kind in ("receipt", "pinned"):
+            with self.subTest(kind=kind):
+                prior, previous, newer = self.fixture()
+                events = []
+                with patch.object(p.build, "json_file", return_value=(prior, "a" * 40)),\
+                     patch.object(p.build, "api", side_effect=self.fake_api(
+                         events, corrupt_receipt=kind == "receipt",
+                         corrupt_pinned=kind == "pinned")):
+                    with self.assertRaisesRegex(p.build.Hold,
+                            "release_registry_commit_receipt_unverified" if kind == "receipt"
+                            else "release_registry_pinned_content_mismatch"):
+                        p.save(ENV, "118", newer, previous)
+                self.assertEqual(events.count("PUT"), 1)
 
 
 if __name__=='__main__':unittest.main()
