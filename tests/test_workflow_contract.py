@@ -1,4 +1,4 @@
-"""Whitelist business, maintenance, health, verification and recovery entrypoints."""
+"""Allowlisted business, maintenance, health, verification and recovery workflows."""
 from pathlib import Path
 import json
 import re
@@ -25,8 +25,8 @@ def event_keys(text):
 class WorkflowContractTests(unittest.TestCase):
     def test_exactly_four_manual_workflows(self):
         files = {p.name:p for p in WORKFLOWS.glob('*.yml')}
-        # Four business workflows remain manual-only; independently audited
-        # health, verification and recovery entries must be explicitly listed.
+        # Keep exactly four owner-initiated business workflows; reject
+        # unknown verification, recovery, or other entrypoints as well.
         self.assertEqual(set(files), ALLOWED_WORKFLOWS)
         for name in sorted(MANUAL_ONLY):
             path = files[name]
@@ -111,43 +111,7 @@ class WorkflowContractTests(unittest.TestCase):
                 self.assertEqual(event_keys(text), {'push', 'workflow_dispatch'})
                 self.assertIn('branches: [main]', text)
                 self.assertIn('contents: read', text)
-                self.assertNotRegex(text, r'(?m)^\\s+[\\w-]+:\\s*write\\s*    def test_strategy_market_and_cleanup(self):
-        for name, task in (('production-dispatch.yml','stock_a'),('stock-us.yml','stock_us')):
-            text = (WORKFLOWS/name).read_text()
-            self.assertIn('TASK: '+task, text)
-            self.assertNotIn('inputs.task', text)
-            self.assertNotIn('bootstrap', text)
-            self.assertIn('scheduler.production_coordinator', text)
-            self.assertIn('scheduler.production_lease', text)
-            self.assertIn('if: always() && inputs.execute == true', text)
-            self.assertIn('group: runner-production-single-task', text)
-
-    def test_publication_is_separate_and_no_source_checkout(self):
-        text = (WORKFLOWS/'android-publish.yml').read_text()
-        self.assertIn('scheduler.android_publish', text)
-        inputs = text.split('    inputs:\n', 1)[1].split('\npermissions:', 1)[0]
-        self.assertEqual(set(re.findall(r'(?m)^      (\w+):', inputs)), {'update_log', 'release_mode'})
-        self.assertIn('type: choice', inputs)
-        self.assertIn('          - "预览"', inputs)
-        self.assertIn('          - "正式"', inputs)
-        self.assertIn('RELEASE_MODE: ${{ inputs.release_mode }}', text)
-        self.assertIn('--release-mode "$mode"', text)
-        self.assertNotIn('inputs.mode', text)
-        self.assertNotIn('inputs.source_sha', text)
-        self.assertIn('CHAONPU_ACTIONS_READ_TOKEN: ${{ secrets.CHAONPU_ACTIONS_READ_TOKEN }}', text)
-        self.assertNotIn('ZIWUXILV_ACTIONS_WRITE_TOKEN', text)
-        self.assertNotIn('ANDROID_SIGNING_KEYSTORE', text)
-        self.assertNotRegex(text, r'(?m)^\s+repository:')
-
-    def test_production_dispatch_stays_closed_between_runs(self):
-        config = json.loads((ROOT/'config/repositories.json').read_text())
-        self.assertIs(config['dispatchEnabled'], False)
-        self.assertTrue(all(t['enabledForDispatch'] is False for t in config['tasks'].values()))
-
-
-if __name__ == '__main__':
-    unittest.main()
-)
+                self.assertNotRegex(text, r'(?m)^\s+[\w-]+:\s*write\s*$')
                 self.assertNotIn('secrets.', text)
                 self.assertIn('persist-credentials: false', text)
                 self.assertNotIn('/dispatches', text)
@@ -165,7 +129,7 @@ if __name__ == '__main__':
         self.assertIn("github.repository == 'chaonpu/Runner'", text)
         self.assertIn("github.ref == 'refs/heads/main'", text)
         self.assertIn('github.run_attempt == 1', text)
-        # Push triggers test the contract but must never execute reconciliation.
+        # Push can test the safe contract, but may not execute reconciliation.
         self.assertIn("if: github.event_name != 'push'", text)
         self.assertIn('ref: ${{ github.sha }}', text)
         self.assertIn('persist-credentials: false', text)
