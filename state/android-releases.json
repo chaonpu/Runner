@@ -7,7 +7,7 @@
       "versionCode": 118,
       "testRunId": 39051122647,
       "signingRunId": 39051666258,
-      "updateLog": "\u66f4\u65b0\u81f3 2.3.5\uff08118\uff09\u3002",
+      "updateLog": "更新至 2.3.5（118）。",
       "forceUpdate": false,
       "phase": "published",
       "publishRequest": {
@@ -18,7 +18,7 @@
         "versionCode": 118,
         "apkSha256": "eac1dd0e4df4df8b2b8e588e387ede54b48514103040ec94fa5e5befcb59c4d8",
         "signingCertificateSha256": "bef3f5cbb2989734f20740eddaac3e105dfecb6c63ea9275e178eedd892ec105",
-        "updateLog": "\u66f4\u65b0\u81f3 2.3.5\uff08118\uff09\u3002",
+        "updateLog": "更新至 2.3.5（118）。",
         "forceUpdate": false
       },
       "publicRunId": 39053891432,
@@ -31,7 +31,7 @@
       "versionCode": 119,
       "testRunId": 39064552158,
       "signingRunId": 39065243664,
-      "updateLog": "\u66f4\u65b0\u81f3 2.3.6\uff08119\uff09\u3002",
+      "updateLog": "更新至 2.3.6（119）。",
       "forceUpdate": false,
       "phase": "published",
       "publishRequest": {
@@ -42,7 +42,7 @@
         "versionCode": 119,
         "apkSha256": "4604f9678257c49cccd4036aad6a961381a8702f0d1ae1108ec820c9264de7db",
         "signingCertificateSha256": "bef3f5cbb2989734f20740eddaac3e105dfecb6c63ea9275e178eedd892ec105",
-        "updateLog": "\u66f4\u65b0\u81f3 2.3.6\uff08119\uff09\u3002",
+        "updateLog": "更新至 2.3.6（119）。",
         "forceUpdate": false
       },
       "publicRunId": 39065471559
@@ -53,7 +53,7 @@
       "versionCode": 120,
       "testRunId": 39070335671,
       "signingRunId": 39070996881,
-      "updateLog": "\u66f4\u65b0\u81f3 2.3.7\uff08120\uff09\u3002",
+      "updateLog": "更新至 2.3.7（120）。",
       "forceUpdate": false,
       "phase": "published",
       "publishRequest": {
@@ -64,7 +64,7 @@
         "versionCode": 120,
         "apkSha256": "4cee8b5e276a599963b6d26f85c18f64d6cb0a781b1f93c41b33704757fe59ec",
         "signingCertificateSha256": "bef3f5cbb2989734f20740eddaac3e105dfecb6c63ea9275e178eedd892ec105",
-        "updateLog": "\u66f4\u65b0\u81f3 2.3.7\uff08120\uff09\u3002",
+        "updateLog": "更新至 2.3.7（120）。",
         "forceUpdate": false
       },
       "publicRunId": 39071417405
@@ -75,7 +75,7 @@
       "versionCode": 121,
       "testRunId": 39073550203,
       "signingRunId": 39074251326,
-      "updateLog": "\u66f4\u65b0\u81f3 2.3.8\uff08121\uff09\u3002",
+      "updateLog": "更新至 2.3.8（121）。",
       "forceUpdate": false,
       "phase": "published",
       "publishRequest": {
@@ -86,7 +86,7 @@
         "versionCode": 121,
         "apkSha256": "e0ff802a84b59db2b6424b266b0363a30c94fd4c74ecfbe5fc652c18cf3f32fc",
         "signingCertificateSha256": "bef3f5cbb2989734f20740eddaac3e105dfecb6c63ea9275e178eedd892ec105",
-        "updateLog": "\u66f4\u65b0\u81f3 2.3.8\uff08121\uff09\u3002",
+        "updateLog": "更新至 2.3.8（121）。",
         "forceUpdate": false
       },
       "publicRunId": 39099350653,
@@ -102,7 +102,7 @@
       "versionCode": 122,
       "testRunId": 39108998905,
       "signingRunId": 39109706331,
-      "updateLog": "v2.3.9\uff1a\n1. \u5c06 K \u7ebf\u4e70\u5165 B\u3001\u5356\u51fa S \u6807\u8bb0\u7684\u8fb9\u957f\u7f29\u5c0f\u4e3a\u6b64\u524d\u7684\u4e00\u534a\uff0c\u5e76\u540c\u6b65\u7f29\u5c0f\u5b57\u6bcd\u548c\u5706\u89d2\u3002\n2. \u4fdd\u6301\u91d1\u8272 B\u3001\u84dd\u8272 S \u6807\u8bb0\u4e0e\u5bf9\u5e94 K \u7ebf\u5c45\u4e2d\u5bf9\u9f50\uff0c\u865a\u7ebf\u8fde\u63a5\u6210\u4ea4\u4ef7\u683c\u70b9\u3002\n3. \u81ea\u9009\u641c\u7d22\u7ed3\u679c\u65b0\u589e\u72ec\u7acb\u52a0\u53f7\u6309\u94ae\uff1b\u70b9\u51fb\u6807\u7684\u67e5\u770b\u56fe\u8868\uff0c\u56fe\u8868\u5f39\u7a97\u4e2d\u4e5f\u53ef\u52a0\u5165\u81ea\u9009\uff0c\u5173\u95ed\u540e\u8fd4\u56de\u539f\u641c\u7d22\u4f4d\u7f6e\u3002",
+      "updateLog": "v2.3.9：\n1. 将 K 线买入 B、卖出 S 标记的边长缩小为此前的一半，并同步缩小字母和圆角。\n2. 保持金色 B、蓝色 S 标记与对应 K 线居中对齐，虚线连接成交价格点。\n3. 自选搜索结果新增独立加号按钮；点击标的查看图表，图表弹窗中也可加入自选，关闭后返回原搜索位置。",
       "forceUpdate": false,
       "phase": "published",
       "publishRequest": {
@@ -113,7 +113,7 @@
         "versionCode": 122,
         "apkSha256": "8c04479d7af4ed29bad54d9e8b8692b4b6e5165d8654713d68e374c4ad6ce8da",
         "signingCertificateSha256": "bef3f5cbb2989734f20740eddaac3e105dfecb6c63ea9275e178eedd892ec105",
-        "updateLog": "v2.3.9\uff1a\n1. \u5c06 K \u7ebf\u4e70\u5165 B\u3001\u5356\u51fa S \u6807\u8bb0\u7684\u8fb9\u957f\u7f29\u5c0f\u4e3a\u6b64\u524d\u7684\u4e00\u534a\uff0c\u5e76\u540c\u6b65\u7f29\u5c0f\u5b57\u6bcd\u548c\u5706\u89d2\u3002\n2. \u4fdd\u6301\u91d1\u8272 B\u3001\u84dd\u8272 S \u6807\u8bb0\u4e0e\u5bf9\u5e94 K \u7ebf\u5c45\u4e2d\u5bf9\u9f50\uff0c\u865a\u7ebf\u8fde\u63a5\u6210\u4ea4\u4ef7\u683c\u70b9\u3002\n3. \u81ea\u9009\u641c\u7d22\u7ed3\u679c\u65b0\u589e\u72ec\u7acb\u52a0\u53f7\u6309\u94ae\uff1b\u70b9\u51fb\u6807\u7684\u67e5\u770b\u56fe\u8868\uff0c\u56fe\u8868\u5f39\u7a97\u4e2d\u4e5f\u53ef\u52a0\u5165\u81ea\u9009\uff0c\u5173\u95ed\u540e\u8fd4\u56de\u539f\u641c\u7d22\u4f4d\u7f6e\u3002",
+        "updateLog": "v2.3.9：\n1. 将 K 线买入 B、卖出 S 标记的边长缩小为此前的一半，并同步缩小字母和圆角。\n2. 保持金色 B、蓝色 S 标记与对应 K 线居中对齐，虚线连接成交价格点。\n3. 自选搜索结果新增独立加号按钮；点击标的查看图表，图表弹窗中也可加入自选，关闭后返回原搜索位置。",
         "forceUpdate": false
       },
       "publicRunId": 39111675158,
@@ -129,7 +129,7 @@
       "versionCode": 123,
       "testRunId": 39114372216,
       "signingRunId": 39115178019,
-      "updateLog": "v2.4.0\uff1a\n1. \u4f18\u5316 K \u7ebf B/S \u4e70\u5356\u6807\u8bb0\uff1a\u4fdd\u6301\u5f53\u524d\u7d27\u51d1\u6807\u7b7e\u5927\u5c0f\uff0c\u5e76\u4e0e\u5bf9\u5e94 K \u7ebf\u4e25\u683c\u5c45\u4e2d\u5bf9\u9f50\uff1b\u6210\u4ea4\u4ef7\u683c\u70b9\u4e0e\u6807\u7b7e\u4e4b\u95f4\u6539\u7528\u56fa\u5b9a 8dp \u77ed\u865a\u7ebf\u3002\n2. \u5bf9\u8c03\u5165\u573a\u4ef7\u53c2\u8003\u7ebf\u4e0e B/S \u8fde\u63a5\u865a\u7ebf\u7684\u989c\u8272\uff0c\u4fdd\u7559\u91d1\u8272 B\u3001\u84dd\u8272 S \u6807\u7b7e\u53ca\u6210\u4ea4\u4ef7\u683c\u70b9\u3002\n3. \u81ea\u9009\u641c\u7d22\u7ed3\u679c\u65b0\u589e\u72ec\u7acb\u52a0\u53f7\u6309\u94ae\uff1b\u70b9\u51fb\u6807\u7684\u67e5\u770b\u56fe\u8868\uff0c\u56fe\u8868\u5f39\u7a97\u4e2d\u4e5f\u53ef\u52a0\u5165\u81ea\u9009\uff0c\u5173\u95ed\u540e\u8fd4\u56de\u539f\u641c\u7d22\u4f4d\u7f6e\u3002",
+      "updateLog": "v2.4.0：\n1. 优化 K 线 B/S 买卖标记：保持当前紧凑标签大小，并与对应 K 线严格居中对齐；成交价格点与标签之间改用固定 8dp 短虚线。\n2. 对调入场价参考线与 B/S 连接虚线的颜色，保留金色 B、蓝色 S 标签及成交价格点。\n3. 自选搜索结果新增独立加号按钮；点击标的查看图表，图表弹窗中也可加入自选，关闭后返回原搜索位置。",
       "forceUpdate": false,
       "phase": "published",
       "publishRequest": {
@@ -140,7 +140,7 @@
         "versionCode": 123,
         "apkSha256": "7cfc52939ecb344f856b6697da10ba6407607d01c5c6f65609873d9112b0b491",
         "signingCertificateSha256": "bef3f5cbb2989734f20740eddaac3e105dfecb6c63ea9275e178eedd892ec105",
-        "updateLog": "v2.4.0\uff1a\n1. \u4f18\u5316 K \u7ebf B/S \u4e70\u5356\u6807\u8bb0\uff1a\u4fdd\u6301\u5f53\u524d\u7d27\u51d1\u6807\u7b7e\u5927\u5c0f\uff0c\u5e76\u4e0e\u5bf9\u5e94 K \u7ebf\u4e25\u683c\u5c45\u4e2d\u5bf9\u9f50\uff1b\u6210\u4ea4\u4ef7\u683c\u70b9\u4e0e\u6807\u7b7e\u4e4b\u95f4\u6539\u7528\u56fa\u5b9a 8dp \u77ed\u865a\u7ebf\u3002\n2. \u5bf9\u8c03\u5165\u573a\u4ef7\u53c2\u8003\u7ebf\u4e0e B/S \u8fde\u63a5\u865a\u7ebf\u7684\u989c\u8272\uff0c\u4fdd\u7559\u91d1\u8272 B\u3001\u84dd\u8272 S \u6807\u7b7e\u53ca\u6210\u4ea4\u4ef7\u683c\u70b9\u3002\n3. \u81ea\u9009\u641c\u7d22\u7ed3\u679c\u65b0\u589e\u72ec\u7acb\u52a0\u53f7\u6309\u94ae\uff1b\u70b9\u51fb\u6807\u7684\u67e5\u770b\u56fe\u8868\uff0c\u56fe\u8868\u5f39\u7a97\u4e2d\u4e5f\u53ef\u52a0\u5165\u81ea\u9009\uff0c\u5173\u95ed\u540e\u8fd4\u56de\u539f\u641c\u7d22\u4f4d\u7f6e\u3002",
+        "updateLog": "v2.4.0：\n1. 优化 K 线 B/S 买卖标记：保持当前紧凑标签大小，并与对应 K 线严格居中对齐；成交价格点与标签之间改用固定 8dp 短虚线。\n2. 对调入场价参考线与 B/S 连接虚线的颜色，保留金色 B、蓝色 S 标签及成交价格点。\n3. 自选搜索结果新增独立加号按钮；点击标的查看图表，图表弹窗中也可加入自选，关闭后返回原搜索位置。",
         "forceUpdate": false
       },
       "publicRunId": 39116550423,
@@ -156,7 +156,7 @@
       "versionCode": 124,
       "testRunId": 39136122175,
       "signingRunId": 39136872455,
-      "updateLog": "v2.4.1\uff1a\n1. \u4fee\u590d\u5e03\u4f26\u7279\u539f\u6cb9\u56e0\u66f2\u5408\u7f3a\u5c11\u6628\u7ed3\u7b97\u4ef7\u800c\u663e\u793a\u201c\u672a\u8bfb\u53d6\u201d\u7684\u95ee\u9898\uff0c\u4e1c\u65b9\u8d22\u5bcc\u5907\u7528\u6e90\u53ef\u72ec\u7acb\u786e\u8ba4\u6708\u4efd\u5408\u7ea6\u5e76\u8bfb\u53d6\u62a5\u4ef7\u3002\n2. \u5e03\u4f26\u7279\u4e3b\u5907\u6e90\u5e76\u53d1\u8bfb\u53d6\uff0c\u4e25\u683c\u6838\u9a8c\u5408\u7ea6\u8eab\u4efd\u3001\u6628\u7ed3\u7b97\u4ef7\u53ca\u5f00\u9ad8\u4f4e\u6570\u636e\u3002\n3. \u589e\u52a0\u5e03\u4f26\u7279\u62a5\u4ef7\u94fe\u8def\u5b9e\u6d4b\u53ca\u5931\u8d25\u539f\u56e0\u8bb0\u5f55\uff0c\u4fdd\u7559\u4f11\u5e02\u884c\u60c5\u7684\u771f\u5b9e\u6765\u6e90\u65f6\u95f4\u3002",
+      "updateLog": "v2.4.1：\n1. 修复布伦特原油因曲合缺少昨结算价而显示“未读取”的问题，东方财富备用源可独立确认月份合约并读取报价。\n2. 布伦特主备源并发读取，严格核验合约身份、昨结算价及开高低数据。\n3. 增加布伦特报价链路实测及失败原因记录，保留休市行情的真实来源时间。",
       "forceUpdate": false,
       "phase": "published",
       "publishRequest": {
@@ -167,7 +167,7 @@
         "versionCode": 124,
         "apkSha256": "1497cc0de62a40dec442ccf4e8a63f3fb09ea1c4596f322775af8c4544ddf932",
         "signingCertificateSha256": "bef3f5cbb2989734f20740eddaac3e105dfecb6c63ea9275e178eedd892ec105",
-        "updateLog": "v2.4.1\uff1a\n1. \u4fee\u590d\u5e03\u4f26\u7279\u539f\u6cb9\u56e0\u66f2\u5408\u7f3a\u5c11\u6628\u7ed3\u7b97\u4ef7\u800c\u663e\u793a\u201c\u672a\u8bfb\u53d6\u201d\u7684\u95ee\u9898\uff0c\u4e1c\u65b9\u8d22\u5bcc\u5907\u7528\u6e90\u53ef\u72ec\u7acb\u786e\u8ba4\u6708\u4efd\u5408\u7ea6\u5e76\u8bfb\u53d6\u62a5\u4ef7\u3002\n2. \u5e03\u4f26\u7279\u4e3b\u5907\u6e90\u5e76\u53d1\u8bfb\u53d6\uff0c\u4e25\u683c\u6838\u9a8c\u5408\u7ea6\u8eab\u4efd\u3001\u6628\u7ed3\u7b97\u4ef7\u53ca\u5f00\u9ad8\u4f4e\u6570\u636e\u3002\n3. \u589e\u52a0\u5e03\u4f26\u7279\u62a5\u4ef7\u94fe\u8def\u5b9e\u6d4b\u53ca\u5931\u8d25\u539f\u56e0\u8bb0\u5f55\uff0c\u4fdd\u7559\u4f11\u5e02\u884c\u60c5\u7684\u771f\u5b9e\u6765\u6e90\u65f6\u95f4\u3002",
+        "updateLog": "v2.4.1：\n1. 修复布伦特原油因曲合缺少昨结算价而显示“未读取”的问题，东方财富备用源可独立确认月份合约并读取报价。\n2. 布伦特主备源并发读取，严格核验合约身份、昨结算价及开高低数据。\n3. 增加布伦特报价链路实测及失败原因记录，保留休市行情的真实来源时间。",
         "forceUpdate": false
       },
       "publicRunId": 39137841148,
@@ -183,7 +183,7 @@
       "versionCode": 125,
       "testRunId": 39139348882,
       "signingRunId": 39140695251,
-      "updateLog": "v2.4.2\uff1a\n1. \u4fee\u590d\u6c99\u7279\u6307\u6570\u4f11\u5e02\u51b7\u542f\u52a8\u65f6\u56e0\u4e3b\u6e90\u4ec5\u8fd4\u56de\u51cc\u6668\u5360\u4f4d\u800c\u663e\u793a\u672a\u8bfb\u53d6\u7684\u95ee\u9898\uff0c\u4ec5\u6062\u590d\u6700\u8fd1\u6709\u6548\u6536\u76d8\u4ef7\uff0c\u4e0d\u4f2a\u9020\u5f53\u65e5\u6da8\u8dcc\u3002\n2. \u6c99\u7279\u4e1c\u65b9\u8d22\u5bcc\u5907\u7528\u6e90\u589e\u52a0\u72ec\u7acb\u5ef6\u65f6\u8282\u70b9\uff0c\u5e76\u4f18\u5148\u4fdd\u7559\u771f\u5b9e\u5b8c\u6574\u62a5\u4ef7\u3002\n3. \u65e5K\u5386\u53f2\u5237\u65b0\u7f29\u77ed\u81f330\u79d2\uff1b\u62a5\u4ef7\u66f4\u65b0\u65f6\u540c\u6b65\u5f53\u524d\u65e5K\uff0c\u4e25\u683c\u6821\u9a8c\u6807\u7684\u3001\u5408\u7ea6\u3001\u4ea4\u6613\u65e5\u53ca\u590d\u6743\u53e3\u5f84\u3002\n4. \u65b0\u589e\u6c99\u7279\u62a5\u4ef7\u51b7\u542f\u52a8\u5b9e\u6d4b\u4e0e\u65e5K\u540c\u6b65\u56de\u5f52\u6d4b\u8bd5\u3002",
+      "updateLog": "v2.4.2：\n1. 修复沙特指数休市冷启动时因主源仅返回凌晨占位而显示未读取的问题，仅恢复最近有效收盘价，不伪造当日涨跌。\n2. 沙特东方财富备用源增加独立延时节点，并优先保留真实完整报价。\n3. 日K历史刷新缩短至30秒；报价更新时同步当前日K，严格校验标的、合约、交易日及复权口径。\n4. 新增沙特报价冷启动实测与日K同步回归测试。",
       "forceUpdate": false,
       "phase": "published",
       "publishRequest": {
@@ -194,7 +194,7 @@
         "versionCode": 125,
         "apkSha256": "9becb2f5a67438ece376ef4affd19d40f4ab7469f5c83522ed6cb85a8379fdda",
         "signingCertificateSha256": "bef3f5cbb2989734f20740eddaac3e105dfecb6c63ea9275e178eedd892ec105",
-        "updateLog": "v2.4.2\uff1a\n1. \u4fee\u590d\u6c99\u7279\u6307\u6570\u4f11\u5e02\u51b7\u542f\u52a8\u65f6\u56e0\u4e3b\u6e90\u4ec5\u8fd4\u56de\u51cc\u6668\u5360\u4f4d\u800c\u663e\u793a\u672a\u8bfb\u53d6\u7684\u95ee\u9898\uff0c\u4ec5\u6062\u590d\u6700\u8fd1\u6709\u6548\u6536\u76d8\u4ef7\uff0c\u4e0d\u4f2a\u9020\u5f53\u65e5\u6da8\u8dcc\u3002\n2. \u6c99\u7279\u4e1c\u65b9\u8d22\u5bcc\u5907\u7528\u6e90\u589e\u52a0\u72ec\u7acb\u5ef6\u65f6\u8282\u70b9\uff0c\u5e76\u4f18\u5148\u4fdd\u7559\u771f\u5b9e\u5b8c\u6574\u62a5\u4ef7\u3002\n3. \u65e5K\u5386\u53f2\u5237\u65b0\u7f29\u77ed\u81f330\u79d2\uff1b\u62a5\u4ef7\u66f4\u65b0\u65f6\u540c\u6b65\u5f53\u524d\u65e5K\uff0c\u4e25\u683c\u6821\u9a8c\u6807\u7684\u3001\u5408\u7ea6\u3001\u4ea4\u6613\u65e5\u53ca\u590d\u6743\u53e3\u5f84\u3002\n4. \u65b0\u589e\u6c99\u7279\u62a5\u4ef7\u51b7\u542f\u52a8\u5b9e\u6d4b\u4e0e\u65e5K\u540c\u6b65\u56de\u5f52\u6d4b\u8bd5\u3002",
+        "updateLog": "v2.4.2：\n1. 修复沙特指数休市冷启动时因主源仅返回凌晨占位而显示未读取的问题，仅恢复最近有效收盘价，不伪造当日涨跌。\n2. 沙特东方财富备用源增加独立延时节点，并优先保留真实完整报价。\n3. 日K历史刷新缩短至30秒；报价更新时同步当前日K，严格校验标的、合约、交易日及复权口径。\n4. 新增沙特报价冷启动实测与日K同步回归测试。",
         "forceUpdate": false
       },
       "publicRunId": 39141552889,
@@ -210,7 +210,7 @@
       "versionCode": 126,
       "testRunId": 39203067711,
       "signingRunId": 39203971217,
-      "updateLog": "v2.4.3\uff1a\n1. \u4fee\u590dB/S\u4ea4\u6613\u6807\u7b7e\u4e0eK\u7ebf\u4e0a\u4e0b\u5f71\u7ebf\u91cd\u53e0\u7684\u95ee\u9898\uff0c\u6807\u7b7e\u4f4d\u7f6e\u968f\u5b8c\u6574\u5f71\u7ebf\u53d8\u5316\u3002\n2. \u6807\u7b7e\u4fdd\u6301\u4e0e\u5bf9\u5e94K\u7ebf\u540c\u5217\uff0c\u7eb5\u5411\u907f\u8ba9\u76f8\u90bbK\u7ebf\u53ca\u5df2\u6709\u6807\u7b7e\u3002\n3. \u8fde\u63a5\u865a\u7ebf\u7ee7\u7eed\u6307\u5411\u771f\u5b9e\u6210\u4ea4\u4ef7\uff0c\u957f\u5ea6\u968f\u907f\u8ba9\u8ddd\u79bb\u8c03\u6574\u3002",
+      "updateLog": "v2.4.3：\n1. 修复B/S交易标签与K线上下影线重叠的问题，标签位置随完整影线变化。\n2. 标签保持与对应K线同列，纵向避让相邻K线及已有标签。\n3. 连接虚线继续指向真实成交价，长度随避让距离调整。",
       "forceUpdate": false,
       "phase": "published",
       "publishRequest": {
@@ -221,7 +221,7 @@
         "versionCode": 126,
         "apkSha256": "037c044c5b3a472a51fab266e8815b431146e86aa1eeb074c4a4427afaf27a5a",
         "signingCertificateSha256": "bef3f5cbb2989734f20740eddaac3e105dfecb6c63ea9275e178eedd892ec105",
-        "updateLog": "v2.4.3\uff1a\n1. \u4fee\u590dB/S\u4ea4\u6613\u6807\u7b7e\u4e0eK\u7ebf\u4e0a\u4e0b\u5f71\u7ebf\u91cd\u53e0\u7684\u95ee\u9898\uff0c\u6807\u7b7e\u4f4d\u7f6e\u968f\u5b8c\u6574\u5f71\u7ebf\u53d8\u5316\u3002\n2. \u6807\u7b7e\u4fdd\u6301\u4e0e\u5bf9\u5e94K\u7ebf\u540c\u5217\uff0c\u7eb5\u5411\u907f\u8ba9\u76f8\u90bbK\u7ebf\u53ca\u5df2\u6709\u6807\u7b7e\u3002\n3. \u8fde\u63a5\u865a\u7ebf\u7ee7\u7eed\u6307\u5411\u771f\u5b9e\u6210\u4ea4\u4ef7\uff0c\u957f\u5ea6\u968f\u907f\u8ba9\u8ddd\u79bb\u8c03\u6574\u3002",
+        "updateLog": "v2.4.3：\n1. 修复B/S交易标签与K线上下影线重叠的问题，标签位置随完整影线变化。\n2. 标签保持与对应K线同列，纵向避让相邻K线及已有标签。\n3. 连接虚线继续指向真实成交价，长度随避让距离调整。",
         "forceUpdate": false
       },
       "publicRunId": 39207187759,
@@ -237,7 +237,7 @@
       "versionCode": 127,
       "testRunId": 39208878709,
       "signingRunId": 39210055054,
-      "updateLog": "v2.4.4\uff1a\n1. \u8c03\u6de1\u5e76\u7ec6\u5316B/S\u6807\u7b7e\u8fde\u63a5\u865a\u7ebf\uff0c\u51cf\u5c11\u5bf9K\u7ebf\u8d70\u52bf\u7684\u5e72\u6270\u3002\n2. \u8fde\u63a5\u865a\u7ebf\u7ed8\u5236\u65f6\u907f\u5f00K\u7ebf\u5f71\u7ebf\u548c\u5b9e\u4f53\u533a\u57df\uff0c\u4fdd\u6301\u5f71\u7ebf\u6e05\u6670\u3002\n3. \u63d0\u4eae\u5165\u573a\u4ef7\u7ebf\u53ca\u4ef7\u683c\u6587\u5b57\uff0c\u65b9\u4fbf\u8bc6\u522b\u5165\u573a\u4f4d\u7f6e\u3002\n4. \u4fee\u590d\u914d\u7f6e\u6a21\u5f0fB/S\u6807\u7b7e\u65e5\u671f\u5339\u914d\uff1a\u4fdd\u5b58\u62a5\u4ef7\u4ea4\u6613\u65e5\uff0c\u517c\u5bb9\u65e7\u8bb0\u5f55\u5728\u4f11\u5e02\u6216\u5f00\u76d8\u524d\u64cd\u4f5c\u7684\u60c5\u51b5\uff0c\u5e76\u4fdd\u7559\u540c\u65e5\u6e05\u4ed3\u3001\u91cd\u65b0\u52a0\u5165\u7684\u987a\u5e8f\u3002",
+      "updateLog": "v2.4.4：\n1. 调淡并细化B/S标签连接虚线，减少对K线走势的干扰。\n2. 连接虚线绘制时避开K线影线和实体区域，保持影线清晰。\n3. 提亮入场价线及价格文字，方便识别入场位置。\n4. 修复配置模式B/S标签日期匹配：保存报价交易日，兼容旧记录在休市或开盘前操作的情况，并保留同日清仓、重新加入的顺序。",
       "forceUpdate": false,
       "phase": "published",
       "publishRequest": {
@@ -248,7 +248,7 @@
         "versionCode": 127,
         "apkSha256": "f9212ea774e57b826b9a3ec3b6040164de6bd9c2a2fe76078ec7bc5c8bf80fb1",
         "signingCertificateSha256": "bef3f5cbb2989734f20740eddaac3e105dfecb6c63ea9275e178eedd892ec105",
-        "updateLog": "v2.4.4\uff1a\n1. \u8c03\u6de1\u5e76\u7ec6\u5316B/S\u6807\u7b7e\u8fde\u63a5\u865a\u7ebf\uff0c\u51cf\u5c11\u5bf9K\u7ebf\u8d70\u52bf\u7684\u5e72\u6270\u3002\n2. \u8fde\u63a5\u865a\u7ebf\u7ed8\u5236\u65f6\u907f\u5f00K\u7ebf\u5f71\u7ebf\u548c\u5b9e\u4f53\u533a\u57df\uff0c\u4fdd\u6301\u5f71\u7ebf\u6e05\u6670\u3002\n3. \u63d0\u4eae\u5165\u573a\u4ef7\u7ebf\u53ca\u4ef7\u683c\u6587\u5b57\uff0c\u65b9\u4fbf\u8bc6\u522b\u5165\u573a\u4f4d\u7f6e\u3002\n4. \u4fee\u590d\u914d\u7f6e\u6a21\u5f0fB/S\u6807\u7b7e\u65e5\u671f\u5339\u914d\uff1a\u4fdd\u5b58\u62a5\u4ef7\u4ea4\u6613\u65e5\uff0c\u517c\u5bb9\u65e7\u8bb0\u5f55\u5728\u4f11\u5e02\u6216\u5f00\u76d8\u524d\u64cd\u4f5c\u7684\u60c5\u51b5\uff0c\u5e76\u4fdd\u7559\u540c\u65e5\u6e05\u4ed3\u3001\u91cd\u65b0\u52a0\u5165\u7684\u987a\u5e8f\u3002",
+        "updateLog": "v2.4.4：\n1. 调淡并细化B/S标签连接虚线，减少对K线走势的干扰。\n2. 连接虚线绘制时避开K线影线和实体区域，保持影线清晰。\n3. 提亮入场价线及价格文字，方便识别入场位置。\n4. 修复配置模式B/S标签日期匹配：保存报价交易日，兼容旧记录在休市或开盘前操作的情况，并保留同日清仓、重新加入的顺序。",
         "forceUpdate": false
       },
       "publicRunId": 39212186852,
@@ -264,7 +264,7 @@
       "versionCode": 128,
       "testRunId": 39432914785,
       "signingRunId": 39436359141,
-      "updateLog": "v2.4.5\uff1a\n1. \u65e5K\u3001\u5468K\u3001\u6708K\u7edf\u4e00\u968f\u6700\u65b0\u62a5\u4ef7\u66f4\u65b0\uff0c\u4fee\u590d\u8de8\u5468\u671f\u6570\u636e\u4e0d\u540c\u6b65\u3002\n2. \u7ebd\u7ea6\u91d1\u3001\u7ebd\u7ea6\u94f6\u3001WTI\u548c\u5e03\u4f26\u7279\u56fe\u8868\u5bf9\u5e94\u7ecf\u6838\u9a8c\u7684\u5b9e\u9645\u4ea4\u5272\u6708\u4efd\u3002\n3. \u4fee\u590d\u81f3\u4eca\u6da8\u5e45\u6df7\u7528\u62a5\u4ef7\u5408\u7ea6\u4ef7\u683c\uff0c\u4ee5\u53ca\u540c\u6807\u7684\u6da8\u8dcc\u57fa\u51c6\u4e0e\u5f00\u9ad8\u4f4e\u53e3\u5f84\u4e0d\u4e00\u81f4\u7684\u95ee\u9898\u3002\n4. \u4fee\u590d\u5fb7\u56fdDAX\u5206\u65f6\u7ebf\u4e0e\u65f6\u95f4\u8f74\u5bf9\u5e94\uff0c\u6b63\u786e\u5904\u7406\u65f6\u533a\u3001\u590f\u4ee4\u65f6\u3001\u8de8\u65e5\u548c\u7f3a\u5931\u5206\u949f\u3002",
+      "updateLog": "v2.4.5：\n1. 日K、周K、月K统一随最新报价更新，修复跨周期数据不同步。\n2. 纽约金、纽约银、WTI和布伦特图表对应经核验的实际交割月份。\n3. 修复至今涨幅混用报价合约价格，以及同标的涨跌基准与开高低口径不一致的问题。\n4. 修复德国DAX分时线与时间轴对应，正确处理时区、夏令时、跨日和缺失分钟。",
       "forceUpdate": false,
       "phase": "published",
       "publishRequest": {
@@ -275,7 +275,7 @@
         "versionCode": 128,
         "apkSha256": "a8b8eae092daa605d4a89f6986032cf889104777b7122898ad0c93b1711daa6f",
         "signingCertificateSha256": "bef3f5cbb2989734f20740eddaac3e105dfecb6c63ea9275e178eedd892ec105",
-        "updateLog": "v2.4.5\uff1a\n1. \u65e5K\u3001\u5468K\u3001\u6708K\u7edf\u4e00\u968f\u6700\u65b0\u62a5\u4ef7\u66f4\u65b0\uff0c\u4fee\u590d\u8de8\u5468\u671f\u6570\u636e\u4e0d\u540c\u6b65\u3002\n2. \u7ebd\u7ea6\u91d1\u3001\u7ebd\u7ea6\u94f6\u3001WTI\u548c\u5e03\u4f26\u7279\u56fe\u8868\u5bf9\u5e94\u7ecf\u6838\u9a8c\u7684\u5b9e\u9645\u4ea4\u5272\u6708\u4efd\u3002\n3. \u4fee\u590d\u81f3\u4eca\u6da8\u5e45\u6df7\u7528\u62a5\u4ef7\u5408\u7ea6\u4ef7\u683c\uff0c\u4ee5\u53ca\u540c\u6807\u7684\u6da8\u8dcc\u57fa\u51c6\u4e0e\u5f00\u9ad8\u4f4e\u53e3\u5f84\u4e0d\u4e00\u81f4\u7684\u95ee\u9898\u3002\n4. \u4fee\u590d\u5fb7\u56fdDAX\u5206\u65f6\u7ebf\u4e0e\u65f6\u95f4\u8f74\u5bf9\u5e94\uff0c\u6b63\u786e\u5904\u7406\u65f6\u533a\u3001\u590f\u4ee4\u65f6\u3001\u8de8\u65e5\u548c\u7f3a\u5931\u5206\u949f\u3002",
+        "updateLog": "v2.4.5：\n1. 日K、周K、月K统一随最新报价更新，修复跨周期数据不同步。\n2. 纽约金、纽约银、WTI和布伦特图表对应经核验的实际交割月份。\n3. 修复至今涨幅混用报价合约价格，以及同标的涨跌基准与开高低口径不一致的问题。\n4. 修复德国DAX分时线与时间轴对应，正确处理时区、夏令时、跨日和缺失分钟。",
         "forceUpdate": false
       },
       "publicRunId": 39438411664,
@@ -291,7 +291,7 @@
       "versionCode": 129,
       "testRunId": 39476868181,
       "signingRunId": 39478215036,
-      "updateLog": "v2.4.6\uff1a\n1. \u6211\u7684\u9875\u65b0\u589e\u7b56\u7565\u62a5\u544a\uff0c\u652f\u6301\u5207\u6362 A\u80a1/\u7f8e\u80a1\uff0c\u6309\u65e5\u671f\u5012\u5e8f\u67e5\u770b database \u4e2d\u7684 HTML \u5b8c\u6574\u9009\u80a1\u62a5\u544a\u3002\n2. \u62a5\u544a\u5728 APP \u5185\u6309\u7f51\u9875\u6e32\u67d3\uff0c\u652f\u6301\u624b\u673a\u6eda\u52a8\u9605\u8bfb\u3001\u7ae0\u8282\u8df3\u8f6c\u4e0e\u6298\u53e0\u3002\n3. \u8c03\u4ed3\u901a\u77e5\u8865\u5145\u4e70\u5165\u3001\u8c03\u51fa\u3001\u4fdd\u7559\u6807\u7684\u540d\u79f0\u4e0e\u4ee3\u7801\u3001\u76ee\u6807\u4ed3\u4f4d\u3001\u73b0\u91d1\u6bd4\u4f8b\u53ca\u6267\u884c\u72b6\u6001\u3002\n4. \u70b9\u51fb APP \u5185\u6216\u7cfb\u7edf\u8c03\u4ed3\u901a\u77e5\u53ef\u6253\u5f00\u5bf9\u5e94\u62a5\u544a\uff0c\u6309\u5e02\u573a\u4e0e\u6570\u636e\u65e5\u671f\u6838\u5bf9\uff0c\u9002\u914d\u7f8e\u80a1\u8de8\u65e5\u62a5\u544a\u3002",
+      "updateLog": "v2.4.6：\n1. 我的页新增策略报告，支持切换 A股/美股，按日期倒序查看 database 中的 HTML 完整选股报告。\n2. 报告在 APP 内按网页渲染，支持手机滚动阅读、章节跳转与折叠。\n3. 调仓通知补充买入、调出、保留标的名称与代码、目标仓位、现金比例及执行状态。\n4. 点击 APP 内或系统调仓通知可打开对应报告，按市场与数据日期核对，适配美股跨日报告。",
       "forceUpdate": false,
       "phase": "published",
       "publishRequest": {
@@ -302,7 +302,7 @@
         "versionCode": 129,
         "apkSha256": "44fe3c7cefdedde98629f5a07f889a7def1b811b7efb86539dd72469878b1034",
         "signingCertificateSha256": "bef3f5cbb2989734f20740eddaac3e105dfecb6c63ea9275e178eedd892ec105",
-        "updateLog": "v2.4.6\uff1a\n1. \u6211\u7684\u9875\u65b0\u589e\u7b56\u7565\u62a5\u544a\uff0c\u652f\u6301\u5207\u6362 A\u80a1/\u7f8e\u80a1\uff0c\u6309\u65e5\u671f\u5012\u5e8f\u67e5\u770b database \u4e2d\u7684 HTML \u5b8c\u6574\u9009\u80a1\u62a5\u544a\u3002\n2. \u62a5\u544a\u5728 APP \u5185\u6309\u7f51\u9875\u6e32\u67d3\uff0c\u652f\u6301\u624b\u673a\u6eda\u52a8\u9605\u8bfb\u3001\u7ae0\u8282\u8df3\u8f6c\u4e0e\u6298\u53e0\u3002\n3. \u8c03\u4ed3\u901a\u77e5\u8865\u5145\u4e70\u5165\u3001\u8c03\u51fa\u3001\u4fdd\u7559\u6807\u7684\u540d\u79f0\u4e0e\u4ee3\u7801\u3001\u76ee\u6807\u4ed3\u4f4d\u3001\u73b0\u91d1\u6bd4\u4f8b\u53ca\u6267\u884c\u72b6\u6001\u3002\n4. \u70b9\u51fb APP \u5185\u6216\u7cfb\u7edf\u8c03\u4ed3\u901a\u77e5\u53ef\u6253\u5f00\u5bf9\u5e94\u62a5\u544a\uff0c\u6309\u5e02\u573a\u4e0e\u6570\u636e\u65e5\u671f\u6838\u5bf9\uff0c\u9002\u914d\u7f8e\u80a1\u8de8\u65e5\u62a5\u544a\u3002",
+        "updateLog": "v2.4.6：\n1. 我的页新增策略报告，支持切换 A股/美股，按日期倒序查看 database 中的 HTML 完整选股报告。\n2. 报告在 APP 内按网页渲染，支持手机滚动阅读、章节跳转与折叠。\n3. 调仓通知补充买入、调出、保留标的名称与代码、目标仓位、现金比例及执行状态。\n4. 点击 APP 内或系统调仓通知可打开对应报告，按市场与数据日期核对，适配美股跨日报告。",
         "forceUpdate": false
       },
       "publicRunId": 39479120545,
@@ -318,7 +318,7 @@
       "versionCode": 130,
       "testRunId": 39485721477,
       "signingRunId": 39487054963,
-      "updateLog": "v2.4.7\uff1a\n1. \u7b56\u7565\u62a5\u544a\u5217\u8868\u6539\u4e3a\u5355\u884c\u663e\u793a\u65e5\u671f\u4e0e\u5f53\u65e5\u4e70\u5165\u3001\u5356\u51fa\u3001\u4fdd\u7559\u6570\u91cf\uff0c\u6574\u884c\u70b9\u51fb\u6253\u5f00\u62a5\u544a\u3002\n2. \u62a5\u544a\u9605\u8bfb\u9875\u4ec5\u4fdd\u7559\u9876\u90e8\u5b89\u5168\u533a\uff0c\u79fb\u9664 APP \u9876\u680f\u3001\u5e02\u573a\u5207\u6362\u3001\u5237\u65b0\u3001\u65e5\u671f\u8bf4\u660e\u53ca\u5e95\u90e8\u5bfc\u822a\u3002\n3. \u4fdd\u7559\u7cfb\u7edf\u8fd4\u56de\u624b\u52bf\u548c\u8c03\u4ed3\u901a\u77e5\u76f4\u8fbe\u5bf9\u5e94\u62a5\u544a\uff0c\u62a5\u544a\u6982\u8981\u7f3a\u5931\u65f6\u660e\u786e\u63d0\u793a\uff0c\u4e0d\u63a8\u6d4b\u64cd\u4f5c\u3002\n4. \u62a5\u544a\u5de5\u5177\u533a\u652f\u6301\u4e0b\u8f7d\u5b8c\u6574 HTML\uff0c\u53ef\u9009\u62e9\u4fdd\u5b58\u4f4d\u7f6e\u5e76\u79bb\u7ebf\u9605\u8bfb\u3002",
+      "updateLog": "v2.4.7：\n1. 策略报告列表改为单行显示日期与当日买入、卖出、保留数量，整行点击打开报告。\n2. 报告阅读页仅保留顶部安全区，移除 APP 顶栏、市场切换、刷新、日期说明及底部导航。\n3. 保留系统返回手势和调仓通知直达对应报告，报告概要缺失时明确提示，不推测操作。\n4. 报告工具区支持下载完整 HTML，可选择保存位置并离线阅读。",
       "forceUpdate": false,
       "phase": "published",
       "publishRequest": {
@@ -329,7 +329,7 @@
         "versionCode": 130,
         "apkSha256": "b5a94789e1be58121c84579c87a3d94553825d6578c6f0c9b04b088885bd7259",
         "signingCertificateSha256": "bef3f5cbb2989734f20740eddaac3e105dfecb6c63ea9275e178eedd892ec105",
-        "updateLog": "v2.4.7\uff1a\n1. \u7b56\u7565\u62a5\u544a\u5217\u8868\u6539\u4e3a\u5355\u884c\u663e\u793a\u65e5\u671f\u4e0e\u5f53\u65e5\u4e70\u5165\u3001\u5356\u51fa\u3001\u4fdd\u7559\u6570\u91cf\uff0c\u6574\u884c\u70b9\u51fb\u6253\u5f00\u62a5\u544a\u3002\n2. \u62a5\u544a\u9605\u8bfb\u9875\u4ec5\u4fdd\u7559\u9876\u90e8\u5b89\u5168\u533a\uff0c\u79fb\u9664 APP \u9876\u680f\u3001\u5e02\u573a\u5207\u6362\u3001\u5237\u65b0\u3001\u65e5\u671f\u8bf4\u660e\u53ca\u5e95\u90e8\u5bfc\u822a\u3002\n3. \u4fdd\u7559\u7cfb\u7edf\u8fd4\u56de\u624b\u52bf\u548c\u8c03\u4ed3\u901a\u77e5\u76f4\u8fbe\u5bf9\u5e94\u62a5\u544a\uff0c\u62a5\u544a\u6982\u8981\u7f3a\u5931\u65f6\u660e\u786e\u63d0\u793a\uff0c\u4e0d\u63a8\u6d4b\u64cd\u4f5c\u3002\n4. \u62a5\u544a\u5de5\u5177\u533a\u652f\u6301\u4e0b\u8f7d\u5b8c\u6574 HTML\uff0c\u53ef\u9009\u62e9\u4fdd\u5b58\u4f4d\u7f6e\u5e76\u79bb\u7ebf\u9605\u8bfb\u3002",
+        "updateLog": "v2.4.7：\n1. 策略报告列表改为单行显示日期与当日买入、卖出、保留数量，整行点击打开报告。\n2. 报告阅读页仅保留顶部安全区，移除 APP 顶栏、市场切换、刷新、日期说明及底部导航。\n3. 保留系统返回手势和调仓通知直达对应报告，报告概要缺失时明确提示，不推测操作。\n4. 报告工具区支持下载完整 HTML，可选择保存位置并离线阅读。",
         "forceUpdate": false
       },
       "publicRunId": 39490660553,
@@ -345,7 +345,7 @@
       "versionCode": 131,
       "testRunId": 39626397622,
       "signingRunId": 39628787012,
-      "updateLog": "v2.4.8\uff1a\n1. \u7b56\u7565\u62a5\u544a\u589e\u52a0\u6309\u8d26\u53f7\u3001\u5e02\u573a\u9694\u79bb\u7684\u672c\u5730\u7f13\u5b58\uff0c\u4f18\u5148\u663e\u793a\u7f13\u5b58\u5e76\u9759\u9ed8\u68c0\u67e5\u66f4\u65b0\uff0c\u7f51\u7edc\u5f02\u5e38\u65f6\u7ee7\u7eed\u9605\u8bfb\u5df2\u7f13\u5b58\u62a5\u544a\u3002\n2. \u81ea\u52a8\u9884\u7f13\u5b58A\u80a1\u3001\u7f8e\u80a1\u6700\u8fd1\u62a5\u544a\uff0c\u652f\u6301\u5e94\u7528\u5185\u5b9a\u671f\u5237\u65b0\u548c\u7cfb\u7edf\u540e\u53f0\u9759\u9ed8\u5237\u65b0\u3002\n3. \u8c03\u4ed3\u901a\u77e5\u79fb\u9664\u4fdd\u7559\u6301\u4ed3\u660e\u7ec6\uff0c\u4ec5\u4fdd\u7559\u6570\u91cf\u3001\u4e70\u5165\u8c03\u51fa\u660e\u7ec6\u53ca\u4ed3\u4f4d\u6458\u8981\u3002\n4. \u6301\u4ed3\u5361\u7247\u4ec5\u5728\u76d8\u4e2d\u663e\u793a\u6da8\u8dcc\u8272\u8fb9\u6846\uff0c\u76d8\u524d\u3001\u5348\u4f11\u3001\u76d8\u540e\u53ca\u4f11\u5e02\u7edf\u4e00\u663e\u793a\u7070\u8272\u3002",
+      "updateLog": "v2.4.8：\n1. 策略报告增加按账号、市场隔离的本地缓存，优先显示缓存并静默检查更新，网络异常时继续阅读已缓存报告。\n2. 自动预缓存A股、美股最近报告，支持应用内定期刷新和系统后台静默刷新。\n3. 调仓通知移除保留持仓明细，仅保留数量、买入调出明细及仓位摘要。\n4. 持仓卡片仅在盘中显示涨跌色边框，盘前、午休、盘后及休市统一显示灰色。",
       "forceUpdate": false,
       "phase": "published",
       "publishRequest": {
@@ -356,7 +356,7 @@
         "versionCode": 131,
         "apkSha256": "a3098381bd833e42f48486c7780bbb2dcd1284db916eff84c5451e594c3f355f",
         "signingCertificateSha256": "bef3f5cbb2989734f20740eddaac3e105dfecb6c63ea9275e178eedd892ec105",
-        "updateLog": "v2.4.8\uff1a\n1. \u7b56\u7565\u62a5\u544a\u589e\u52a0\u6309\u8d26\u53f7\u3001\u5e02\u573a\u9694\u79bb\u7684\u672c\u5730\u7f13\u5b58\uff0c\u4f18\u5148\u663e\u793a\u7f13\u5b58\u5e76\u9759\u9ed8\u68c0\u67e5\u66f4\u65b0\uff0c\u7f51\u7edc\u5f02\u5e38\u65f6\u7ee7\u7eed\u9605\u8bfb\u5df2\u7f13\u5b58\u62a5\u544a\u3002\n2. \u81ea\u52a8\u9884\u7f13\u5b58A\u80a1\u3001\u7f8e\u80a1\u6700\u8fd1\u62a5\u544a\uff0c\u652f\u6301\u5e94\u7528\u5185\u5b9a\u671f\u5237\u65b0\u548c\u7cfb\u7edf\u540e\u53f0\u9759\u9ed8\u5237\u65b0\u3002\n3. \u8c03\u4ed3\u901a\u77e5\u79fb\u9664\u4fdd\u7559\u6301\u4ed3\u660e\u7ec6\uff0c\u4ec5\u4fdd\u7559\u6570\u91cf\u3001\u4e70\u5165\u8c03\u51fa\u660e\u7ec6\u53ca\u4ed3\u4f4d\u6458\u8981\u3002\n4. \u6301\u4ed3\u5361\u7247\u4ec5\u5728\u76d8\u4e2d\u663e\u793a\u6da8\u8dcc\u8272\u8fb9\u6846\uff0c\u76d8\u524d\u3001\u5348\u4f11\u3001\u76d8\u540e\u53ca\u4f11\u5e02\u7edf\u4e00\u663e\u793a\u7070\u8272\u3002",
+        "updateLog": "v2.4.8：\n1. 策略报告增加按账号、市场隔离的本地缓存，优先显示缓存并静默检查更新，网络异常时继续阅读已缓存报告。\n2. 自动预缓存A股、美股最近报告，支持应用内定期刷新和系统后台静默刷新。\n3. 调仓通知移除保留持仓明细，仅保留数量、买入调出明细及仓位摘要。\n4. 持仓卡片仅在盘中显示涨跌色边框，盘前、午休、盘后及休市统一显示灰色。",
         "forceUpdate": false
       },
       "publicRunId": 39629940347,
@@ -372,7 +372,7 @@
       "versionCode": 132,
       "testRunId": 39782239682,
       "signingRunId": 39784894571,
-      "updateLog": "v2.4.9\uff1a\n1. A\u80a1\u3001\u7f8e\u80a1\u7ec4\u5408\u6536\u76ca\u66f2\u7ebf\u6309\u96f6\u8f74\u5206\u8272\uff1a\u96f6\u8f74\u4ee5\u4e0a\u7ea2\u8272\u3001\u4ee5\u4e0b\u7eff\u8272\uff0c\u7a7f\u8d8a\u96f6\u8f74\u65f6\u51c6\u786e\u5207\u6362\u989c\u8272\u3002\n2. \u66f2\u7ebf\u9009\u4e2d\u70b9\u968f\u6536\u76ca\u6b63\u8d1f\u53d8\u8272\uff0c\u96f6\u6536\u76ca\u5e73\u6bb5\u663e\u793a\u7070\u8272\u3002\n3. \u96f6\u8f74\u6587\u5b57\u6309\u5b9e\u9645\u7eb5\u8f74\u6bd4\u4f8b\u5b9a\u4f4d\u3002",
+      "updateLog": "v2.4.9：\n1. A股、美股组合收益曲线按零轴分色：零轴以上红色、以下绿色，穿越零轴时准确切换颜色。\n2. 曲线选中点随收益正负变色，零收益平段显示灰色。\n3. 零轴文字按实际纵轴比例定位。",
       "forceUpdate": false,
       "phase": "published",
       "publishRequest": {
@@ -383,7 +383,7 @@
         "versionCode": 132,
         "apkSha256": "abf2b28ded106d3bf93d82e97db873ffe8bdc8de9eebeddc683c023145571936",
         "signingCertificateSha256": "bef3f5cbb2989734f20740eddaac3e105dfecb6c63ea9275e178eedd892ec105",
-        "updateLog": "v2.4.9\uff1a\n1. A\u80a1\u3001\u7f8e\u80a1\u7ec4\u5408\u6536\u76ca\u66f2\u7ebf\u6309\u96f6\u8f74\u5206\u8272\uff1a\u96f6\u8f74\u4ee5\u4e0a\u7ea2\u8272\u3001\u4ee5\u4e0b\u7eff\u8272\uff0c\u7a7f\u8d8a\u96f6\u8f74\u65f6\u51c6\u786e\u5207\u6362\u989c\u8272\u3002\n2. \u66f2\u7ebf\u9009\u4e2d\u70b9\u968f\u6536\u76ca\u6b63\u8d1f\u53d8\u8272\uff0c\u96f6\u6536\u76ca\u5e73\u6bb5\u663e\u793a\u7070\u8272\u3002\n3. \u96f6\u8f74\u6587\u5b57\u6309\u5b9e\u9645\u7eb5\u8f74\u6bd4\u4f8b\u5b9a\u4f4d\u3002",
+        "updateLog": "v2.4.9：\n1. A股、美股组合收益曲线按零轴分色：零轴以上红色、以下绿色，穿越零轴时准确切换颜色。\n2. 曲线选中点随收益正负变色，零收益平段显示灰色。\n3. 零轴文字按实际纵轴比例定位。",
         "forceUpdate": false
       },
       "publicRunId": 39787752816,
@@ -399,7 +399,7 @@
       "versionCode": 133,
       "testRunId": 39997018739,
       "signingRunId": 39998426561,
-      "updateLog": "v2.5.0\uff1a\n1. \u884c\u60c5\u3001\u6536\u76ca\u548c\u6301\u4ed3\u7edf\u4e00\u4f7f\u7528\u7ecf\u8fc7\u6821\u9a8c\u7684\u4ea4\u6613\u65e5\u5386\u3002\n2. \u65e5\u5386\u652f\u6301\u540e\u53f0\u68c0\u67e5\u66f4\u65b0\u53ca\u672c\u5730\u7f13\u5b58\uff0c\u5e74\u5ea6\u6570\u636e\u66f4\u65b0\u65e0\u9700\u53cd\u590d\u5347\u7ea7APP\u3002\n3. \u4fee\u590d\u8de8\u5e74\u4ea4\u6613\u65e5\u63a8\u7b97\uff0c\u65e5\u5386\u672a\u8986\u76d6\u65f6\u505c\u6b62\u63a8\u7b97\uff0c\u4e0d\u518d\u56de\u9000\u4e3a\u76f8\u90bb\u81ea\u7136\u65e5\u3002\n4. \u7edf\u4e00\u7f8e\u80a1\u63d0\u524d\u6536\u76d8\u3001\u6e2f\u80a1\u534a\u65e5\u5e02\u53ca\u56fd\u5185\u671f\u8d27\u8282\u524d\u591c\u76d8\u7684\u65e5\u5386\u8bfb\u53d6\u3002",
+      "updateLog": "v2.5.0：\n1. 行情、收益和持仓统一使用经过校验的交易日历。\n2. 日历支持后台检查更新及本地缓存，年度数据更新无需反复升级APP。\n3. 修复跨年交易日推算，日历未覆盖时停止推算，不再回退为相邻自然日。\n4. 统一美股提前收盘、港股半日市及国内期货节前夜盘的日历读取。",
       "forceUpdate": false,
       "phase": "published",
       "publishRequest": {
@@ -410,7 +410,7 @@
         "versionCode": 133,
         "apkSha256": "7388d317c64bfa92c27e77a0085fb0748fab4879fa13a9e370d154dcad072069",
         "signingCertificateSha256": "bef3f5cbb2989734f20740eddaac3e105dfecb6c63ea9275e178eedd892ec105",
-        "updateLog": "v2.5.0\uff1a\n1. \u884c\u60c5\u3001\u6536\u76ca\u548c\u6301\u4ed3\u7edf\u4e00\u4f7f\u7528\u7ecf\u8fc7\u6821\u9a8c\u7684\u4ea4\u6613\u65e5\u5386\u3002\n2. \u65e5\u5386\u652f\u6301\u540e\u53f0\u68c0\u67e5\u66f4\u65b0\u53ca\u672c\u5730\u7f13\u5b58\uff0c\u5e74\u5ea6\u6570\u636e\u66f4\u65b0\u65e0\u9700\u53cd\u590d\u5347\u7ea7APP\u3002\n3. \u4fee\u590d\u8de8\u5e74\u4ea4\u6613\u65e5\u63a8\u7b97\uff0c\u65e5\u5386\u672a\u8986\u76d6\u65f6\u505c\u6b62\u63a8\u7b97\uff0c\u4e0d\u518d\u56de\u9000\u4e3a\u76f8\u90bb\u81ea\u7136\u65e5\u3002\n4. \u7edf\u4e00\u7f8e\u80a1\u63d0\u524d\u6536\u76d8\u3001\u6e2f\u80a1\u534a\u65e5\u5e02\u53ca\u56fd\u5185\u671f\u8d27\u8282\u524d\u591c\u76d8\u7684\u65e5\u5386\u8bfb\u53d6\u3002",
+        "updateLog": "v2.5.0：\n1. 行情、收益和持仓统一使用经过校验的交易日历。\n2. 日历支持后台检查更新及本地缓存，年度数据更新无需反复升级APP。\n3. 修复跨年交易日推算，日历未覆盖时停止推算，不再回退为相邻自然日。\n4. 统一美股提前收盘、港股半日市及国内期货节前夜盘的日历读取。",
         "forceUpdate": false
       },
       "publicRunId": 40052400695,
@@ -426,7 +426,7 @@
       "versionCode": 134,
       "testRunId": 40060715423,
       "signingRunId": 40061476635,
-      "updateLog": "v2.5.1\uff1a\n1. \u6536\u76ca\u66f2\u7ebf\u5de6\u4fa7\u663e\u793a\u51c0\u503c\u3001\u53f3\u4fa7\u663e\u793a\u6536\u76ca\u767e\u5206\u6bd4\uff0c\u4e24\u4fa7\u523b\u5ea6\u5747\u653e\u5728\u56fe\u6846\u5185\u3002\n2. \u4fee\u590d\u96f6\u8f74\u9644\u8fd1\u523b\u5ea6\u91cd\u53e0\uff0c\u6309\u6587\u5b57\u9ad8\u5ea6\u81ea\u52a8\u907f\u8ba9\u3002\n3. \u70b9\u6309\u6216\u62d6\u52a8\u5149\u6807\u53ef\u67e5\u770b\u5bf9\u5e94\u65e5\u671f\u7684\u5f53\u65e5\u6536\u76ca\u6d6e\u7a97\uff0c\u6d6e\u7a97\u9760\u8fd1\u8fb9\u7f18\u65f6\u81ea\u52a8\u6362\u4f4d\u3002",
+      "updateLog": "v2.5.1：\n1. 收益曲线左侧显示净值、右侧显示收益百分比，两侧刻度均放在图框内。\n2. 修复零轴附近刻度重叠，按文字高度自动避让。\n3. 点按或拖动光标可查看对应日期的当日收益浮窗，浮窗靠近边缘时自动换位。",
       "forceUpdate": false,
       "phase": "published",
       "publishRequest": {
@@ -437,7 +437,7 @@
         "versionCode": 134,
         "apkSha256": "c3b7545c919bb40c25e623799a30395e1e669c9cf4a7967a592221a69383f775",
         "signingCertificateSha256": "bef3f5cbb2989734f20740eddaac3e105dfecb6c63ea9275e178eedd892ec105",
-        "updateLog": "v2.5.1\uff1a\n1. \u6536\u76ca\u66f2\u7ebf\u5de6\u4fa7\u663e\u793a\u51c0\u503c\u3001\u53f3\u4fa7\u663e\u793a\u6536\u76ca\u767e\u5206\u6bd4\uff0c\u4e24\u4fa7\u523b\u5ea6\u5747\u653e\u5728\u56fe\u6846\u5185\u3002\n2. \u4fee\u590d\u96f6\u8f74\u9644\u8fd1\u523b\u5ea6\u91cd\u53e0\uff0c\u6309\u6587\u5b57\u9ad8\u5ea6\u81ea\u52a8\u907f\u8ba9\u3002\n3. \u70b9\u6309\u6216\u62d6\u52a8\u5149\u6807\u53ef\u67e5\u770b\u5bf9\u5e94\u65e5\u671f\u7684\u5f53\u65e5\u6536\u76ca\u6d6e\u7a97\uff0c\u6d6e\u7a97\u9760\u8fd1\u8fb9\u7f18\u65f6\u81ea\u52a8\u6362\u4f4d\u3002",
+        "updateLog": "v2.5.1：\n1. 收益曲线左侧显示净值、右侧显示收益百分比，两侧刻度均放在图框内。\n2. 修复零轴附近刻度重叠，按文字高度自动避让。\n3. 点按或拖动光标可查看对应日期的当日收益浮窗，浮窗靠近边缘时自动换位。",
         "forceUpdate": false
       },
       "publicRunId": 40063383085,
@@ -453,7 +453,7 @@
       "versionCode": 135,
       "testRunId": 40064864069,
       "signingRunId": 40065566796,
-      "updateLog": "v2.5.2\uff1a\n1. \u6536\u76ca\u66f2\u7ebf\u5de6\u53f3\u4e24\u4fa7\u4ec5\u663e\u793a\u6700\u9ad8\u3001\u6700\u4f4e\u5750\u6807\u503c\uff0c\u51cf\u5c11\u523b\u5ea6\u5e72\u6270\u3002\n2. \u79fb\u9664\u5750\u6807\u6587\u5b57\u80cc\u666f\uff0c\u907f\u514d\u906e\u6321\u6536\u76ca\u66f2\u7ebf\u3002\n3. \u4fdd\u7559\u6846\u5185\u51c0\u503c\u4e0e\u6536\u76ca\u767e\u5206\u6bd4\u53cc\u8f74\uff0c\u4ee5\u53ca\u968f\u5149\u6807\u663e\u793a\u7684\u5f53\u65e5\u6536\u76ca\u6d6e\u7a97\u3002",
+      "updateLog": "v2.5.2：\n1. 收益曲线左右两侧仅显示最高、最低坐标值，减少刻度干扰。\n2. 移除坐标文字背景，避免遮挡收益曲线。\n3. 保留框内净值与收益百分比双轴，以及随光标显示的当日收益浮窗。",
       "forceUpdate": false,
       "phase": "published",
       "publishRequest": {
@@ -464,7 +464,7 @@
         "versionCode": 135,
         "apkSha256": "439f03fab58a3bfd100a9f17d7121ee78b9ec9486ecbc15efe607ecd4a8798ea",
         "signingCertificateSha256": "bef3f5cbb2989734f20740eddaac3e105dfecb6c63ea9275e178eedd892ec105",
-        "updateLog": "v2.5.2\uff1a\n1. \u6536\u76ca\u66f2\u7ebf\u5de6\u53f3\u4e24\u4fa7\u4ec5\u663e\u793a\u6700\u9ad8\u3001\u6700\u4f4e\u5750\u6807\u503c\uff0c\u51cf\u5c11\u523b\u5ea6\u5e72\u6270\u3002\n2. \u79fb\u9664\u5750\u6807\u6587\u5b57\u80cc\u666f\uff0c\u907f\u514d\u906e\u6321\u6536\u76ca\u66f2\u7ebf\u3002\n3. \u4fdd\u7559\u6846\u5185\u51c0\u503c\u4e0e\u6536\u76ca\u767e\u5206\u6bd4\u53cc\u8f74\uff0c\u4ee5\u53ca\u968f\u5149\u6807\u663e\u793a\u7684\u5f53\u65e5\u6536\u76ca\u6d6e\u7a97\u3002",
+        "updateLog": "v2.5.2：\n1. 收益曲线左右两侧仅显示最高、最低坐标值，减少刻度干扰。\n2. 移除坐标文字背景，避免遮挡收益曲线。\n3. 保留框内净值与收益百分比双轴，以及随光标显示的当日收益浮窗。",
         "forceUpdate": false
       },
       "publicRunId": 40068277384,
@@ -480,7 +480,7 @@
       "versionCode": 136,
       "testRunId": 40564925944,
       "signingRunId": 40572178326,
-      "updateLog": "v2.5.3\uff1a\n1. \u65e5K\u3001\u5468K\u3001\u6708K\u7684\u60ac\u6d6e\u7a97\u65b0\u589e\u201c\u81f3\u4eca\u6da8\u5e45\u201d\u7d2f\u8ba1\u5468\u671f\u6570\uff0c\u4f8b\u598225\u65e5\u30012\u5468\u30012\u6708\u3002\n2. \u7edf\u8ba1\u4ece\u6240\u9009K\u7ebf\u5230\u6700\u65b0K\u7ebf\u7684\u5b9e\u9645\u6839\u6570\uff0c\u5305\u542b\u5f53\u524d\u6240\u9009K\u7ebf\u3002\n3. \u5206\u65f6\u56fe\u4fdd\u6301\u539f\u6837\uff0c\u65b0\u589e\u5468\u671f\u4fe1\u606f\u91c7\u7528\u7d27\u51d1\u5e03\u5c40\u3002\n4. \u6536\u76ca\u66f2\u7ebf\u8303\u56f4\u8c03\u6574\u4e3a\u672c\u6708\u3001\u8fd1\u4e09\u6708\u3001\u4eca\u5e74\u3001\u5168\u90e8\uff0c\u9ed8\u8ba4\u9009\u4e2d\u672c\u6708\uff1b\u4f7f\u7528\u5b9e\u9645\u8d77\u70b9\u51c0\u503c\u8ba1\u7b97\u671f\u95f4\u6536\u76ca\u3002",
+      "updateLog": "v2.5.3：\n1. 日K、周K、月K的悬浮窗新增“至今涨幅”累计周期数，例如25日、2周、2月。\n2. 统计从所选K线到最新K线的实际根数，包含当前所选K线。\n3. 分时图保持原样，新增周期信息采用紧凑布局。\n4. 收益曲线范围调整为本月、近三月、今年、全部，默认选中本月；使用实际起点净值计算期间收益。",
       "forceUpdate": false,
       "phase": "published",
       "publishRequest": {
@@ -491,7 +491,7 @@
         "versionCode": 136,
         "apkSha256": "5ba044306cd5dd0f97ed6d015788246d772a6199226e774a28ab08fe3f1fda49",
         "signingCertificateSha256": "bef3f5cbb2989734f20740eddaac3e105dfecb6c63ea9275e178eedd892ec105",
-        "updateLog": "v2.5.3\uff1a\n1. \u65e5K\u3001\u5468K\u3001\u6708K\u7684\u60ac\u6d6e\u7a97\u65b0\u589e\u201c\u81f3\u4eca\u6da8\u5e45\u201d\u7d2f\u8ba1\u5468\u671f\u6570\uff0c\u4f8b\u598225\u65e5\u30012\u5468\u30012\u6708\u3002\n2. \u7edf\u8ba1\u4ece\u6240\u9009K\u7ebf\u5230\u6700\u65b0K\u7ebf\u7684\u5b9e\u9645\u6839\u6570\uff0c\u5305\u542b\u5f53\u524d\u6240\u9009K\u7ebf\u3002\n3. \u5206\u65f6\u56fe\u4fdd\u6301\u539f\u6837\uff0c\u65b0\u589e\u5468\u671f\u4fe1\u606f\u91c7\u7528\u7d27\u51d1\u5e03\u5c40\u3002\n4. \u6536\u76ca\u66f2\u7ebf\u8303\u56f4\u8c03\u6574\u4e3a\u672c\u6708\u3001\u8fd1\u4e09\u6708\u3001\u4eca\u5e74\u3001\u5168\u90e8\uff0c\u9ed8\u8ba4\u9009\u4e2d\u672c\u6708\uff1b\u4f7f\u7528\u5b9e\u9645\u8d77\u70b9\u51c0\u503c\u8ba1\u7b97\u671f\u95f4\u6536\u76ca\u3002",
+        "updateLog": "v2.5.3：\n1. 日K、周K、月K的悬浮窗新增“至今涨幅”累计周期数，例如25日、2周、2月。\n2. 统计从所选K线到最新K线的实际根数，包含当前所选K线。\n3. 分时图保持原样，新增周期信息采用紧凑布局。\n4. 收益曲线范围调整为本月、近三月、今年、全部，默认选中本月；使用实际起点净值计算期间收益。",
         "forceUpdate": false
       },
       "publicRunId": 40575130000,
@@ -507,7 +507,7 @@
       "versionCode": 137,
       "testRunId": 40620581486,
       "signingRunId": 40623679486,
-      "updateLog": "v2.5.4\uff1a\n1. \u5e03\u4f26\u7279\u7279\u6708\u5408\u7ea6\u5206\u65f6\uff1a\u5f53\u540c\u6708\u5206\u949fK\u4e0d\u8db3\u65f6\uff0c\u589e\u52a0\u4e25\u683c\u6838\u9a8c\u5e02\u573a\u548c\u4ea4\u5272\u6708\u4efd\u7684\u5206\u65f6\u5907\u9009\u63a5\u53e3\uff0c\u4e0d\u6df7\u7528\u8fde\u7eed\u5408\u7ea6\u3002\n2. \u65e5\u7ecf\u7b49\u8de8\u591c\u671f\u8d27\uff1a\u5254\u9664\u4f1a\u8bdd\u5916\u5386\u53f2\u70b9\uff0c\u4fee\u590d\u65f6\u95f4\u8f74\u91cd\u53e0\u53ca\u65ad\u6d41\u65f6\u5f62\u6210\u7684\u7ad6\u6761\uff0c\u5206\u6bb5\u7ed8\u5236\u771f\u5b9e\u8d70\u52bf\u3002\n3. \u53f0\u6e7e\u52a0\u6743\u5206\u65f6\uff1a\u5b98\u65b9\u4e0e\u5907\u7528\u6e90\u5747\u4e0d\u53ef\u7528\u65f6\u63d0\u793a\u771f\u5b9e\u60c5\u51b5\uff0c\u4e0d\u663e\u793a\u5e95\u5c42\u7f51\u7edc\u5f02\u5e38\u6216\u4f2a\u9020\u8d70\u52bf\u3002\n4. \u6052\u79d1\u671f\u8d27\u3001A50\u53ca\u5176\u4ed6\u8de8\u65f6\u6bb5\u66f2\u7ebf\u6cbf\u7528\u539f\u59cb\u771f\u5b9e\u65f6\u95f4\u4e0e\u6628\u6536\u57fa\u51c6\uff0c\u589e\u52a0\u76f8\u5173\u56de\u5f52\u6d4b\u8bd5\u3002",
+      "updateLog": "v2.5.4：\n1. 布伦特特月合约分时：当同月分钟K不足时，增加严格核验市场和交割月份的分时备选接口，不混用连续合约。\n2. 日经等跨夜期货：剔除会话外历史点，修复时间轴重叠及断流时形成的竖条，分段绘制真实走势。\n3. 台湾加权分时：官方与备用源均不可用时提示真实情况，不显示底层网络异常或伪造走势。\n4. 恒科期货、A50及其他跨时段曲线沿用原始真实时间与昨收基准，增加相关回归测试。",
       "forceUpdate": false,
       "phase": "published",
       "publishRequest": {
@@ -518,7 +518,7 @@
         "versionCode": 137,
         "apkSha256": "cc61eeebd7ce43cf69d3addb234818b48cc35fbb06915f4e51d21d8b695c8c17",
         "signingCertificateSha256": "bef3f5cbb2989734f20740eddaac3e105dfecb6c63ea9275e178eedd892ec105",
-        "updateLog": "v2.5.4\uff1a\n1. \u5e03\u4f26\u7279\u7279\u6708\u5408\u7ea6\u5206\u65f6\uff1a\u5f53\u540c\u6708\u5206\u949fK\u4e0d\u8db3\u65f6\uff0c\u589e\u52a0\u4e25\u683c\u6838\u9a8c\u5e02\u573a\u548c\u4ea4\u5272\u6708\u4efd\u7684\u5206\u65f6\u5907\u9009\u63a5\u53e3\uff0c\u4e0d\u6df7\u7528\u8fde\u7eed\u5408\u7ea6\u3002\n2. \u65e5\u7ecf\u7b49\u8de8\u591c\u671f\u8d27\uff1a\u5254\u9664\u4f1a\u8bdd\u5916\u5386\u53f2\u70b9\uff0c\u4fee\u590d\u65f6\u95f4\u8f74\u91cd\u53e0\u53ca\u65ad\u6d41\u65f6\u5f62\u6210\u7684\u7ad6\u6761\uff0c\u5206\u6bb5\u7ed8\u5236\u771f\u5b9e\u8d70\u52bf\u3002\n3. \u53f0\u6e7e\u52a0\u6743\u5206\u65f6\uff1a\u5b98\u65b9\u4e0e\u5907\u7528\u6e90\u5747\u4e0d\u53ef\u7528\u65f6\u63d0\u793a\u771f\u5b9e\u60c5\u51b5\uff0c\u4e0d\u663e\u793a\u5e95\u5c42\u7f51\u7edc\u5f02\u5e38\u6216\u4f2a\u9020\u8d70\u52bf\u3002\n4. \u6052\u79d1\u671f\u8d27\u3001A50\u53ca\u5176\u4ed6\u8de8\u65f6\u6bb5\u66f2\u7ebf\u6cbf\u7528\u539f\u59cb\u771f\u5b9e\u65f6\u95f4\u4e0e\u6628\u6536\u57fa\u51c6\uff0c\u589e\u52a0\u76f8\u5173\u56de\u5f52\u6d4b\u8bd5\u3002",
+        "updateLog": "v2.5.4：\n1. 布伦特特月合约分时：当同月分钟K不足时，增加严格核验市场和交割月份的分时备选接口，不混用连续合约。\n2. 日经等跨夜期货：剔除会话外历史点，修复时间轴重叠及断流时形成的竖条，分段绘制真实走势。\n3. 台湾加权分时：官方与备用源均不可用时提示真实情况，不显示底层网络异常或伪造走势。\n4. 恒科期货、A50及其他跨时段曲线沿用原始真实时间与昨收基准，增加相关回归测试。",
         "forceUpdate": false
       },
       "publicRunId": 40624903644,
@@ -534,7 +534,7 @@
       "versionCode": 138,
       "testRunId": 40794585815,
       "signingRunId": 40797301325,
-      "updateLog": "v2.5.5\uff1a\n1. \u5171\u7528\u5206\u65f6\u56fe\u4fee\u590d\uff1a\u771f\u5b9e\u7f3a\u53e3\u4fdd\u6301\u65ad\u7ebf\uff0c\u7a00\u758f\u6570\u636e\u505c\u7528\u4f1a\u5f62\u6210\u7ad6\u6761\u7684\u9762\u79ef\u586b\u5145\uff0c\u5e76\u660e\u786e\u63d0\u793a\u6570\u636e\u4e0d\u8fde\u7eed\u3002\n2. \u4fdd\u7559\u5b64\u7acb\u6709\u6548\u62a5\u4ef7\u70b9\uff1b\u5206\u65f6\u6309\u771f\u5b9e\u79d2\u6570\u5b9a\u4f4d\uff0c\u907f\u514d\u5206\u949f\u53d6\u6574\u9020\u6210\u91cd\u53e0\u6216\u8bef\u65ad\u7ebf\u3002\n3. \u65e5\u7ecf\u6765\u6e90\u5df2\u6838\u5b9e\u7684\u8de8\u591c\u4f11\u5e02\u6309\u4f1a\u8bdd\u538b\u7f29\uff1b\u6b63\u5e38\u5348\u4f11\u4e0e\u771f\u5b9e\u7f3a\u62a5\u5206\u522b\u5904\u7406\uff0c\u672a\u77e5\u65f6\u6bb5\u4e0d\u63a8\u7b97\u3002\n4. \u589e\u52a0\u65e5\u7ecf\u3001\u6807\u666e\u3001\u7eb3\u6307\u3001\u9053\u6307\u4e0eA50\u4e94\u7ec4\u771f\u5b9e\u5206\u65f6\u56de\u653e\u53ca\u8de8\u5e02\u573a\u56de\u5f52\u6d4b\u8bd5\u3002",
+      "updateLog": "v2.5.5：\n1. 共用分时图修复：真实缺口保持断线，稀疏数据停用会形成竖条的面积填充，并明确提示数据不连续。\n2. 保留孤立有效报价点；分时按真实秒数定位，避免分钟取整造成重叠或误断线。\n3. 日经来源已核实的跨夜休市按会话压缩；正常午休与真实缺报分别处理，未知时段不推算。\n4. 增加日经、标普、纳指、道指与A50五组真实分时回放及跨市场回归测试。",
       "forceUpdate": false,
       "phase": "published",
       "publishRequest": {
@@ -545,7 +545,7 @@
         "versionCode": 138,
         "apkSha256": "ad6005dc6e8ddc5ce76ea1bbcf8d4f45c957850688008e36da71d94b70acb237",
         "signingCertificateSha256": "bef3f5cbb2989734f20740eddaac3e105dfecb6c63ea9275e178eedd892ec105",
-        "updateLog": "v2.5.5\uff1a\n1. \u5171\u7528\u5206\u65f6\u56fe\u4fee\u590d\uff1a\u771f\u5b9e\u7f3a\u53e3\u4fdd\u6301\u65ad\u7ebf\uff0c\u7a00\u758f\u6570\u636e\u505c\u7528\u4f1a\u5f62\u6210\u7ad6\u6761\u7684\u9762\u79ef\u586b\u5145\uff0c\u5e76\u660e\u786e\u63d0\u793a\u6570\u636e\u4e0d\u8fde\u7eed\u3002\n2. \u4fdd\u7559\u5b64\u7acb\u6709\u6548\u62a5\u4ef7\u70b9\uff1b\u5206\u65f6\u6309\u771f\u5b9e\u79d2\u6570\u5b9a\u4f4d\uff0c\u907f\u514d\u5206\u949f\u53d6\u6574\u9020\u6210\u91cd\u53e0\u6216\u8bef\u65ad\u7ebf\u3002\n3. \u65e5\u7ecf\u6765\u6e90\u5df2\u6838\u5b9e\u7684\u8de8\u591c\u4f11\u5e02\u6309\u4f1a\u8bdd\u538b\u7f29\uff1b\u6b63\u5e38\u5348\u4f11\u4e0e\u771f\u5b9e\u7f3a\u62a5\u5206\u522b\u5904\u7406\uff0c\u672a\u77e5\u65f6\u6bb5\u4e0d\u63a8\u7b97\u3002\n4. \u589e\u52a0\u65e5\u7ecf\u3001\u6807\u666e\u3001\u7eb3\u6307\u3001\u9053\u6307\u4e0eA50\u4e94\u7ec4\u771f\u5b9e\u5206\u65f6\u56de\u653e\u53ca\u8de8\u5e02\u573a\u56de\u5f52\u6d4b\u8bd5\u3002",
+        "updateLog": "v2.5.5：\n1. 共用分时图修复：真实缺口保持断线，稀疏数据停用会形成竖条的面积填充，并明确提示数据不连续。\n2. 保留孤立有效报价点；分时按真实秒数定位，避免分钟取整造成重叠或误断线。\n3. 日经来源已核实的跨夜休市按会话压缩；正常午休与真实缺报分别处理，未知时段不推算。\n4. 增加日经、标普、纳指、道指与A50五组真实分时回放及跨市场回归测试。",
         "forceUpdate": false
       },
       "publicRunId": 40799968605,
@@ -561,7 +561,7 @@
       "versionCode": 139,
       "testRunId": 40922640681,
       "signingRunId": 40924596056,
-      "updateLog": "v2.5.6\uff1a\n1. \u4fee\u590d\u5206\u65f6\u56fe\u65f6\u95f4\u8f74\uff1a\u4fdd\u7559\u771f\u5b9e\u884c\u60c5\u95f4\u9694\uff0c\u907f\u514d\u975e\u4ea4\u6613\u65f6\u95f4\u9020\u6210\u66f2\u7ebf\u7f3a\u53e3\u3001\u9519\u8bef\u8fde\u7ebf\u548c\u4ef7\u683c\u70b9\u9519\u4f4d\u3002\n2. \u6838\u5bf9 A50 CFD \u4ea4\u6613\u65f6\u6bb5\u4e0e\u8de8\u65e5\u533a\u95f4\uff0c\u6309\u5b9e\u9645\u4ea4\u6613\u7a97\u53e3\u538b\u7f29\u4f11\u5e02\u65f6\u95f4\u3002\n3. \u4fee\u590d\u6052\u751f\u79d1\u6280\u6307\u6570\u9876\u90e8\u884c\u60c5\u65f6\u95f4\u4e0e\u5206\u65f6\u6700\u65b0\u6570\u636e\u65f6\u95f4\u4e0d\u4e00\u81f4\u65f6\u7684\u5c55\u793a\u903b\u8f91\u3002\n4. \u6539\u8fdb\u56fd\u5185\u671f\u8d27\u591c\u76d8\u8854\u63a5\u4e0e\u4f11\u5e02\u6bb5\u8fb9\u754c\u6807\u6ce8\uff0c\u65b0\u589e\u56de\u5f52\u6821\u9a8c\u3002",
+      "updateLog": "v2.5.6：\n1. 修复分时图时间轴：保留真实行情间隔，避免非交易时间造成曲线缺口、错误连线和价格点错位。\n2. 核对 A50 CFD 交易时段与跨日区间，按实际交易窗口压缩休市时间。\n3. 修复恒生科技指数顶部行情时间与分时最新数据时间不一致时的展示逻辑。\n4. 改进国内期货夜盘衔接与休市段边界标注，新增回归校验。",
       "forceUpdate": false,
       "phase": "published",
       "publishRequest": {
@@ -572,7 +572,7 @@
         "versionCode": 139,
         "apkSha256": "36019d6b00bffe85708d148d195ff4dbe42bd607cbbc96fdb95110aa03cf5bb0",
         "signingCertificateSha256": "bef3f5cbb2989734f20740eddaac3e105dfecb6c63ea9275e178eedd892ec105",
-        "updateLog": "v2.5.6\uff1a\n1. \u4fee\u590d\u5206\u65f6\u56fe\u65f6\u95f4\u8f74\uff1a\u4fdd\u7559\u771f\u5b9e\u884c\u60c5\u95f4\u9694\uff0c\u907f\u514d\u975e\u4ea4\u6613\u65f6\u95f4\u9020\u6210\u66f2\u7ebf\u7f3a\u53e3\u3001\u9519\u8bef\u8fde\u7ebf\u548c\u4ef7\u683c\u70b9\u9519\u4f4d\u3002\n2. \u6838\u5bf9 A50 CFD \u4ea4\u6613\u65f6\u6bb5\u4e0e\u8de8\u65e5\u533a\u95f4\uff0c\u6309\u5b9e\u9645\u4ea4\u6613\u7a97\u53e3\u538b\u7f29\u4f11\u5e02\u65f6\u95f4\u3002\n3. \u4fee\u590d\u6052\u751f\u79d1\u6280\u6307\u6570\u9876\u90e8\u884c\u60c5\u65f6\u95f4\u4e0e\u5206\u65f6\u6700\u65b0\u6570\u636e\u65f6\u95f4\u4e0d\u4e00\u81f4\u65f6\u7684\u5c55\u793a\u903b\u8f91\u3002\n4. \u6539\u8fdb\u56fd\u5185\u671f\u8d27\u591c\u76d8\u8854\u63a5\u4e0e\u4f11\u5e02\u6bb5\u8fb9\u754c\u6807\u6ce8\uff0c\u65b0\u589e\u56de\u5f52\u6821\u9a8c\u3002",
+        "updateLog": "v2.5.6：\n1. 修复分时图时间轴：保留真实行情间隔，避免非交易时间造成曲线缺口、错误连线和价格点错位。\n2. 核对 A50 CFD 交易时段与跨日区间，按实际交易窗口压缩休市时间。\n3. 修复恒生科技指数顶部行情时间与分时最新数据时间不一致时的展示逻辑。\n4. 改进国内期货夜盘衔接与休市段边界标注，新增回归校验。",
         "forceUpdate": false
       },
       "publicRunId": 40931185533,
@@ -588,7 +588,7 @@
       "versionCode": 140,
       "testRunId": 41155686409,
       "signingRunId": 41156709091,
-      "updateLog": "v2.5.7\uff1a\n1. \u4fee\u590d A50 \u671f\u8d27 CFD \u7684\u5f00\u76d8\u3001\u6536\u76d8\u53ca\u76d8\u95f4\u72b6\u6001\uff0c\u7edf\u4e00\u5b9e\u9645\u62a5\u4ef7\u65f6\u6bb5\u4e0e\u5206\u65f6\u56fe\u3002\n2. \u4fee\u590d\u8de8\u65e5\u4ea4\u6613\u65e5\u5386\u5f52\u5c5e\uff0c\u907f\u514d\u5468\u4e94\u591c\u76d8\u5ef6\u7eed\u81f3\u5468\u516d\u51cc\u6668\u65f6\u8bef\u5224\u4f11\u5e02\u3002\n3. \u65b0\u589e A50 \u4ea4\u6613\u72b6\u6001\u8fb9\u754c\u56de\u5f52\u6d4b\u8bd5\u3002",
+      "updateLog": "v2.5.7：\n1. 修复 A50 期货 CFD 的开盘、收盘及盘间状态，统一实际报价时段与分时图。\n2. 修复跨日交易日历归属，避免周五夜盘延续至周六凌晨时误判休市。\n3. 新增 A50 交易状态边界回归测试。",
       "forceUpdate": false,
       "phase": "published",
       "publishRequest": {
@@ -599,7 +599,7 @@
         "versionCode": 140,
         "apkSha256": "5fb352ab2a102115fee176ad9b58e46f29aa76812f857dfb3e4f1f70c8af46a5",
         "signingCertificateSha256": "bef3f5cbb2989734f20740eddaac3e105dfecb6c63ea9275e178eedd892ec105",
-        "updateLog": "v2.5.7\uff1a\n1. \u4fee\u590d A50 \u671f\u8d27 CFD \u7684\u5f00\u76d8\u3001\u6536\u76d8\u53ca\u76d8\u95f4\u72b6\u6001\uff0c\u7edf\u4e00\u5b9e\u9645\u62a5\u4ef7\u65f6\u6bb5\u4e0e\u5206\u65f6\u56fe\u3002\n2. \u4fee\u590d\u8de8\u65e5\u4ea4\u6613\u65e5\u5386\u5f52\u5c5e\uff0c\u907f\u514d\u5468\u4e94\u591c\u76d8\u5ef6\u7eed\u81f3\u5468\u516d\u51cc\u6668\u65f6\u8bef\u5224\u4f11\u5e02\u3002\n3. \u65b0\u589e A50 \u4ea4\u6613\u72b6\u6001\u8fb9\u754c\u56de\u5f52\u6d4b\u8bd5\u3002",
+        "updateLog": "v2.5.7：\n1. 修复 A50 期货 CFD 的开盘、收盘及盘间状态，统一实际报价时段与分时图。\n2. 修复跨日交易日历归属，避免周五夜盘延续至周六凌晨时误判休市。\n3. 新增 A50 交易状态边界回归测试。",
         "forceUpdate": false
       },
       "publicRunId": 41158253049,
@@ -615,7 +615,7 @@
       "versionCode": 141,
       "testRunId": 41335262554,
       "signingRunId": 41336478167,
-      "updateLog": "v2.5.8\uff1a\n1. K\u7ebf\u5341\u5b57\u5149\u6807\u540c\u6b65\u5ef6\u4f38\u81f3\u6210\u4ea4\u91cf\u526f\u56fe\uff0c\u652f\u6301\u5728\u6210\u4ea4\u91cf\u533a\u57df\u957f\u6309\u4e0e\u62d6\u52a8\u67e5\u770b\u3002\n2. \u6210\u4ea4\u91cf\u6807\u9898\u663e\u793a\u6240\u9009\u5468\u671f\u7684\u6210\u4ea4\u91cf\u6570\u503c\uff0c\u672a\u9009\u4e2d\u65f6\u663e\u793a\u6700\u65b0\u6210\u4ea4\u91cf\u3002\n3. \u6536\u76ca\u66f2\u7ebf\u91c7\u7528\u865a\u7ebf\u5341\u5b57\u6e38\u6807\uff0c\u6a2a\u7ebf\u4e24\u7aef\u663e\u793a\u51c0\u503c\u548c\u6536\u76ca\u7387\uff0c\u70b9\u51fb\u7a7a\u767d\u533a\u57df\u53d6\u6d88\u9009\u4e2d\u3002",
+      "updateLog": "v2.5.8：\n1. K线十字光标同步延伸至成交量副图，支持在成交量区域长按与拖动查看。\n2. 成交量标题显示所选周期的成交量数值，未选中时显示最新成交量。\n3. 收益曲线采用虚线十字游标，横线两端显示净值和收益率，点击空白区域取消选中。",
       "forceUpdate": false,
       "phase": "published",
       "publishRequest": {
@@ -626,7 +626,7 @@
         "versionCode": 141,
         "apkSha256": "61681ae2bde9f521cbb1f45a6f3cdc87e44ed9df7e90f7cd07c301e23355c97f",
         "signingCertificateSha256": "bef3f5cbb2989734f20740eddaac3e105dfecb6c63ea9275e178eedd892ec105",
-        "updateLog": "v2.5.8\uff1a\n1. K\u7ebf\u5341\u5b57\u5149\u6807\u540c\u6b65\u5ef6\u4f38\u81f3\u6210\u4ea4\u91cf\u526f\u56fe\uff0c\u652f\u6301\u5728\u6210\u4ea4\u91cf\u533a\u57df\u957f\u6309\u4e0e\u62d6\u52a8\u67e5\u770b\u3002\n2. \u6210\u4ea4\u91cf\u6807\u9898\u663e\u793a\u6240\u9009\u5468\u671f\u7684\u6210\u4ea4\u91cf\u6570\u503c\uff0c\u672a\u9009\u4e2d\u65f6\u663e\u793a\u6700\u65b0\u6210\u4ea4\u91cf\u3002\n3. \u6536\u76ca\u66f2\u7ebf\u91c7\u7528\u865a\u7ebf\u5341\u5b57\u6e38\u6807\uff0c\u6a2a\u7ebf\u4e24\u7aef\u663e\u793a\u51c0\u503c\u548c\u6536\u76ca\u7387\uff0c\u70b9\u51fb\u7a7a\u767d\u533a\u57df\u53d6\u6d88\u9009\u4e2d\u3002",
+        "updateLog": "v2.5.8：\n1. K线十字光标同步延伸至成交量副图，支持在成交量区域长按与拖动查看。\n2. 成交量标题显示所选周期的成交量数值，未选中时显示最新成交量。\n3. 收益曲线采用虚线十字游标，横线两端显示净值和收益率，点击空白区域取消选中。",
         "forceUpdate": false
       },
       "publicRunId": 41336713485,
@@ -642,7 +642,7 @@
       "versionCode": 142,
       "testRunId": 41342832983,
       "signingRunId": 41344087699,
-      "updateLog": "v2.5.9\uff1a\n1. \u56fe\u8868\u5e95\u90e8\u6539\u4e3a\u7b80\u6d01\u540c\u6b65\u72b6\u6001\u680f\uff0c\u663e\u793a\u884c\u60c5\u4e0e\u56fe\u8868\u540c\u6b65\u72b6\u6001\u3002\n2. \u65b0\u589e\u53ef\u70b9\u51fb\u7684\u201c\u6765\u6e90\u8be6\u60c5\u201d\uff0c\u96c6\u4e2d\u5c55\u793a\u6570\u636e\u6e90\u3001\u66f4\u65b0\u65f6\u95f4\u548c\u56fe\u8868\u6838\u9a8c\u8bf4\u660e\u3002\n3. \u5bf9\u52a0\u8f7d\u4e2d\u3001\u7f3a\u6570\u53ca\u6807\u7684\u4e0d\u4e00\u81f4\u7b49\u60c5\u51b5\u663e\u793a\u5bf9\u5e94\u72b6\u6001\uff0c\u907f\u514d\u9519\u8bef\u63d0\u793a\u5df2\u540c\u6b65\u3002",
+      "updateLog": "v2.5.9：\n1. 图表底部改为简洁同步状态栏，显示行情与图表同步状态。\n2. 新增可点击的“来源详情”，集中展示数据源、更新时间和图表核验说明。\n3. 对加载中、缺数及标的不一致等情况显示对应状态，避免错误提示已同步。",
       "forceUpdate": false,
       "phase": "published",
       "publishRequest": {
@@ -653,7 +653,7 @@
         "versionCode": 142,
         "apkSha256": "683c4283c276945c9529318717c42ebed5c66370ab7edb3cfcb434266570d52f",
         "signingCertificateSha256": "bef3f5cbb2989734f20740eddaac3e105dfecb6c63ea9275e178eedd892ec105",
-        "updateLog": "v2.5.9\uff1a\n1. \u56fe\u8868\u5e95\u90e8\u6539\u4e3a\u7b80\u6d01\u540c\u6b65\u72b6\u6001\u680f\uff0c\u663e\u793a\u884c\u60c5\u4e0e\u56fe\u8868\u540c\u6b65\u72b6\u6001\u3002\n2. \u65b0\u589e\u53ef\u70b9\u51fb\u7684\u201c\u6765\u6e90\u8be6\u60c5\u201d\uff0c\u96c6\u4e2d\u5c55\u793a\u6570\u636e\u6e90\u3001\u66f4\u65b0\u65f6\u95f4\u548c\u56fe\u8868\u6838\u9a8c\u8bf4\u660e\u3002\n3. \u5bf9\u52a0\u8f7d\u4e2d\u3001\u7f3a\u6570\u53ca\u6807\u7684\u4e0d\u4e00\u81f4\u7b49\u60c5\u51b5\u663e\u793a\u5bf9\u5e94\u72b6\u6001\uff0c\u907f\u514d\u9519\u8bef\u63d0\u793a\u5df2\u540c\u6b65\u3002",
+        "updateLog": "v2.5.9：\n1. 图表底部改为简洁同步状态栏，显示行情与图表同步状态。\n2. 新增可点击的“来源详情”，集中展示数据源、更新时间和图表核验说明。\n3. 对加载中、缺数及标的不一致等情况显示对应状态，避免错误提示已同步。",
         "forceUpdate": false
       },
       "publicRunId": 41344247282,
@@ -669,7 +669,7 @@
       "versionCode": 143,
       "testRunId": 41387605633,
       "signingRunId": 41389055651,
-      "updateLog": "v2.6.0\uff1a\n1. \u5206\u65f6\u56fe\u53d6\u6d88\u5341\u5b57\u5149\u6807\u6d6e\u7a97\uff0c\u6a2a\u7ebf\u4e24\u4fa7\u5206\u522b\u663e\u793a\u4ef7\u683c\u4e0e\u6da8\u8dcc\u5e45\uff0c\u4e3b\u56fe\u5e95\u90e8\u663e\u793a\u9009\u4e2d\u65f6\u95f4\u3002\n2. \u65e5K\u3001\u5468K\u3001\u6708K\u7684\u5341\u5b57\u5149\u6807\u65e5\u671f\u79fb\u81f3\u4e3b\u56fe\u4e0b\u65b9\uff0c\u4fdd\u7559\u5f00\u9ad8\u4f4e\u6536\u7b49\u4fe1\u606f\u3002\n3. \u6210\u4ea4\u91cf\u526f\u56fe\u53d6\u6d88\u91cd\u590d\u7684\u65f6\u95f4/\u65e5\u671f\u6a2a\u5750\u6807\uff0c\u4ec5\u4fdd\u7559\u6210\u4ea4\u91cf\u6570\u503c\u548c\u6e38\u6807\u5ef6\u957f\u7ebf\u3002",
+      "updateLog": "v2.6.0：\n1. 分时图取消十字光标浮窗，横线两侧分别显示价格与涨跌幅，主图底部显示选中时间。\n2. 日K、周K、月K的十字光标日期移至主图下方，保留开高低收等信息。\n3. 成交量副图取消重复的时间/日期横坐标，仅保留成交量数值和游标延长线。",
       "forceUpdate": false,
       "phase": "published",
       "publishRequest": {
@@ -680,7 +680,7 @@
         "versionCode": 143,
         "apkSha256": "e0d0f541a36dfb502fb2c60664b1f722c4d61a61fe0bfafa8e37b5ced7211494",
         "signingCertificateSha256": "bef3f5cbb2989734f20740eddaac3e105dfecb6c63ea9275e178eedd892ec105",
-        "updateLog": "v2.6.0\uff1a\n1. \u5206\u65f6\u56fe\u53d6\u6d88\u5341\u5b57\u5149\u6807\u6d6e\u7a97\uff0c\u6a2a\u7ebf\u4e24\u4fa7\u5206\u522b\u663e\u793a\u4ef7\u683c\u4e0e\u6da8\u8dcc\u5e45\uff0c\u4e3b\u56fe\u5e95\u90e8\u663e\u793a\u9009\u4e2d\u65f6\u95f4\u3002\n2. \u65e5K\u3001\u5468K\u3001\u6708K\u7684\u5341\u5b57\u5149\u6807\u65e5\u671f\u79fb\u81f3\u4e3b\u56fe\u4e0b\u65b9\uff0c\u4fdd\u7559\u5f00\u9ad8\u4f4e\u6536\u7b49\u4fe1\u606f\u3002\n3. \u6210\u4ea4\u91cf\u526f\u56fe\u53d6\u6d88\u91cd\u590d\u7684\u65f6\u95f4/\u65e5\u671f\u6a2a\u5750\u6807\uff0c\u4ec5\u4fdd\u7559\u6210\u4ea4\u91cf\u6570\u503c\u548c\u6e38\u6807\u5ef6\u957f\u7ebf\u3002",
+        "updateLog": "v2.6.0：\n1. 分时图取消十字光标浮窗，横线两侧分别显示价格与涨跌幅，主图底部显示选中时间。\n2. 日K、周K、月K的十字光标日期移至主图下方，保留开高低收等信息。\n3. 成交量副图取消重复的时间/日期横坐标，仅保留成交量数值和游标延长线。",
         "forceUpdate": false
       },
       "publicRunId": 41389308846,
@@ -696,7 +696,7 @@
       "versionCode": 144,
       "testRunId": 41553464729,
       "signingRunId": 41555089170,
-      "updateLog": "v2.6.1\uff1a\n1. \u4fee\u590d\u7b56\u7565\u62a5\u544a\u5217\u8868\u5728\u7f8e\u80a1\u96f6\u4e70\u5356\u3001\u65e0\u9644\u52a0\u8bf4\u660e\u65f6\u663e\u793a\u201c\u6982\u8981\u5f85\u6838\u9a8c\u201d\u7684\u95ee\u9898\u3002\n2. \u4ec5\u4ece HTML \u62a5\u544a\u7edf\u8ba1\u533a\u57df\u8bfb\u53d6\u4e70\u5356\u53ca\u4fdd\u7559\u6570\u91cf\uff0c\u907f\u514d\u8bef\u8bfb\u6b63\u6587\u6570\u636e\u3002",
+      "updateLog": "v2.6.1：\n1. 修复策略报告列表在美股零买卖、无附加说明时显示“概要待核验”的问题。\n2. 仅从 HTML 报告统计区域读取买卖及保留数量，避免误读正文数据。",
       "forceUpdate": false,
       "phase": "published",
       "publishRequest": {
@@ -707,7 +707,7 @@
         "versionCode": 144,
         "apkSha256": "6974def73d088a22da17fb830d4c26c213f8d1241a75c4bd52665cf2d343381f",
         "signingCertificateSha256": "bef3f5cbb2989734f20740eddaac3e105dfecb6c63ea9275e178eedd892ec105",
-        "updateLog": "v2.6.1\uff1a\n1. \u4fee\u590d\u7b56\u7565\u62a5\u544a\u5217\u8868\u5728\u7f8e\u80a1\u96f6\u4e70\u5356\u3001\u65e0\u9644\u52a0\u8bf4\u660e\u65f6\u663e\u793a\u201c\u6982\u8981\u5f85\u6838\u9a8c\u201d\u7684\u95ee\u9898\u3002\n2. \u4ec5\u4ece HTML \u62a5\u544a\u7edf\u8ba1\u533a\u57df\u8bfb\u53d6\u4e70\u5356\u53ca\u4fdd\u7559\u6570\u91cf\uff0c\u907f\u514d\u8bef\u8bfb\u6b63\u6587\u6570\u636e\u3002",
+        "updateLog": "v2.6.1：\n1. 修复策略报告列表在美股零买卖、无附加说明时显示“概要待核验”的问题。\n2. 仅从 HTML 报告统计区域读取买卖及保留数量，避免误读正文数据。",
         "forceUpdate": false
       },
       "publicRunId": 41555990576,
@@ -723,7 +723,7 @@
       "versionCode": 145,
       "testRunId": 41788813165,
       "signingRunId": 41790086898,
-      "updateLog": "v2.6.2\uff1a\n1. \u65b0\u589e\u6caa\u6df1\u4eacA\u80a1\u5e02\u573a\u5e7f\u5ea6\u7edf\u8ba1\u3001\u6da8\u8dcc\u5206\u5e03\u548c\u5e02\u573a\u6210\u4ea4\u989d\u5c55\u793a\u3002\n2. \u6210\u4ea4\u989d\u5206\u949f\u66f2\u7ebf\u63a5\u5165\u6caa\u6df1\u4eac\u4e09\u5e02\u5728\u7ebf\u6570\u636e\uff0c\u652f\u6301\u4e0e\u4e0a\u4e00\u4ea4\u6613\u65e5\u540c\u671f\u5bf9\u6bd4\u53ca\u653e\u91cf\uff0f\u7f29\u91cf\u8ba1\u7b97\u3002\n3. \u884c\u60c5\u6301\u4ed3\u9875\u9762\u5c06\u6da8\u8dcc\u60c5\u51b5\u6539\u4e3a\u6587\u5b57\u7edf\u8ba1\u4e0e\u6bd4\u4f8b\u6761\uff0c\u4fdd\u7559\u4e2a\u80a1\u539f\u6709\u591a\u5217\u7f51\u683c\u3002\n4. \u4f18\u5316\u884c\u60c5\u6570\u636e\u4e0d\u5b8c\u6574\u53ca\u6210\u4ea4\u989d\u7edf\u8ba1\u8303\u56f4\u7684\u63d0\u793a\u3002",
+      "updateLog": "v2.6.2：\n1. 新增沪深京A股市场广度统计、涨跌分布和市场成交额展示。\n2. 成交额分钟曲线接入沪深京三市在线数据，支持与上一交易日同期对比及放量／缩量计算。\n3. 行情持仓页面将涨跌情况改为文字统计与比例条，保留个股原有多列网格。\n4. 优化行情数据不完整及成交额统计范围的提示。",
       "forceUpdate": false,
       "phase": "published",
       "publishRequest": {
@@ -734,7 +734,7 @@
         "versionCode": 145,
         "apkSha256": "194b08c1953b4c37babde85f07984b23afc0daa63d57cf48369ff629757197cd",
         "signingCertificateSha256": "bef3f5cbb2989734f20740eddaac3e105dfecb6c63ea9275e178eedd892ec105",
-        "updateLog": "v2.6.2\uff1a\n1. \u65b0\u589e\u6caa\u6df1\u4eacA\u80a1\u5e02\u573a\u5e7f\u5ea6\u7edf\u8ba1\u3001\u6da8\u8dcc\u5206\u5e03\u548c\u5e02\u573a\u6210\u4ea4\u989d\u5c55\u793a\u3002\n2. \u6210\u4ea4\u989d\u5206\u949f\u66f2\u7ebf\u63a5\u5165\u6caa\u6df1\u4eac\u4e09\u5e02\u5728\u7ebf\u6570\u636e\uff0c\u652f\u6301\u4e0e\u4e0a\u4e00\u4ea4\u6613\u65e5\u540c\u671f\u5bf9\u6bd4\u53ca\u653e\u91cf\uff0f\u7f29\u91cf\u8ba1\u7b97\u3002\n3. \u884c\u60c5\u6301\u4ed3\u9875\u9762\u5c06\u6da8\u8dcc\u60c5\u51b5\u6539\u4e3a\u6587\u5b57\u7edf\u8ba1\u4e0e\u6bd4\u4f8b\u6761\uff0c\u4fdd\u7559\u4e2a\u80a1\u539f\u6709\u591a\u5217\u7f51\u683c\u3002\n4. \u4f18\u5316\u884c\u60c5\u6570\u636e\u4e0d\u5b8c\u6574\u53ca\u6210\u4ea4\u989d\u7edf\u8ba1\u8303\u56f4\u7684\u63d0\u793a\u3002",
+        "updateLog": "v2.6.2：\n1. 新增沪深京A股市场广度统计、涨跌分布和市场成交额展示。\n2. 成交额分钟曲线接入沪深京三市在线数据，支持与上一交易日同期对比及放量／缩量计算。\n3. 行情持仓页面将涨跌情况改为文字统计与比例条，保留个股原有多列网格。\n4. 优化行情数据不完整及成交额统计范围的提示。",
         "forceUpdate": false
       },
       "publicRunId": 41791014168,
@@ -750,7 +750,7 @@
       "versionCode": 146,
       "testRunId": 41808961732,
       "signingRunId": 41810579287,
-      "updateLog": "v2.6.3\uff1a\n1. A\u80a1\u6da8\u8dcc\u5206\u5e03\u75318\u6863\u53d8\u4e3a9\u6863\uff0c0%\u5e73\u76d8\u72ec\u7acb\u4e3a\u7070\u8272\u67f1\uff0c\u6da8\u8dcc\u533a\u95f4\u7edf\u8ba1\u4fdd\u6301\u4e92\u65a5\u3002\n2. \u6210\u4ea4\u989d\u5bf9\u6bd4\u652f\u6301\u62d6\u52a8\u6e38\u6807\uff0c\u9876\u90e8\u6210\u4ea4\u989d\u3001\u653e\u7f29\u91cf\u548c\u767e\u5206\u6bd4\u968f\u6240\u9009\u4ea4\u6613\u5206\u949f\u8054\u52a8\u3002\n3. A\u80a1\u5e02\u573a\u5e7f\u5ea6\u8be6\u60c5\u7cbe\u7b80\u4e3a\u53cc\u56fe\u8868\uff0c\u53d6\u6d88\u5de6\u4fa7\u7eb5\u5750\u6807\u5e76\u4f18\u5316\u4e00\u5c4f\u6392\u7248\u3002\n4. \u5e02\u573a\u5e7f\u5ea6\u5e76\u53d1\u8bfb\u53d6\u53ca\u542f\u52a8\u7f13\u5b58\u4f18\u5316\uff0c\u5b8c\u5584\u8fd4\u56de\u624b\u52bf\u4e0e\u884c\u60c5\u9875\u8fd4\u56de\u884c\u4e3a\u3002",
+      "updateLog": "v2.6.3：\n1. A股涨跌分布由8档变为9档，0%平盘独立为灰色柱，涨跌区间统计保持互斥。\n2. 成交额对比支持拖动游标，顶部成交额、放缩量和百分比随所选交易分钟联动。\n3. A股市场广度详情精简为双图表，取消左侧纵坐标并优化一屏排版。\n4. 市场广度并发读取及启动缓存优化，完善返回手势与行情页返回行为。",
       "forceUpdate": false,
       "phase": "published",
       "publishRequest": {
@@ -761,7 +761,7 @@
         "versionCode": 146,
         "apkSha256": "4508d96db2e600ab1b159cd9445df498e3a01c8e7997f52d15b7f1fc5cec9ec3",
         "signingCertificateSha256": "bef3f5cbb2989734f20740eddaac3e105dfecb6c63ea9275e178eedd892ec105",
-        "updateLog": "v2.6.3\uff1a\n1. A\u80a1\u6da8\u8dcc\u5206\u5e03\u75318\u6863\u53d8\u4e3a9\u6863\uff0c0%\u5e73\u76d8\u72ec\u7acb\u4e3a\u7070\u8272\u67f1\uff0c\u6da8\u8dcc\u533a\u95f4\u7edf\u8ba1\u4fdd\u6301\u4e92\u65a5\u3002\n2. \u6210\u4ea4\u989d\u5bf9\u6bd4\u652f\u6301\u62d6\u52a8\u6e38\u6807\uff0c\u9876\u90e8\u6210\u4ea4\u989d\u3001\u653e\u7f29\u91cf\u548c\u767e\u5206\u6bd4\u968f\u6240\u9009\u4ea4\u6613\u5206\u949f\u8054\u52a8\u3002\n3. A\u80a1\u5e02\u573a\u5e7f\u5ea6\u8be6\u60c5\u7cbe\u7b80\u4e3a\u53cc\u56fe\u8868\uff0c\u53d6\u6d88\u5de6\u4fa7\u7eb5\u5750\u6807\u5e76\u4f18\u5316\u4e00\u5c4f\u6392\u7248\u3002\n4. \u5e02\u573a\u5e7f\u5ea6\u5e76\u53d1\u8bfb\u53d6\u53ca\u542f\u52a8\u7f13\u5b58\u4f18\u5316\uff0c\u5b8c\u5584\u8fd4\u56de\u624b\u52bf\u4e0e\u884c\u60c5\u9875\u8fd4\u56de\u884c\u4e3a\u3002",
+        "updateLog": "v2.6.3：\n1. A股涨跌分布由8档变为9档，0%平盘独立为灰色柱，涨跌区间统计保持互斥。\n2. 成交额对比支持拖动游标，顶部成交额、放缩量和百分比随所选交易分钟联动。\n3. A股市场广度详情精简为双图表，取消左侧纵坐标并优化一屏排版。\n4. 市场广度并发读取及启动缓存优化，完善返回手势与行情页返回行为。",
         "forceUpdate": false
       },
       "publicRunId": 41811453601,
@@ -777,7 +777,7 @@
       "versionCode": 147,
       "testRunId": 41847363040,
       "signingRunId": 41849592415,
-      "updateLog": "v2.6.4\uff1a\n1. A\u80a1\u5e02\u573a\u5e7f\u5ea6\u6210\u4ea4\u989d\u66f2\u7ebf\u6309\u4e0a\u5348\u548c\u4e0b\u5348\u4ea4\u6613\u65f6\u6bb5\u5206\u6bb5\u7ed8\u5236\uff0c\u5348\u95f4\u4f11\u5e02\u4e0d\u518d\u8fde\u7ebf\u3002\n2. \u652f\u6301\u70b9\u51fb\u66f2\u7ebf\u4e4b\u5916\u7684\u7a7a\u767d\u533a\u57df\u53d6\u6d88\u6e38\u6807\u9009\u4e2d\uff0c\u6309\u4f4f\u62d6\u52a8\u65f6\u4ecd\u5b9e\u65f6\u663e\u793a\u6240\u9009\u5206\u949f\u6570\u636e\u3002\n3. \u5e02\u573a\u5e7f\u5ea6\u7684\u65f6\u95f4\u7edf\u4e00\u8ddf\u968fA\u80a1\u4ea4\u6613\u65f6\u6bb5\uff0c\u5348\u95f4\u56fa\u5b9a\u4e3a11:30\u3001\u6536\u76d8\u540e\u56fa\u5b9a\u4e3a15:00\uff0c\u4e0d\u663e\u793a\u76d8\u540e\u7684\u6570\u636e\u8bfb\u53d6\u65f6\u523b\u3002\n4. \u6da8\u8dcc\u5206\u5e03\u6a2a\u5750\u68070\u523b\u5ea6\u4e0e\u5176\u4ed6\u523b\u5ea6\u4f7f\u7528\u7edf\u4e00\u7684\u989c\u8272\u548c\u5b57\u53f7\u3002",
+      "updateLog": "v2.6.4：\n1. A股市场广度成交额曲线按上午和下午交易时段分段绘制，午间休市不再连线。\n2. 支持点击曲线之外的空白区域取消游标选中，按住拖动时仍实时显示所选分钟数据。\n3. 市场广度的时间统一跟随A股交易时段，午间固定为11:30、收盘后固定为15:00，不显示盘后的数据读取时刻。\n4. 涨跌分布横坐标0刻度与其他刻度使用统一的颜色和字号。",
       "forceUpdate": false,
       "phase": "published",
       "publishRequest": {
@@ -788,7 +788,7 @@
         "versionCode": 147,
         "apkSha256": "43db986fd44fc64248a6bbff9351a3313a5f7d4956e9512ea55c17d2f9ee18b6",
         "signingCertificateSha256": "bef3f5cbb2989734f20740eddaac3e105dfecb6c63ea9275e178eedd892ec105",
-        "updateLog": "v2.6.4\uff1a\n1. A\u80a1\u5e02\u573a\u5e7f\u5ea6\u6210\u4ea4\u989d\u66f2\u7ebf\u6309\u4e0a\u5348\u548c\u4e0b\u5348\u4ea4\u6613\u65f6\u6bb5\u5206\u6bb5\u7ed8\u5236\uff0c\u5348\u95f4\u4f11\u5e02\u4e0d\u518d\u8fde\u7ebf\u3002\n2. \u652f\u6301\u70b9\u51fb\u66f2\u7ebf\u4e4b\u5916\u7684\u7a7a\u767d\u533a\u57df\u53d6\u6d88\u6e38\u6807\u9009\u4e2d\uff0c\u6309\u4f4f\u62d6\u52a8\u65f6\u4ecd\u5b9e\u65f6\u663e\u793a\u6240\u9009\u5206\u949f\u6570\u636e\u3002\n3. \u5e02\u573a\u5e7f\u5ea6\u7684\u65f6\u95f4\u7edf\u4e00\u8ddf\u968fA\u80a1\u4ea4\u6613\u65f6\u6bb5\uff0c\u5348\u95f4\u56fa\u5b9a\u4e3a11:30\u3001\u6536\u76d8\u540e\u56fa\u5b9a\u4e3a15:00\uff0c\u4e0d\u663e\u793a\u76d8\u540e\u7684\u6570\u636e\u8bfb\u53d6\u65f6\u523b\u3002\n4. \u6da8\u8dcc\u5206\u5e03\u6a2a\u5750\u68070\u523b\u5ea6\u4e0e\u5176\u4ed6\u523b\u5ea6\u4f7f\u7528\u7edf\u4e00\u7684\u989c\u8272\u548c\u5b57\u53f7\u3002",
+        "updateLog": "v2.6.4：\n1. A股市场广度成交额曲线按上午和下午交易时段分段绘制，午间休市不再连线。\n2. 支持点击曲线之外的空白区域取消游标选中，按住拖动时仍实时显示所选分钟数据。\n3. 市场广度的时间统一跟随A股交易时段，午间固定为11:30、收盘后固定为15:00，不显示盘后的数据读取时刻。\n4. 涨跌分布横坐标0刻度与其他刻度使用统一的颜色和字号。",
         "forceUpdate": false
       },
       "publicRunId": 41849977340,
@@ -804,7 +804,7 @@
       "versionCode": 148,
       "testRunId": 41872931657,
       "signingRunId": 41875243153,
-      "updateLog": "v2.6.5\uff1a\n1. A\u80a1\u5e02\u573a\u5e7f\u5ea6\u5361\u7247\u5168\u90e8\u533a\u57df\u53ef\u70b9\u51fb\u8fdb\u5165\u8be6\u60c5\u3002\n2. \u5e02\u573a\u5e7f\u5ea6\u8be6\u60c5\u7684\u6da8\u8dcc\u5206\u5e03\u4e0e\u6210\u4ea4\u989d\u5bf9\u6bd4\u6309\u53ef\u7528\u9ad8\u5ea6\u81ea\u52a8\u5206\u914d\u7a7a\u95f4\uff0c\u9002\u914d\u4e00\u5c4f\u5c55\u793a\u3002\n3. \u6210\u4ea4\u989d\u66f2\u7ebf\u538b\u7f29\u5348\u95f4\u4f11\u5e02\u65f6\u95f4\u8f74\uff0c\u76f4\u63a5\u8fde\u63a511:30\u4e0e13:00\u771f\u5b9e\u6570\u636e\uff0c\u4e0d\u7ed8\u5236\u5348\u4f11\u65f6\u95f4\u8d70\u52bf\uff1b\u6e38\u6807\u4f7f\u7528\u540c\u4e00\u538b\u7f29\u5750\u6807\u3002",
+      "updateLog": "v2.6.5：\n1. A股市场广度卡片全部区域可点击进入详情。\n2. 市场广度详情的涨跌分布与成交额对比按可用高度自动分配空间，适配一屏展示。\n3. 成交额曲线压缩午间休市时间轴，直接连接11:30与13:00真实数据，不绘制午休时间走势；游标使用同一压缩坐标。",
       "forceUpdate": false,
       "phase": "published",
       "publishRequest": {
@@ -815,7 +815,7 @@
         "versionCode": 148,
         "apkSha256": "8dd40af85dc3fc9486722a879413120c919df82ff8895cd7874255d98698e48d",
         "signingCertificateSha256": "bef3f5cbb2989734f20740eddaac3e105dfecb6c63ea9275e178eedd892ec105",
-        "updateLog": "v2.6.5\uff1a\n1. A\u80a1\u5e02\u573a\u5e7f\u5ea6\u5361\u7247\u5168\u90e8\u533a\u57df\u53ef\u70b9\u51fb\u8fdb\u5165\u8be6\u60c5\u3002\n2. \u5e02\u573a\u5e7f\u5ea6\u8be6\u60c5\u7684\u6da8\u8dcc\u5206\u5e03\u4e0e\u6210\u4ea4\u989d\u5bf9\u6bd4\u6309\u53ef\u7528\u9ad8\u5ea6\u81ea\u52a8\u5206\u914d\u7a7a\u95f4\uff0c\u9002\u914d\u4e00\u5c4f\u5c55\u793a\u3002\n3. \u6210\u4ea4\u989d\u66f2\u7ebf\u538b\u7f29\u5348\u95f4\u4f11\u5e02\u65f6\u95f4\u8f74\uff0c\u76f4\u63a5\u8fde\u63a511:30\u4e0e13:00\u771f\u5b9e\u6570\u636e\uff0c\u4e0d\u7ed8\u5236\u5348\u4f11\u65f6\u95f4\u8d70\u52bf\uff1b\u6e38\u6807\u4f7f\u7528\u540c\u4e00\u538b\u7f29\u5750\u6807\u3002",
+        "updateLog": "v2.6.5：\n1. A股市场广度卡片全部区域可点击进入详情。\n2. 市场广度详情的涨跌分布与成交额对比按可用高度自动分配空间，适配一屏展示。\n3. 成交额曲线压缩午间休市时间轴，直接连接11:30与13:00真实数据，不绘制午休时间走势；游标使用同一压缩坐标。",
         "forceUpdate": false
       },
       "publicRunId": 41875639111,
@@ -831,7 +831,7 @@
       "versionCode": 149,
       "testRunId": 41893788258,
       "signingRunId": 41895318003,
-      "updateLog": "v2.6.6\uff1a\n1. \u6da8\u8dcc\u5206\u5e03\u7684\u5404\u6863\u5bb6\u6570\u79fb\u81f3\u5bf9\u5e94\u67f1\u9876\uff0c\u6570\u503c\u9ad8\u5ea6\u968f\u67f1\u9ad8\u53d8\u5316\uff0c\u4e0d\u518d\u6392\u5217\u5728\u7edf\u4e00\u9876\u7aef\u884c\u3002\n2. \u4fdd\u75599\u6863\u67f1\u72b6\u5206\u5e03\u3001\u72ec\u7acb\u76840\u6863\u53ca\u4e00\u5c4f\u81ea\u9002\u5e94\u5e03\u5c40\u3002",
+      "updateLog": "v2.6.6：\n1. 涨跌分布的各档家数移至对应柱顶，数值高度随柱高变化，不再排列在统一顶端行。\n2. 保留9档柱状分布、独立的0档及一屏自适应布局。",
       "forceUpdate": false,
       "phase": "published",
       "publishRequest": {
@@ -842,7 +842,7 @@
         "versionCode": 149,
         "apkSha256": "cf042bd993e72388f4f3a9f552749ac00d027d7f06a9f984442f513236ee973a",
         "signingCertificateSha256": "bef3f5cbb2989734f20740eddaac3e105dfecb6c63ea9275e178eedd892ec105",
-        "updateLog": "v2.6.6\uff1a\n1. \u6da8\u8dcc\u5206\u5e03\u7684\u5404\u6863\u5bb6\u6570\u79fb\u81f3\u5bf9\u5e94\u67f1\u9876\uff0c\u6570\u503c\u9ad8\u5ea6\u968f\u67f1\u9ad8\u53d8\u5316\uff0c\u4e0d\u518d\u6392\u5217\u5728\u7edf\u4e00\u9876\u7aef\u884c\u3002\n2. \u4fdd\u75599\u6863\u67f1\u72b6\u5206\u5e03\u3001\u72ec\u7acb\u76840\u6863\u53ca\u4e00\u5c4f\u81ea\u9002\u5e94\u5e03\u5c40\u3002",
+        "updateLog": "v2.6.6：\n1. 涨跌分布的各档家数移至对应柱顶，数值高度随柱高变化，不再排列在统一顶端行。\n2. 保留9档柱状分布、独立的0档及一屏自适应布局。",
         "forceUpdate": false
       },
       "publicRunId": 41896778222,
@@ -858,7 +858,7 @@
       "versionCode": 150,
       "testRunId": 41952069512,
       "signingRunId": 41953521977,
-      "updateLog": "v2.6.7\uff1a\n1. A\u80a1\u5e02\u573a\u5e7f\u5ea6\u5361\u7247\u53ca\u8be6\u60c5\u7edf\u4e00\u4f7f\u7528APP\u6da8\u8dcc\u7ea2\u7eff\u8272\u3002\n2. \u6210\u4ea4\u989d\u5bf9\u6bd4\u5b8c\u6574\u663e\u793a\u4e0a\u4e00\u4ea4\u6613\u65e5\u66f2\u7ebf\uff0c\u6309\u4ea4\u6613\u65e5\u7f13\u5b58\uff0c\u4eca\u65e5\u66f2\u7ebf\u5b9e\u65f6\u66f4\u65b0\u3002\n3. \u5206\u65f6\u53caK\u7ebf\u5341\u5b57\u6e38\u6807\u4e0b\u65b9\u7684\u65f6\u95f4\u3001\u65e5\u671f\u6587\u5b57\u5728\u6846\u5185\u5c45\u4e2d\u663e\u793a\u3002",
+      "updateLog": "v2.6.7：\n1. A股市场广度卡片及详情统一使用APP涨跌红绿色。\n2. 成交额对比完整显示上一交易日曲线，按交易日缓存，今日曲线实时更新。\n3. 分时及K线十字游标下方的时间、日期文字在框内居中显示。",
       "forceUpdate": false,
       "phase": "published",
       "publishRequest": {
@@ -869,7 +869,7 @@
         "versionCode": 150,
         "apkSha256": "d22747a1baa643d361d8facac969ba0175af5804ceee0c32fe88ecd90be56805",
         "signingCertificateSha256": "bef3f5cbb2989734f20740eddaac3e105dfecb6c63ea9275e178eedd892ec105",
-        "updateLog": "v2.6.7\uff1a\n1. A\u80a1\u5e02\u573a\u5e7f\u5ea6\u5361\u7247\u53ca\u8be6\u60c5\u7edf\u4e00\u4f7f\u7528APP\u6da8\u8dcc\u7ea2\u7eff\u8272\u3002\n2. \u6210\u4ea4\u989d\u5bf9\u6bd4\u5b8c\u6574\u663e\u793a\u4e0a\u4e00\u4ea4\u6613\u65e5\u66f2\u7ebf\uff0c\u6309\u4ea4\u6613\u65e5\u7f13\u5b58\uff0c\u4eca\u65e5\u66f2\u7ebf\u5b9e\u65f6\u66f4\u65b0\u3002\n3. \u5206\u65f6\u53caK\u7ebf\u5341\u5b57\u6e38\u6807\u4e0b\u65b9\u7684\u65f6\u95f4\u3001\u65e5\u671f\u6587\u5b57\u5728\u6846\u5185\u5c45\u4e2d\u663e\u793a\u3002",
+        "updateLog": "v2.6.7：\n1. A股市场广度卡片及详情统一使用APP涨跌红绿色。\n2. 成交额对比完整显示上一交易日曲线，按交易日缓存，今日曲线实时更新。\n3. 分时及K线十字游标下方的时间、日期文字在框内居中显示。",
         "forceUpdate": false
       },
       "publicRunId": 41953746761,
@@ -885,7 +885,7 @@
       "versionCode": 151,
       "testRunId": 41970678298,
       "signingRunId": 41971716368,
-      "updateLog": "v2.6.8\uff1a\n1. ETF\u5168\u5c40\u884c\u60c5\u3001\u6301\u4ed3\u53ca\u81ea\u9009\u4ef7\u683c\u7edf\u4e00\u7cbe\u786e\u5230\u5398\uff08\u5c0f\u6570\u70b9\u540e\u4e09\u4f4d\uff09\u3002\n2. ETF\u5206\u65f6\u4e0eK\u7ebf\u56fe\u7684\u4ef7\u683c\u5750\u6807\u3001\u6e38\u6807\u3001\u6700\u9ad8\u6700\u4f4e\u4ef7\u3001\u6628\u6536\u548c\u5165\u573a\u4ef7\u7edf\u4e00\u663e\u793a\u4e09\u4f4d\u5c0f\u6570\u3002\n3. \u6210\u4ea4\u989d\u5bf9\u6bd4\u66f2\u7ebf\u6807\u6ce8\u4e0a\u4e00\u4ea4\u6613\u65e5\u6700\u7ec8\u6210\u4ea4\u989d\uff0c\u62d6\u52a8\u6e38\u6807\u65f6\u4fdd\u6301\u56fa\u5b9a\u3002",
+      "updateLog": "v2.6.8：\n1. ETF全局行情、持仓及自选价格统一精确到厘（小数点后三位）。\n2. ETF分时与K线图的价格坐标、游标、最高最低价、昨收和入场价统一显示三位小数。\n3. 成交额对比曲线标注上一交易日最终成交额，拖动游标时保持固定。",
       "forceUpdate": false,
       "phase": "published",
       "publishRequest": {
@@ -896,7 +896,7 @@
         "versionCode": 151,
         "apkSha256": "f60588a511dc1dcde129a9aea74ce7ce7307aa0640ecbdd64da35fd51fcb8fc5",
         "signingCertificateSha256": "bef3f5cbb2989734f20740eddaac3e105dfecb6c63ea9275e178eedd892ec105",
-        "updateLog": "v2.6.8\uff1a\n1. ETF\u5168\u5c40\u884c\u60c5\u3001\u6301\u4ed3\u53ca\u81ea\u9009\u4ef7\u683c\u7edf\u4e00\u7cbe\u786e\u5230\u5398\uff08\u5c0f\u6570\u70b9\u540e\u4e09\u4f4d\uff09\u3002\n2. ETF\u5206\u65f6\u4e0eK\u7ebf\u56fe\u7684\u4ef7\u683c\u5750\u6807\u3001\u6e38\u6807\u3001\u6700\u9ad8\u6700\u4f4e\u4ef7\u3001\u6628\u6536\u548c\u5165\u573a\u4ef7\u7edf\u4e00\u663e\u793a\u4e09\u4f4d\u5c0f\u6570\u3002\n3. \u6210\u4ea4\u989d\u5bf9\u6bd4\u66f2\u7ebf\u6807\u6ce8\u4e0a\u4e00\u4ea4\u6613\u65e5\u6700\u7ec8\u6210\u4ea4\u989d\uff0c\u62d6\u52a8\u6e38\u6807\u65f6\u4fdd\u6301\u56fa\u5b9a\u3002",
+        "updateLog": "v2.6.8：\n1. ETF全局行情、持仓及自选价格统一精确到厘（小数点后三位）。\n2. ETF分时与K线图的价格坐标、游标、最高最低价、昨收和入场价统一显示三位小数。\n3. 成交额对比曲线标注上一交易日最终成交额，拖动游标时保持固定。",
         "forceUpdate": false
       },
       "publicRunId": 41972615487,
@@ -912,7 +912,7 @@
       "versionCode": 152,
       "testRunId": 42075033862,
       "signingRunId": 42076807457,
-      "updateLog": "v2.6.9\uff1a\n1. K\u7ebf\u9009\u4e2d\u8be6\u60c5\u6574\u5408\u81f3\u9876\u90e8\u4fe1\u606f\u5361\u7247\uff0c\u4fdd\u6301\u539f\u6709\u9ad8\u5ea6\uff0c\u53d6\u6d88\u56fe\u5185\u906e\u6321\u6d6e\u7a97\u3002\n2. \u6536\u76ca\u9875\u7ee9\u6548\u5361\u7247\u8c03\u6574\u4e3a\u7ec4\u5408\u51c0\u503c\u3001\u4ed3\u4f4d\u914d\u7f6e\u3001\u5f53\u65e5\u6536\u76ca\u3001\u7d2f\u8ba1\u6536\u76ca\uff1b\u5c55\u793a\u6301\u4ed3\u6570\u91cf\u3001\u6301\u4ed3\u4e0e\u73b0\u91d1\u6bd4\u4f8b\u3002\n3. \u884c\u60c5-\u6301\u4ed3\u6309\u5e38\u89c4\u76d8\u4e2d\u5e02\u573a\u52a8\u6001\u8c03\u6574A\u80a1\u4e0e\u7f8e\u80a1\u6301\u4ed3\u7ec4\u987a\u5e8f\uff0c\u975e\u76d8\u4e2d\u6062\u590dA\u80a1\u5728\u524d\u3002",
+      "updateLog": "v2.6.9：\n1. K线选中详情整合至顶部信息卡片，保持原有高度，取消图内遮挡浮窗。\n2. 收益页绩效卡片调整为组合净值、仓位配置、当日收益、累计收益；展示持仓数量、持仓与现金比例。\n3. 行情-持仓按常规盘中市场动态调整A股与美股持仓组顺序，非盘中恢复A股在前。",
       "forceUpdate": false,
       "phase": "published",
       "publishRequest": {
@@ -923,7 +923,7 @@
         "versionCode": 152,
         "apkSha256": "d1e8844a59211f944aad544639dc2160de687cd89fafc015ec31b21355e70603",
         "signingCertificateSha256": "bef3f5cbb2989734f20740eddaac3e105dfecb6c63ea9275e178eedd892ec105",
-        "updateLog": "v2.6.9\uff1a\n1. K\u7ebf\u9009\u4e2d\u8be6\u60c5\u6574\u5408\u81f3\u9876\u90e8\u4fe1\u606f\u5361\u7247\uff0c\u4fdd\u6301\u539f\u6709\u9ad8\u5ea6\uff0c\u53d6\u6d88\u56fe\u5185\u906e\u6321\u6d6e\u7a97\u3002\n2. \u6536\u76ca\u9875\u7ee9\u6548\u5361\u7247\u8c03\u6574\u4e3a\u7ec4\u5408\u51c0\u503c\u3001\u4ed3\u4f4d\u914d\u7f6e\u3001\u5f53\u65e5\u6536\u76ca\u3001\u7d2f\u8ba1\u6536\u76ca\uff1b\u5c55\u793a\u6301\u4ed3\u6570\u91cf\u3001\u6301\u4ed3\u4e0e\u73b0\u91d1\u6bd4\u4f8b\u3002\n3. \u884c\u60c5-\u6301\u4ed3\u6309\u5e38\u89c4\u76d8\u4e2d\u5e02\u573a\u52a8\u6001\u8c03\u6574A\u80a1\u4e0e\u7f8e\u80a1\u6301\u4ed3\u7ec4\u987a\u5e8f\uff0c\u975e\u76d8\u4e2d\u6062\u590dA\u80a1\u5728\u524d\u3002",
+        "updateLog": "v2.6.9：\n1. K线选中详情整合至顶部信息卡片，保持原有高度，取消图内遮挡浮窗。\n2. 收益页绩效卡片调整为组合净值、仓位配置、当日收益、累计收益；展示持仓数量、持仓与现金比例。\n3. 行情-持仓按常规盘中市场动态调整A股与美股持仓组顺序，非盘中恢复A股在前。",
         "forceUpdate": false
       },
       "publicRunId": 42078316639,
@@ -939,7 +939,7 @@
       "versionCode": 153,
       "testRunId": 42083658169,
       "signingRunId": 42085498788,
-      "updateLog": "v2.7.0\uff1a\n1. \u91cd\u8bbe\u8ba1\u9009\u4e2dK\u7ebf\u540e\u7684\u4e0a\u65b9\u4fe1\u606f\u680f\uff1a\u6536\u76d8\u4ef7\u4e0e\u5f53\u671f\u6da8\u5e45\u7a81\u51fa\u663e\u793a\uff0c\u81f3\u4eca\u6da8\u5e45\u53ca\u5468\u671f\u7d27\u968f\uff0c\u5f00\u9ad8\u4f4e\u6210\u4ea4\u91cf\u7d27\u51d1\u6392\u5217\uff1b\u4e0d\u6539\u53d8\u5361\u7247\u9ad8\u5ea6\u3002\n2. \u65e5K\u3001\u5468K\u3001\u6708K\u5341\u5b57\u5149\u6807\u4e0e\u5206\u65f6\u4e00\u81f4\uff1a\u6a2a\u7ebf\u5de6\u7aef\u663e\u793a\u4ef7\u683c\u3001\u53f3\u7aef\u663e\u793a\u5bf9\u5e94\u6da8\u8dcc\u5e45\uff0c\u5e95\u90e8\u663e\u793a\u65e5\u671f\u3002\n3. \u5386\u53f2K\u7ebf\u6ed1\u52a8\u65f6\uff0c\u6da8\u8dcc\u5e45\u4f9d\u636e\u5b8c\u6574\u5386\u53f2\u5e8f\u5217\u7684\u4e0a\u4e00\u5468\u671f\u6536\u76d8\u4ef7\uff0c\u4fdd\u6301\u56fe\u8868\u4e0e\u4fe1\u606f\u680f\u4e00\u81f4\u3002",
+      "updateLog": "v2.7.0：\n1. 重设计选中K线后的上方信息栏：收盘价与当期涨幅突出显示，至今涨幅及周期紧随，开高低成交量紧凑排列；不改变卡片高度。\n2. 日K、周K、月K十字光标与分时一致：横线左端显示价格、右端显示对应涨跌幅，底部显示日期。\n3. 历史K线滑动时，涨跌幅依据完整历史序列的上一周期收盘价，保持图表与信息栏一致。",
       "forceUpdate": false,
       "phase": "published",
       "publishRequest": {
@@ -950,7 +950,7 @@
         "versionCode": 153,
         "apkSha256": "726db2e000f2c08f093952c506174ea860256a18189f06de4f01e2f31b271534",
         "signingCertificateSha256": "bef3f5cbb2989734f20740eddaac3e105dfecb6c63ea9275e178eedd892ec105",
-        "updateLog": "v2.7.0\uff1a\n1. \u91cd\u8bbe\u8ba1\u9009\u4e2dK\u7ebf\u540e\u7684\u4e0a\u65b9\u4fe1\u606f\u680f\uff1a\u6536\u76d8\u4ef7\u4e0e\u5f53\u671f\u6da8\u5e45\u7a81\u51fa\u663e\u793a\uff0c\u81f3\u4eca\u6da8\u5e45\u53ca\u5468\u671f\u7d27\u968f\uff0c\u5f00\u9ad8\u4f4e\u6210\u4ea4\u91cf\u7d27\u51d1\u6392\u5217\uff1b\u4e0d\u6539\u53d8\u5361\u7247\u9ad8\u5ea6\u3002\n2. \u65e5K\u3001\u5468K\u3001\u6708K\u5341\u5b57\u5149\u6807\u4e0e\u5206\u65f6\u4e00\u81f4\uff1a\u6a2a\u7ebf\u5de6\u7aef\u663e\u793a\u4ef7\u683c\u3001\u53f3\u7aef\u663e\u793a\u5bf9\u5e94\u6da8\u8dcc\u5e45\uff0c\u5e95\u90e8\u663e\u793a\u65e5\u671f\u3002\n3. \u5386\u53f2K\u7ebf\u6ed1\u52a8\u65f6\uff0c\u6da8\u8dcc\u5e45\u4f9d\u636e\u5b8c\u6574\u5386\u53f2\u5e8f\u5217\u7684\u4e0a\u4e00\u5468\u671f\u6536\u76d8\u4ef7\uff0c\u4fdd\u6301\u56fe\u8868\u4e0e\u4fe1\u606f\u680f\u4e00\u81f4\u3002",
+        "updateLog": "v2.7.0：\n1. 重设计选中K线后的上方信息栏：收盘价与当期涨幅突出显示，至今涨幅及周期紧随，开高低成交量紧凑排列；不改变卡片高度。\n2. 日K、周K、月K十字光标与分时一致：横线左端显示价格、右端显示对应涨跌幅，底部显示日期。\n3. 历史K线滑动时，涨跌幅依据完整历史序列的上一周期收盘价，保持图表与信息栏一致。",
         "forceUpdate": false
       },
       "publicRunId": 42086262446,
@@ -966,7 +966,7 @@
       "versionCode": 155,
       "testRunId": 42090261528,
       "signingRunId": 42092899734,
-      "updateLog": "v2.7.2\uff1a\n1. \u884c\u60c5\u3001\u81ea\u9009\u3001\u6536\u76ca\u548c\u6301\u4ed3\u56fe\u8868\u7edf\u4e00\u9009\u4e2dK\u7ebf\u9876\u90e8\u4fe1\u606f\u680f\uff0c\u9002\u914d\u4e0d\u540c\u5bbd\u5ea6\u4e0e\u5361\u7247\u9ad8\u5ea6\u3002\n2. \u65e5K/\u5468K/\u6708K\u5341\u5b57\u5149\u6807\u5de6\u53f3\u663e\u793a\u4ef7\u683c\u53ca\u6da8\u8dcc\u5e45\uff0c\u5e95\u90e8\u663e\u793a\u9009\u4e2d\u65e5\u671f\u3002\n3. \u6536\u76ca\u9875\u53ca\u7b56\u7565/\u914d\u7f6e\u6301\u4ed3\u5185\u5d4c\u56fe\u8868\u63a5\u5165K\u7ebf\u9009\u4e2d\u8be6\u60c5\uff0c\u652f\u6301\u70b9\u51fb\u9876\u90e8\u5361\u7247\u53d6\u6d88\u9009\u4e2d\u3002\n4. \u4fee\u590d\u7d27\u51d1\u5361\u7247\u6536\u76d8\u4ef7\u88ab\u88c1\u5207\u95ee\u9898\uff0c\u4f18\u5316\u7a84\u5c4f\u56fe\u8868\u4e0e\u6210\u4ea4\u91cf\u7a7a\u95f4\u5206\u914d\u3002",
+      "updateLog": "v2.7.2：\n1. 行情、自选、收益和持仓图表统一选中K线顶部信息栏，适配不同宽度与卡片高度。\n2. 日K/周K/月K十字光标左右显示价格及涨跌幅，底部显示选中日期。\n3. 收益页及策略/配置持仓内嵌图表接入K线选中详情，支持点击顶部卡片取消选中。\n4. 修复紧凑卡片收盘价被裁切问题，优化窄屏图表与成交量空间分配。",
       "forceUpdate": false,
       "phase": "published",
       "publishRequest": {
@@ -977,7 +977,7 @@
         "versionCode": 155,
         "apkSha256": "a29a96b1dd6e2cc111e5ff6a29c5fa117a7c9c16d2c5784115755ee5ff5f9f70",
         "signingCertificateSha256": "bef3f5cbb2989734f20740eddaac3e105dfecb6c63ea9275e178eedd892ec105",
-        "updateLog": "v2.7.2\uff1a\n1. \u884c\u60c5\u3001\u81ea\u9009\u3001\u6536\u76ca\u548c\u6301\u4ed3\u56fe\u8868\u7edf\u4e00\u9009\u4e2dK\u7ebf\u9876\u90e8\u4fe1\u606f\u680f\uff0c\u9002\u914d\u4e0d\u540c\u5bbd\u5ea6\u4e0e\u5361\u7247\u9ad8\u5ea6\u3002\n2. \u65e5K/\u5468K/\u6708K\u5341\u5b57\u5149\u6807\u5de6\u53f3\u663e\u793a\u4ef7\u683c\u53ca\u6da8\u8dcc\u5e45\uff0c\u5e95\u90e8\u663e\u793a\u9009\u4e2d\u65e5\u671f\u3002\n3. \u6536\u76ca\u9875\u53ca\u7b56\u7565/\u914d\u7f6e\u6301\u4ed3\u5185\u5d4c\u56fe\u8868\u63a5\u5165K\u7ebf\u9009\u4e2d\u8be6\u60c5\uff0c\u652f\u6301\u70b9\u51fb\u9876\u90e8\u5361\u7247\u53d6\u6d88\u9009\u4e2d\u3002\n4. \u4fee\u590d\u7d27\u51d1\u5361\u7247\u6536\u76d8\u4ef7\u88ab\u88c1\u5207\u95ee\u9898\uff0c\u4f18\u5316\u7a84\u5c4f\u56fe\u8868\u4e0e\u6210\u4ea4\u91cf\u7a7a\u95f4\u5206\u914d\u3002",
+        "updateLog": "v2.7.2：\n1. 行情、自选、收益和持仓图表统一选中K线顶部信息栏，适配不同宽度与卡片高度。\n2. 日K/周K/月K十字光标左右显示价格及涨跌幅，底部显示选中日期。\n3. 收益页及策略/配置持仓内嵌图表接入K线选中详情，支持点击顶部卡片取消选中。\n4. 修复紧凑卡片收盘价被裁切问题，优化窄屏图表与成交量空间分配。",
         "forceUpdate": false
       },
       "publicRunId": 42093380175,
@@ -993,7 +993,7 @@
       "versionCode": 156,
       "testRunId": 42160655335,
       "signingRunId": 42162107194,
-      "updateLog": "v2.7.3\uff1a\n1. \u4fee\u590d\u81ea\u9009\u53ca\u884c\u60c5\u56fe\u8868\u9009\u4e2dK\u7ebf\u540e\uff0c\u9876\u90e8\u4fe1\u606f\u680f\u201c\u5f00\u3001\u9ad8\u3001\u4f4e\u3001\u91cf\u201d\u6807\u7b7e\u5728\u7d27\u51d1\u5361\u7247\u88ab\u6324\u538b\u3001\u88c1\u5207\u7684\u95ee\u9898\u3002\n2. \u9009\u4e2dK\u7ebf\u4fe1\u606f\u680f\u91c7\u7528\u7edf\u4e00\u4e09\u5c42\u81ea\u9002\u5e94\u5e03\u5c40\uff1a\u4ee3\u7801\u7d27\u8ddf\u540d\u79f0\uff0c\u6536\u76d8\u4ef7\u4e0e\u5f53\u671f\u6da8\u5e45\u540c\u884c\uff0c\u81f3\u4eca\u6da8\u5e45\u548c\u5468\u671f\u9760\u53f3\u663e\u793a\uff0c\u51cf\u5c0f\u65e0\u6548\u7559\u767d\u3002\n3. \u884c\u60c5\u3001\u81ea\u9009\u3001\u6536\u76ca\u53ca\u6301\u4ed3\u56fe\u8868\u5171\u7528\u672c\u6b21\u6392\u7248\u4fee\u590d\uff0c\u4fdd\u6301\u539f\u5361\u7247\u9ad8\u5ea6\u3001K\u7ebf\u53ca\u5341\u5b57\u5149\u6807\u4ea4\u4e92\u4e0d\u53d8\u3002",
+      "updateLog": "v2.7.3：\n1. 修复自选及行情图表选中K线后，顶部信息栏“开、高、低、量”标签在紧凑卡片被挤压、裁切的问题。\n2. 选中K线信息栏采用统一三层自适应布局：代码紧跟名称，收盘价与当期涨幅同行，至今涨幅和周期靠右显示，减小无效留白。\n3. 行情、自选、收益及持仓图表共用本次排版修复，保持原卡片高度、K线及十字光标交互不变。",
       "forceUpdate": false,
       "phase": "published",
       "publishRequest": {
@@ -1004,7 +1004,7 @@
         "versionCode": 156,
         "apkSha256": "a0acaf4cb61fb61f38f3001976a4ec0a5ed82abd1aa1d6439f3049e3bcf9580a",
         "signingCertificateSha256": "bef3f5cbb2989734f20740eddaac3e105dfecb6c63ea9275e178eedd892ec105",
-        "updateLog": "v2.7.3\uff1a\n1. \u4fee\u590d\u81ea\u9009\u53ca\u884c\u60c5\u56fe\u8868\u9009\u4e2dK\u7ebf\u540e\uff0c\u9876\u90e8\u4fe1\u606f\u680f\u201c\u5f00\u3001\u9ad8\u3001\u4f4e\u3001\u91cf\u201d\u6807\u7b7e\u5728\u7d27\u51d1\u5361\u7247\u88ab\u6324\u538b\u3001\u88c1\u5207\u7684\u95ee\u9898\u3002\n2. \u9009\u4e2dK\u7ebf\u4fe1\u606f\u680f\u91c7\u7528\u7edf\u4e00\u4e09\u5c42\u81ea\u9002\u5e94\u5e03\u5c40\uff1a\u4ee3\u7801\u7d27\u8ddf\u540d\u79f0\uff0c\u6536\u76d8\u4ef7\u4e0e\u5f53\u671f\u6da8\u5e45\u540c\u884c\uff0c\u81f3\u4eca\u6da8\u5e45\u548c\u5468\u671f\u9760\u53f3\u663e\u793a\uff0c\u51cf\u5c0f\u65e0\u6548\u7559\u767d\u3002\n3. \u884c\u60c5\u3001\u81ea\u9009\u3001\u6536\u76ca\u53ca\u6301\u4ed3\u56fe\u8868\u5171\u7528\u672c\u6b21\u6392\u7248\u4fee\u590d\uff0c\u4fdd\u6301\u539f\u5361\u7247\u9ad8\u5ea6\u3001K\u7ebf\u53ca\u5341\u5b57\u5149\u6807\u4ea4\u4e92\u4e0d\u53d8\u3002",
+        "updateLog": "v2.7.3：\n1. 修复自选及行情图表选中K线后，顶部信息栏“开、高、低、量”标签在紧凑卡片被挤压、裁切的问题。\n2. 选中K线信息栏采用统一三层自适应布局：代码紧跟名称，收盘价与当期涨幅同行，至今涨幅和周期靠右显示，减小无效留白。\n3. 行情、自选、收益及持仓图表共用本次排版修复，保持原卡片高度、K线及十字光标交互不变。",
         "forceUpdate": false
       },
       "publicRunId": 42162381211,
@@ -1020,7 +1020,7 @@
       "versionCode": 157,
       "testRunId": 42174822709,
       "signingRunId": 42175990142,
-      "updateLog": "v2.7.4\uff1a\n1. \u4fee\u590dA\u80a1ETF\u5b9e\u65f6K\u7ebf\u66f4\u65b0\uff1a\u7ecf\u6838\u9a8c\u7684\u62a5\u4ef7\u540c\u6b65\u66f4\u65b0\u5f53\u65e5\u65e5K\u5f00\u9ad8\u4f4e\u6536\uff0c\u4ef7\u683c\u7edf\u4e00\u4fdd\u7559\u4e09\u4f4d\u5c0f\u6570\uff0c\u5468K\u4e0e\u6708K\u968f\u65e5K\u805a\u5408\u3002\n2. \u884c\u60c5\u3001\u81ea\u9009\u3001\u7b56\u7565\u6301\u4ed3\u3001\u914d\u7f6e\u6301\u4ed3\u548c\u5df2\u6e05\u4ed3\u56fe\u8868\u7edf\u4e00\u4f20\u9012\u5b8c\u6574\u62a5\u4ef7\uff1b\u4fdd\u6301\u5386\u53f2\u6210\u4ea4\u91cf\u53ca\u524d\u590d\u6743\u5b89\u5168\u6821\u9a8c\u3002\n3. \u4f18\u5316\u53ef\u89c1\u56fe\u8868\u5237\u65b0\u9891\u7387\uff1a\u76d8\u4e2d\u5206\u65f615\u79d2\u3001K\u7ebf60\u79d2\uff1b\u6309\u5e02\u573a\u4ea4\u6613\u72b6\u6001\u81ea\u52a8\u964d\u9891\u53ca\u6062\u590d\u3002\n4. A\u80a1\u5e02\u573a\u5e7f\u5ea6\u4e0e\u6210\u4ea4\u989d\u5bf9\u6bd4\u72ec\u7acb\u5237\u65b0\uff0c\u4fdd\u7559\u4ea4\u6613\u65e5\u548c\u6570\u636e\u53e3\u5f84\u6838\u9a8c\u3002",
+      "updateLog": "v2.7.4：\n1. 修复A股ETF实时K线更新：经核验的报价同步更新当日日K开高低收，价格统一保留三位小数，周K与月K随日K聚合。\n2. 行情、自选、策略持仓、配置持仓和已清仓图表统一传递完整报价；保持历史成交量及前复权安全校验。\n3. 优化可见图表刷新频率：盘中分时15秒、K线60秒；按市场交易状态自动降频及恢复。\n4. A股市场广度与成交额对比独立刷新，保留交易日和数据口径核验。",
       "forceUpdate": false,
       "phase": "published",
       "publishRequest": {
@@ -1031,7 +1031,7 @@
         "versionCode": 157,
         "apkSha256": "1ef063b4ad99029678eeb2f4d190796be977a39fe1618931e9dee34cc87416be",
         "signingCertificateSha256": "bef3f5cbb2989734f20740eddaac3e105dfecb6c63ea9275e178eedd892ec105",
-        "updateLog": "v2.7.4\uff1a\n1. \u4fee\u590dA\u80a1ETF\u5b9e\u65f6K\u7ebf\u66f4\u65b0\uff1a\u7ecf\u6838\u9a8c\u7684\u62a5\u4ef7\u540c\u6b65\u66f4\u65b0\u5f53\u65e5\u65e5K\u5f00\u9ad8\u4f4e\u6536\uff0c\u4ef7\u683c\u7edf\u4e00\u4fdd\u7559\u4e09\u4f4d\u5c0f\u6570\uff0c\u5468K\u4e0e\u6708K\u968f\u65e5K\u805a\u5408\u3002\n2. \u884c\u60c5\u3001\u81ea\u9009\u3001\u7b56\u7565\u6301\u4ed3\u3001\u914d\u7f6e\u6301\u4ed3\u548c\u5df2\u6e05\u4ed3\u56fe\u8868\u7edf\u4e00\u4f20\u9012\u5b8c\u6574\u62a5\u4ef7\uff1b\u4fdd\u6301\u5386\u53f2\u6210\u4ea4\u91cf\u53ca\u524d\u590d\u6743\u5b89\u5168\u6821\u9a8c\u3002\n3. \u4f18\u5316\u53ef\u89c1\u56fe\u8868\u5237\u65b0\u9891\u7387\uff1a\u76d8\u4e2d\u5206\u65f615\u79d2\u3001K\u7ebf60\u79d2\uff1b\u6309\u5e02\u573a\u4ea4\u6613\u72b6\u6001\u81ea\u52a8\u964d\u9891\u53ca\u6062\u590d\u3002\n4. A\u80a1\u5e02\u573a\u5e7f\u5ea6\u4e0e\u6210\u4ea4\u989d\u5bf9\u6bd4\u72ec\u7acb\u5237\u65b0\uff0c\u4fdd\u7559\u4ea4\u6613\u65e5\u548c\u6570\u636e\u53e3\u5f84\u6838\u9a8c\u3002",
+        "updateLog": "v2.7.4：\n1. 修复A股ETF实时K线更新：经核验的报价同步更新当日日K开高低收，价格统一保留三位小数，周K与月K随日K聚合。\n2. 行情、自选、策略持仓、配置持仓和已清仓图表统一传递完整报价；保持历史成交量及前复权安全校验。\n3. 优化可见图表刷新频率：盘中分时15秒、K线60秒；按市场交易状态自动降频及恢复。\n4. A股市场广度与成交额对比独立刷新，保留交易日和数据口径核验。",
         "forceUpdate": false
       },
       "publicRunId": 42176765242,
@@ -1047,7 +1047,7 @@
       "versionCode": 158,
       "testRunId": 42211605614,
       "signingRunId": 42213272943,
-      "updateLog": "v2.7.5\uff1a\n1. \u4ec5\u7b56\u7565\u6a21\u5f0f\u7684K\u7ebf\u526f\u56fe\u589e\u52a0\u6210\u4ea4\u91cf\uff0f\u7b56\u7565\u4fe1\u53f7\u5207\u6362\uff0c\u7ec4\u5408\u56fe\u6807\u4e0e\u65e5K\u3001\u5468K\u3001\u6708K\u9010\u6839\u5bf9\u5e94\u3002\n2. \u672c\u5730\u6309\u6b63\u5f0f\u6280\u672f\u516c\u5f0f\u8ba1\u7b97\u76d8\u4e2d\u7ed3\u8bba\uff1bATR\u4ec5\u4ee5\u91d1\u6846\u6709\u65e0\u8868\u793a\uff0c\u6e05\u4ed3\u7edf\u4e00\u663e\u793a\u3002\n3. \u9996\u6b21\u5168\u91cf\u8ba1\u7b97\u5e76\u7f13\u5b58\uff0c\u540e\u7eed\u4ece\u5386\u53f2\u68c0\u67e5\u70b9\u589e\u91cf\u66f4\u65b0\uff0c\u6536\u76d8\u540e\u6821\u6b63\u4fdd\u5b58\uff1b\u8bf4\u660e\u7edf\u4e00\u6536\u8fdb\u8be6\u60c5\u56fe\u6807\u3002",
+      "updateLog": "v2.7.5：\n1. 仅策略模式的K线副图增加成交量／策略信号切换，组合图标与日K、周K、月K逐根对应。\n2. 本地按正式技术公式计算盘中结论；ATR仅以金框有无表示，清仓统一显示。\n3. 首次全量计算并缓存，后续从历史检查点增量更新，收盘后校正保存；说明统一收进详情图标。",
       "forceUpdate": false,
       "phase": "published",
       "publishRequest": {
@@ -1058,7 +1058,7 @@
         "versionCode": 158,
         "apkSha256": "6f7abd2b561616556b46c3bbe77d9fb53d1ed2db7ae099f19382e46d76fa73db",
         "signingCertificateSha256": "bef3f5cbb2989734f20740eddaac3e105dfecb6c63ea9275e178eedd892ec105",
-        "updateLog": "v2.7.5\uff1a\n1. \u4ec5\u7b56\u7565\u6a21\u5f0f\u7684K\u7ebf\u526f\u56fe\u589e\u52a0\u6210\u4ea4\u91cf\uff0f\u7b56\u7565\u4fe1\u53f7\u5207\u6362\uff0c\u7ec4\u5408\u56fe\u6807\u4e0e\u65e5K\u3001\u5468K\u3001\u6708K\u9010\u6839\u5bf9\u5e94\u3002\n2. \u672c\u5730\u6309\u6b63\u5f0f\u6280\u672f\u516c\u5f0f\u8ba1\u7b97\u76d8\u4e2d\u7ed3\u8bba\uff1bATR\u4ec5\u4ee5\u91d1\u6846\u6709\u65e0\u8868\u793a\uff0c\u6e05\u4ed3\u7edf\u4e00\u663e\u793a\u3002\n3. \u9996\u6b21\u5168\u91cf\u8ba1\u7b97\u5e76\u7f13\u5b58\uff0c\u540e\u7eed\u4ece\u5386\u53f2\u68c0\u67e5\u70b9\u589e\u91cf\u66f4\u65b0\uff0c\u6536\u76d8\u540e\u6821\u6b63\u4fdd\u5b58\uff1b\u8bf4\u660e\u7edf\u4e00\u6536\u8fdb\u8be6\u60c5\u56fe\u6807\u3002",
+        "updateLog": "v2.7.5：\n1. 仅策略模式的K线副图增加成交量／策略信号切换，组合图标与日K、周K、月K逐根对应。\n2. 本地按正式技术公式计算盘中结论；ATR仅以金框有无表示，清仓统一显示。\n3. 首次全量计算并缓存，后续从历史检查点增量更新，收盘后校正保存；说明统一收进详情图标。",
         "forceUpdate": false
       },
       "publicRunId": 42213746369,
@@ -1074,7 +1074,7 @@
       "versionCode": 159,
       "testRunId": 42222996039,
       "signingRunId": 42224988614,
-      "updateLog": "v2.7.6\uff1a\n1. \u76f4\u63a5\u70b9\u51fbK\u7ebf\u526f\u56fe\u533a\u57df\u5373\u53ef\u5207\u6362\u6210\u4ea4\u91cf\u4e0e\u7b56\u7565\u4fe1\u53f7\uff0c\u957f\u6309\u5b9a\u4f4dK\u7ebf\u3001\u6ed1\u52a8\u5386\u53f2\u7684\u64cd\u4f5c\u4fdd\u6301\u4e0d\u53d8\u3002\n2. \u7b56\u7565\u4fe1\u53f7\u526f\u56fe\u9ad8\u5ea6\u7531124dp\u538b\u7f29\u4e3a80dp\uff0c\u4f18\u5316\u7bad\u5934\u4e0e\u5404\u6307\u6807\u884c\u95f4\u8ddd\u3002\n3. \u526f\u56fe\u6807\u9898\u5408\u5e76\u4e3a\u5355\u884c\uff0c\u4fdd\u7559\u7b56\u7565\u4fe1\u53f7\u8be6\u60c5\u5165\u53e3\uff1b\u4e3b\u56fe\u3001\u884c\u60c5\u5361\u7247\u53ca\u7b56\u7565\u8ba1\u7b97\u89c4\u5219\u4e0d\u53d8\u3002",
+      "updateLog": "v2.7.6：\n1. 直接点击K线副图区域即可切换成交量与策略信号，长按定位K线、滑动历史的操作保持不变。\n2. 策略信号副图高度由124dp压缩为80dp，优化箭头与各指标行间距。\n3. 副图标题合并为单行，保留策略信号详情入口；主图、行情卡片及策略计算规则不变。",
       "forceUpdate": false,
       "phase": "published",
       "publishRequest": {
@@ -1085,7 +1085,7 @@
         "versionCode": 159,
         "apkSha256": "35d0fcd218dc3dcb86868365346f6238942b433544efdabfb38ecd6038d12339",
         "signingCertificateSha256": "bef3f5cbb2989734f20740eddaac3e105dfecb6c63ea9275e178eedd892ec105",
-        "updateLog": "v2.7.6\uff1a\n1. \u76f4\u63a5\u70b9\u51fbK\u7ebf\u526f\u56fe\u533a\u57df\u5373\u53ef\u5207\u6362\u6210\u4ea4\u91cf\u4e0e\u7b56\u7565\u4fe1\u53f7\uff0c\u957f\u6309\u5b9a\u4f4dK\u7ebf\u3001\u6ed1\u52a8\u5386\u53f2\u7684\u64cd\u4f5c\u4fdd\u6301\u4e0d\u53d8\u3002\n2. \u7b56\u7565\u4fe1\u53f7\u526f\u56fe\u9ad8\u5ea6\u7531124dp\u538b\u7f29\u4e3a80dp\uff0c\u4f18\u5316\u7bad\u5934\u4e0e\u5404\u6307\u6807\u884c\u95f4\u8ddd\u3002\n3. \u526f\u56fe\u6807\u9898\u5408\u5e76\u4e3a\u5355\u884c\uff0c\u4fdd\u7559\u7b56\u7565\u4fe1\u53f7\u8be6\u60c5\u5165\u53e3\uff1b\u4e3b\u56fe\u3001\u884c\u60c5\u5361\u7247\u53ca\u7b56\u7565\u8ba1\u7b97\u89c4\u5219\u4e0d\u53d8\u3002",
+        "updateLog": "v2.7.6：\n1. 直接点击K线副图区域即可切换成交量与策略信号，长按定位K线、滑动历史的操作保持不变。\n2. 策略信号副图高度由124dp压缩为80dp，优化箭头与各指标行间距。\n3. 副图标题合并为单行，保留策略信号详情入口；主图、行情卡片及策略计算规则不变。",
         "forceUpdate": false
       },
       "publicRunId": 42225818657,
@@ -1101,7 +1101,7 @@
       "versionCode": 160,
       "testRunId": 42246997705,
       "signingRunId": 42248524900,
-      "updateLog": "v2.7.7\uff1a\n1. \u5206\u65f6\u56fe\u7b56\u7565\u4fe1\u53f7\u526f\u56fe\u5c55\u793a\u5f53\u65e5\u65e5\u7ebf\u7ed3\u8bba\u3001\u8d8b\u52bf\u95e8\u69db\u3001\u786e\u8ba4\u6307\u6807\u4e0eATR\uff0c\u5e76\u4fdd\u7559\u6210\u4ea4\u91cf\u4e00\u952e\u5207\u6362\u3002\n2. \u4f18\u5316\u7b56\u7565\u4fe1\u53f7\u8be6\u60c5\u7684\u4e70\u5165\u3001\u6e05\u4ed3\u5224\u65ad\u8def\u5f84\uff0c\u4fdd\u6301\u539f\u7b56\u7565\u89c4\u5219\u3002\n3. \u4fee\u590d\u7f8e\u80a1\u6301\u4ed3\u884c\u60c5\u4e0e\u56fe\u8868\u5bf9\u5e94\u5173\u7cfb\u3001\u5f53\u65e5K\u7ebf\u524d\u590d\u6743\u57fa\u51c6\u548c\u90e8\u5206\u5b9e\u65f6\u4fe1\u53f7\u5f85\u6838\u9a8c\u95ee\u9898\u3002\n4. ATR\u7ed8\u56fe\u6539\u4e3a\u672a\u8dcc\u7834\u9608\u503c\u65f6\u663e\u793a\uff0c\u8dcc\u7834\u540e\u6807\u8bb0\u6d88\u5931\uff1b\u6e05\u4ed3\u903b\u8f91\u4e0d\u53d8\u3002",
+      "updateLog": "v2.7.7：\n1. 分时图策略信号副图展示当日日线结论、趋势门槛、确认指标与ATR，并保留成交量一键切换。\n2. 优化策略信号详情的买入、清仓判断路径，保持原策略规则。\n3. 修复美股持仓行情与图表对应关系、当日K线前复权基准和部分实时信号待核验问题。\n4. ATR绘图改为未跌破阈值时显示，跌破后标记消失；清仓逻辑不变。",
       "forceUpdate": false,
       "phase": "published",
       "publishRequest": {
@@ -1112,7 +1112,7 @@
         "versionCode": 160,
         "apkSha256": "3adc1c12289ae577b8aa0cca7c0276df23e86288726f6c9f7fdf5bcf880bfcb2",
         "signingCertificateSha256": "bef3f5cbb2989734f20740eddaac3e105dfecb6c63ea9275e178eedd892ec105",
-        "updateLog": "v2.7.7\uff1a\n1. \u5206\u65f6\u56fe\u7b56\u7565\u4fe1\u53f7\u526f\u56fe\u5c55\u793a\u5f53\u65e5\u65e5\u7ebf\u7ed3\u8bba\u3001\u8d8b\u52bf\u95e8\u69db\u3001\u786e\u8ba4\u6307\u6807\u4e0eATR\uff0c\u5e76\u4fdd\u7559\u6210\u4ea4\u91cf\u4e00\u952e\u5207\u6362\u3002\n2. \u4f18\u5316\u7b56\u7565\u4fe1\u53f7\u8be6\u60c5\u7684\u4e70\u5165\u3001\u6e05\u4ed3\u5224\u65ad\u8def\u5f84\uff0c\u4fdd\u6301\u539f\u7b56\u7565\u89c4\u5219\u3002\n3. \u4fee\u590d\u7f8e\u80a1\u6301\u4ed3\u884c\u60c5\u4e0e\u56fe\u8868\u5bf9\u5e94\u5173\u7cfb\u3001\u5f53\u65e5K\u7ebf\u524d\u590d\u6743\u57fa\u51c6\u548c\u90e8\u5206\u5b9e\u65f6\u4fe1\u53f7\u5f85\u6838\u9a8c\u95ee\u9898\u3002\n4. ATR\u7ed8\u56fe\u6539\u4e3a\u672a\u8dcc\u7834\u9608\u503c\u65f6\u663e\u793a\uff0c\u8dcc\u7834\u540e\u6807\u8bb0\u6d88\u5931\uff1b\u6e05\u4ed3\u903b\u8f91\u4e0d\u53d8\u3002",
+        "updateLog": "v2.7.7：\n1. 分时图策略信号副图展示当日日线结论、趋势门槛、确认指标与ATR，并保留成交量一键切换。\n2. 优化策略信号详情的买入、清仓判断路径，保持原策略规则。\n3. 修复美股持仓行情与图表对应关系、当日K线前复权基准和部分实时信号待核验问题。\n4. ATR绘图改为未跌破阈值时显示，跌破后标记消失；清仓逻辑不变。",
         "forceUpdate": false
       },
       "publicRunId": 42250809098,
@@ -1128,7 +1128,7 @@
       "versionCode": 161,
       "testRunId": 42257873018,
       "signingRunId": 42260117700,
-      "updateLog": "v2.7.8\uff1a\n1. \u5206\u65f6\u7b56\u7565\u4fe1\u53f7\u526f\u56fe\u4fdd\u7559\u539f\u56db\u5206\u533a\u5e03\u5c40\uff0c\u4fee\u590d\u6587\u5b57\u622a\u65ad\u548c\u7a7a\u95f4\u5229\u7528\u4e0d\u8db3\uff0c\u4e0d\u6539\u53d8\u56fe\u8868\u9ad8\u5ea6\u3002\n2. \u7b56\u7565\u8be6\u60c5\u79fb\u9664\u5197\u957f\u8bf4\u660e\uff0c\u4fdd\u7559\u5224\u65ad\u8def\u5f84\u4e0e\u5404\u6307\u6807\u72b6\u6001\u3002\n3. \u7f8e\u80a1\u524d\u590d\u6743\u65e5K\u589e\u52a0\u72ec\u7acb\u5907\u7528\u6e90\uff0c\u8986\u76d6\u4e3b\u6e90\u7f3a\u5931\u3001\u5386\u53f2\u4e0d\u8db3\u6216\u8fc7\u65e7\u7b49\u60c5\u51b5\uff1b\u4fdd\u6301\u4e25\u8c28\u6570\u636e\u6838\u9a8c\u3002\n4. BMBL\u3001BOX\u901a\u8fc7\u771f\u5b9e\u524d\u590d\u6743\u884c\u60c5\u4e0e\u7b56\u7565\u4fe1\u53f7\u4e13\u9879\u9a8c\u8bc1\u3002",
+      "updateLog": "v2.7.8：\n1. 分时策略信号副图保留原四分区布局，修复文字截断和空间利用不足，不改变图表高度。\n2. 策略详情移除冗长说明，保留判断路径与各指标状态。\n3. 美股前复权日K增加独立备用源，覆盖主源缺失、历史不足或过旧等情况；保持严谨数据核验。\n4. BMBL、BOX通过真实前复权行情与策略信号专项验证。",
       "forceUpdate": false,
       "phase": "published",
       "publishRequest": {
@@ -1139,7 +1139,7 @@
         "versionCode": 161,
         "apkSha256": "8eaa2093acc09be2ef948ca54dc6db0bf769f5caa9fce393018df5c3d0735403",
         "signingCertificateSha256": "bef3f5cbb2989734f20740eddaac3e105dfecb6c63ea9275e178eedd892ec105",
-        "updateLog": "v2.7.8\uff1a\n1. \u5206\u65f6\u7b56\u7565\u4fe1\u53f7\u526f\u56fe\u4fdd\u7559\u539f\u56db\u5206\u533a\u5e03\u5c40\uff0c\u4fee\u590d\u6587\u5b57\u622a\u65ad\u548c\u7a7a\u95f4\u5229\u7528\u4e0d\u8db3\uff0c\u4e0d\u6539\u53d8\u56fe\u8868\u9ad8\u5ea6\u3002\n2. \u7b56\u7565\u8be6\u60c5\u79fb\u9664\u5197\u957f\u8bf4\u660e\uff0c\u4fdd\u7559\u5224\u65ad\u8def\u5f84\u4e0e\u5404\u6307\u6807\u72b6\u6001\u3002\n3. \u7f8e\u80a1\u524d\u590d\u6743\u65e5K\u589e\u52a0\u72ec\u7acb\u5907\u7528\u6e90\uff0c\u8986\u76d6\u4e3b\u6e90\u7f3a\u5931\u3001\u5386\u53f2\u4e0d\u8db3\u6216\u8fc7\u65e7\u7b49\u60c5\u51b5\uff1b\u4fdd\u6301\u4e25\u8c28\u6570\u636e\u6838\u9a8c\u3002\n4. BMBL\u3001BOX\u901a\u8fc7\u771f\u5b9e\u524d\u590d\u6743\u884c\u60c5\u4e0e\u7b56\u7565\u4fe1\u53f7\u4e13\u9879\u9a8c\u8bc1\u3002",
+        "updateLog": "v2.7.8：\n1. 分时策略信号副图保留原四分区布局，修复文字截断和空间利用不足，不改变图表高度。\n2. 策略详情移除冗长说明，保留判断路径与各指标状态。\n3. 美股前复权日K增加独立备用源，覆盖主源缺失、历史不足或过旧等情况；保持严谨数据核验。\n4. BMBL、BOX通过真实前复权行情与策略信号专项验证。",
         "forceUpdate": false
       },
       "publicRunId": 42261129917,
@@ -1155,7 +1155,7 @@
       "versionCode": 162,
       "testRunId": 42266703490,
       "signingRunId": 42268796442,
-      "updateLog": "v2.7.9\uff1a\n1. A\u80a1\u5e02\u573a\u5e7f\u5ea6\u6da8\u505c/\u8dcc\u505c\u5728\u5468\u672b\u3001\u8282\u5047\u65e5\u548c\u5f00\u76d8\u524d\u6539\u4e3a\u67e5\u8be2\u6700\u8fd1\u6709\u6548\u4ea4\u6613\u65e5\uff0c\u907f\u514d\u65e0\u6545\u663e\u793a\u6a2a\u6760\u3002\n2. \u817e\u8bafA\u80a1\u80a1\u7968\u53caETF\u5206\u65f6\u8fc7\u6ee415:00\u540e\u975e\u65e5\u95f4\u4ea4\u6613\u65f6\u6bb5\u91c7\u6837\uff0c\u4fee\u590d\u7edf\u4e00\u8bef\u62a5\u7f3a\u657025\u5904\uff1b\u771f\u5b9e\u91c7\u6837\u7f3a\u53e3\u4ecd\u4f1a\u63d0\u793a\u3002\n3. \u589e\u5f3a\u4e13\u9898\u6570\u91cf\u5b57\u6bb5\u517c\u5bb9\u6027\u4e0e\u5931\u8d25\u8bca\u65ad\uff0c\u65b0\u589e\u6caa\u6df1\u4eac\u80a1\u7968/ETF\u548c\u4ea4\u6613\u65e5\u65e5\u671f\u56de\u5f52\u6d4b\u8bd5\u3002",
+      "updateLog": "v2.7.9：\n1. A股市场广度涨停/跌停在周末、节假日和开盘前改为查询最近有效交易日，避免无故显示横杠。\n2. 腾讯A股股票及ETF分时过滤15:00后非日间交易时段采样，修复统一误报缺数25处；真实采样缺口仍会提示。\n3. 增强专题数量字段兼容性与失败诊断，新增沪深京股票/ETF和交易日日期回归测试。",
       "forceUpdate": false,
       "phase": "published",
       "publishRequest": {
@@ -1166,7 +1166,7 @@
         "versionCode": 162,
         "apkSha256": "5b3fda608abb8a2e48fa98e62a2b543cb354bd4249265379bf4c9385f22d1df8",
         "signingCertificateSha256": "bef3f5cbb2989734f20740eddaac3e105dfecb6c63ea9275e178eedd892ec105",
-        "updateLog": "v2.7.9\uff1a\n1. A\u80a1\u5e02\u573a\u5e7f\u5ea6\u6da8\u505c/\u8dcc\u505c\u5728\u5468\u672b\u3001\u8282\u5047\u65e5\u548c\u5f00\u76d8\u524d\u6539\u4e3a\u67e5\u8be2\u6700\u8fd1\u6709\u6548\u4ea4\u6613\u65e5\uff0c\u907f\u514d\u65e0\u6545\u663e\u793a\u6a2a\u6760\u3002\n2. \u817e\u8bafA\u80a1\u80a1\u7968\u53caETF\u5206\u65f6\u8fc7\u6ee415:00\u540e\u975e\u65e5\u95f4\u4ea4\u6613\u65f6\u6bb5\u91c7\u6837\uff0c\u4fee\u590d\u7edf\u4e00\u8bef\u62a5\u7f3a\u657025\u5904\uff1b\u771f\u5b9e\u91c7\u6837\u7f3a\u53e3\u4ecd\u4f1a\u63d0\u793a\u3002\n3. \u589e\u5f3a\u4e13\u9898\u6570\u91cf\u5b57\u6bb5\u517c\u5bb9\u6027\u4e0e\u5931\u8d25\u8bca\u65ad\uff0c\u65b0\u589e\u6caa\u6df1\u4eac\u80a1\u7968/ETF\u548c\u4ea4\u6613\u65e5\u65e5\u671f\u56de\u5f52\u6d4b\u8bd5\u3002",
+        "updateLog": "v2.7.9：\n1. A股市场广度涨停/跌停在周末、节假日和开盘前改为查询最近有效交易日，避免无故显示横杠。\n2. 腾讯A股股票及ETF分时过滤15:00后非日间交易时段采样，修复统一误报缺数25处；真实采样缺口仍会提示。\n3. 增强专题数量字段兼容性与失败诊断，新增沪深京股票/ETF和交易日日期回归测试。",
         "forceUpdate": false
       },
       "publicRunId": 42269454542,
@@ -1182,7 +1182,7 @@
       "versionCode": 163,
       "testRunId": 42338221467,
       "signingRunId": 42339195379,
-      "updateLog": "v2.8.0\uff1a\n1. \u7b56\u7565\u4fe1\u53f7\u8be6\u60c5\u4e0e\u5206\u65f6\u526f\u56fe\u5171\u4eab\u4e03\u7c7b\u7ed3\u8bba\u53ca\u56fe\u6807\uff0c\u7edf\u4e00\u7ea2\u8272\u591a\u5934\u3001\u7eff\u8272\u9884\u8b66\u7b49\u914d\u8272\uff0c\u539f\u4e70\u5165\u6e05\u4ed3\u89c4\u5219\u4e0d\u53d8\u3002\n2. \u5206\u65f6\u526f\u56fe\u5c06\u8d8b\u52bf\u524d\u63d0/\u786e\u8ba4\u6307\u6807\u66f4\u540d\u4e3a\u8d8b\u52bf\u6307\u6807/\u6280\u672f\u6307\u6807\uff0cATR \u672a\u8dcc\u7834\u663e\u793a\u91d1\u8272\u5b9e\u5fc3\u83f1\u5f62\uff0c\u8dcc\u7834\u663e\u793a\u7070\u8272\u7a7a\u5fc3\u83f1\u5f62\uff0c\u53d6\u6d88 ATR \u6da8\u8dcc\u7834\u72b6\u6001\u6587\u5b57\u3002\n3. \u7b56\u7565\u8be6\u60c5\u4e00\u76ee\u66f4\u540d\u4e3a\u4e00\u76ee\u5747\u8861\uff0cATR \u540c\u6b65\u53cc\u72b6\u6001\u83f1\u5f62\u663e\u793a\u3002",
+      "updateLog": "v2.8.0：\n1. 策略信号详情与分时副图共享七类结论及图标，统一红色多头、绿色预警等配色，原买入清仓规则不变。\n2. 分时副图将趋势前提/确认指标更名为趋势指标/技术指标，ATR 未跌破显示金色实心菱形，跌破显示灰色空心菱形，取消 ATR 涨跌破状态文字。\n3. 策略详情一目更名为一目均衡，ATR 同步双状态菱形显示。",
       "forceUpdate": false,
       "phase": "published",
       "publishRequest": {
@@ -1193,7 +1193,7 @@
         "versionCode": 163,
         "apkSha256": "9d85090a091557d3132b30c5af42ebeda5471f9afb7b1a70019da1345f3c00c4",
         "signingCertificateSha256": "bef3f5cbb2989734f20740eddaac3e105dfecb6c63ea9275e178eedd892ec105",
-        "updateLog": "v2.8.0\uff1a\n1. \u7b56\u7565\u4fe1\u53f7\u8be6\u60c5\u4e0e\u5206\u65f6\u526f\u56fe\u5171\u4eab\u4e03\u7c7b\u7ed3\u8bba\u53ca\u56fe\u6807\uff0c\u7edf\u4e00\u7ea2\u8272\u591a\u5934\u3001\u7eff\u8272\u9884\u8b66\u7b49\u914d\u8272\uff0c\u539f\u4e70\u5165\u6e05\u4ed3\u89c4\u5219\u4e0d\u53d8\u3002\n2. \u5206\u65f6\u526f\u56fe\u5c06\u8d8b\u52bf\u524d\u63d0/\u786e\u8ba4\u6307\u6807\u66f4\u540d\u4e3a\u8d8b\u52bf\u6307\u6807/\u6280\u672f\u6307\u6807\uff0cATR \u672a\u8dcc\u7834\u663e\u793a\u91d1\u8272\u5b9e\u5fc3\u83f1\u5f62\uff0c\u8dcc\u7834\u663e\u793a\u7070\u8272\u7a7a\u5fc3\u83f1\u5f62\uff0c\u53d6\u6d88 ATR \u6da8\u8dcc\u7834\u72b6\u6001\u6587\u5b57\u3002\n3. \u7b56\u7565\u8be6\u60c5\u4e00\u76ee\u66f4\u540d\u4e3a\u4e00\u76ee\u5747\u8861\uff0cATR \u540c\u6b65\u53cc\u72b6\u6001\u83f1\u5f62\u663e\u793a\u3002",
+        "updateLog": "v2.8.0：\n1. 策略信号详情与分时副图共享七类结论及图标，统一红色多头、绿色预警等配色，原买入清仓规则不变。\n2. 分时副图将趋势前提/确认指标更名为趋势指标/技术指标，ATR 未跌破显示金色实心菱形，跌破显示灰色空心菱形，取消 ATR 涨跌破状态文字。\n3. 策略详情一目更名为一目均衡，ATR 同步双状态菱形显示。",
         "forceUpdate": false
       },
       "publicRunId": 42339409825,
@@ -1209,7 +1209,7 @@
       "versionCode": 164,
       "testRunId": 42343079175,
       "signingRunId": 42344016609,
-      "updateLog": "v2.8.1\uff1a\n1. \u4e03\u7c7b\u7b56\u7565\u5c55\u793a\u7ed3\u8bba\u4f18\u5316\uff1a\u6a59\u8272\u201c\u8d8b\u52bf\u8f6c\u5f31/\u8f6c\u5f31\u201d\u642d\u914d\u4e0b\u964d\u8d8b\u52bf\u56fe\u6807\u3002\n2. \u591a\u5934\u5ef6\u7eed\u5728\u8d8b\u52bf4/4\u3001\u6280\u672f\u81f3\u5c111\u9879\u591a\u5934\u4e14\u65e0\u7a7a\u5934\u3001ATR\u672a\u8dcc\u7834\u65f6\u663e\u793a\uff1b\u6280\u672f\u5168\u4e2d\u6027\u3001\u51fa\u73b0\u7a7a\u5934\u6216ATR\u8dcc\u7834\u5219\u663e\u793a\u201c\u4fe1\u53f7\u5206\u6b67\u201d\uff0c\u4e0d\u66f4\u6539\u5b9e\u9645\u4e70\u5165\u6e05\u4ed3\u89c4\u5219\u3002\n3. \u7b56\u7565\u8be6\u60c5 ATR \u540c\u65f6\u663e\u793a\u53cc\u8272\u83f1\u5f62\u4e0e\u201c\u5df2\u8dcc\u7834/\u672a\u8dcc\u7834\u201d\u6587\u5b57\uff0c\u4e70\u5165\u4e0eATR\u98ce\u9669\u5e76\u5b58\u65f6\u660e\u786e\u63d0\u793a\u3002\u5206\u65f6\u4ec5\u4fdd\u7559\u53cc\u8272\u83f1\u5f62\uff0cK\u7ebf\u526f\u56fe\u4e0d\u6539\u3002",
+      "updateLog": "v2.8.1：\n1. 七类策略展示结论优化：橙色“趋势转弱/转弱”搭配下降趋势图标。\n2. 多头延续在趋势4/4、技术至少1项多头且无空头、ATR未跌破时显示；技术全中性、出现空头或ATR跌破则显示“信号分歧”，不更改实际买入清仓规则。\n3. 策略详情 ATR 同时显示双色菱形与“已跌破/未跌破”文字，买入与ATR风险并存时明确提示。分时仅保留双色菱形，K线副图不改。",
       "forceUpdate": false,
       "phase": "published",
       "publishRequest": {
@@ -1220,7 +1220,7 @@
         "versionCode": 164,
         "apkSha256": "ca9fe87033ddb53200f286f7702dbb1d4031d88a16225fce92e4f1937166dabf",
         "signingCertificateSha256": "bef3f5cbb2989734f20740eddaac3e105dfecb6c63ea9275e178eedd892ec105",
-        "updateLog": "v2.8.1\uff1a\n1. \u4e03\u7c7b\u7b56\u7565\u5c55\u793a\u7ed3\u8bba\u4f18\u5316\uff1a\u6a59\u8272\u201c\u8d8b\u52bf\u8f6c\u5f31/\u8f6c\u5f31\u201d\u642d\u914d\u4e0b\u964d\u8d8b\u52bf\u56fe\u6807\u3002\n2. \u591a\u5934\u5ef6\u7eed\u5728\u8d8b\u52bf4/4\u3001\u6280\u672f\u81f3\u5c111\u9879\u591a\u5934\u4e14\u65e0\u7a7a\u5934\u3001ATR\u672a\u8dcc\u7834\u65f6\u663e\u793a\uff1b\u6280\u672f\u5168\u4e2d\u6027\u3001\u51fa\u73b0\u7a7a\u5934\u6216ATR\u8dcc\u7834\u5219\u663e\u793a\u201c\u4fe1\u53f7\u5206\u6b67\u201d\uff0c\u4e0d\u66f4\u6539\u5b9e\u9645\u4e70\u5165\u6e05\u4ed3\u89c4\u5219\u3002\n3. \u7b56\u7565\u8be6\u60c5 ATR \u540c\u65f6\u663e\u793a\u53cc\u8272\u83f1\u5f62\u4e0e\u201c\u5df2\u8dcc\u7834/\u672a\u8dcc\u7834\u201d\u6587\u5b57\uff0c\u4e70\u5165\u4e0eATR\u98ce\u9669\u5e76\u5b58\u65f6\u660e\u786e\u63d0\u793a\u3002\u5206\u65f6\u4ec5\u4fdd\u7559\u53cc\u8272\u83f1\u5f62\uff0cK\u7ebf\u526f\u56fe\u4e0d\u6539\u3002",
+        "updateLog": "v2.8.1：\n1. 七类策略展示结论优化：橙色“趋势转弱/转弱”搭配下降趋势图标。\n2. 多头延续在趋势4/4、技术至少1项多头且无空头、ATR未跌破时显示；技术全中性、出现空头或ATR跌破则显示“信号分歧”，不更改实际买入清仓规则。\n3. 策略详情 ATR 同时显示双色菱形与“已跌破/未跌破”文字，买入与ATR风险并存时明确提示。分时仅保留双色菱形，K线副图不改。",
         "forceUpdate": false
       },
       "publicRunId": 42345011351,
@@ -1236,7 +1236,7 @@
       "versionCode": 165,
       "testRunId": 42563816112,
       "signingRunId": 42564998474,
-      "updateLog": "v2.8.2\uff1a\n1. \u7b56\u7565\u4fe1\u53f7\u989c\u8272\u8c03\u6574\uff1a\u4fe1\u53f7\u5206\u6b67\u6539\u4e3a\u6a59\u8272\uff0c\u8d8b\u52bf\u8f6c\u5f31\u6539\u4e3a\u7070\u84dd\u8272\uff0c\u5224\u65ad\u903b\u8f91\u4e0d\u53d8\u3002\n2. A\u80a1\u6210\u4ea4\u989d\u5bf9\u6bd4\uff1a\u4e0a\u4e00\u4ea4\u6613\u65e5\u6700\u7ec8\u6210\u4ea4\u989d\u6807\u7b7e\u9760\u8fd115:00\u7ec8\u70b9\uff0c\u907f\u8ba9\u4eca\u65e5\u4e0e\u4e0a\u4e00\u4ea4\u6613\u65e5\u66f2\u7ebf\uff1b\u4fdd\u6301\u5361\u7247\u5c3a\u5bf8\u548c\u66f2\u7ebf\u5b8c\u6574\u3002",
+      "updateLog": "v2.8.2：\n1. 策略信号颜色调整：信号分歧改为橙色，趋势转弱改为灰蓝色，判断逻辑不变。\n2. A股成交额对比：上一交易日最终成交额标签靠近15:00终点，避让今日与上一交易日曲线；保持卡片尺寸和曲线完整。",
       "forceUpdate": false,
       "phase": "published",
       "publishRequest": {
@@ -1247,7 +1247,7 @@
         "versionCode": 165,
         "apkSha256": "1edd22c17816116113f31ccb8a3926be5b872973a59df7fb05647ae4787f4822",
         "signingCertificateSha256": "bef3f5cbb2989734f20740eddaac3e105dfecb6c63ea9275e178eedd892ec105",
-        "updateLog": "v2.8.2\uff1a\n1. \u7b56\u7565\u4fe1\u53f7\u989c\u8272\u8c03\u6574\uff1a\u4fe1\u53f7\u5206\u6b67\u6539\u4e3a\u6a59\u8272\uff0c\u8d8b\u52bf\u8f6c\u5f31\u6539\u4e3a\u7070\u84dd\u8272\uff0c\u5224\u65ad\u903b\u8f91\u4e0d\u53d8\u3002\n2. A\u80a1\u6210\u4ea4\u989d\u5bf9\u6bd4\uff1a\u4e0a\u4e00\u4ea4\u6613\u65e5\u6700\u7ec8\u6210\u4ea4\u989d\u6807\u7b7e\u9760\u8fd115:00\u7ec8\u70b9\uff0c\u907f\u8ba9\u4eca\u65e5\u4e0e\u4e0a\u4e00\u4ea4\u6613\u65e5\u66f2\u7ebf\uff1b\u4fdd\u6301\u5361\u7247\u5c3a\u5bf8\u548c\u66f2\u7ebf\u5b8c\u6574\u3002",
+        "updateLog": "v2.8.2：\n1. 策略信号颜色调整：信号分歧改为橙色，趋势转弱改为灰蓝色，判断逻辑不变。\n2. A股成交额对比：上一交易日最终成交额标签靠近15:00终点，避让今日与上一交易日曲线；保持卡片尺寸和曲线完整。",
         "forceUpdate": false
       },
       "publicRunId": 42565498891,
@@ -1262,7 +1262,7 @@
       "versionCode": 167,
       "testRunId": 42580500619,
       "signingRunId": 42581870438,
-      "updateLog": "v2.8.4\uff1a\n1. \u4fee\u590d\u5206\u65f6\u5b9e\u65f6\u672b\u7aef\u548c\u5341\u5b57\u5149\u6807\u4e0e\u6700\u65b0\u62a5\u4ef7\u70b9\u7684\u5bf9\u5e94\u5173\u7cfb\uff0c\u5e76\u5b8c\u5584\u7f8e\u80a1\u6536\u76d8\u62a5\u4ef7\u72b6\u6001\u6838\u9a8c\u3002\n2. \u4f18\u5316A\u80a1ETF\u524d\u590d\u6743\u65e5K\u6570\u636e\u6e90\u7cbe\u5ea6\u6821\u9a8c\uff0c\u907f\u514d\u5386\u53f2K\u7ebf\u4e0d\u5fc5\u8981\u7684\u4ef7\u683c\u8df3\u53d8\u3002\n3. \u5ef6\u7eedv2.8.2\u7b56\u7565\u4fe1\u53f7\u989c\u8272\u548cA\u80a1\u6210\u4ea4\u989d\u5bf9\u6bd4\u6807\u7b7e\u4f18\u5316\u3002",
+      "updateLog": "v2.8.4：\n1. 修复分时实时末端和十字光标与最新报价点的对应关系，并完善美股收盘报价状态核验。\n2. 优化A股ETF前复权日K数据源精度校验，避免历史K线不必要的价格跳变。\n3. 延续v2.8.2策略信号颜色和A股成交额对比标签优化。",
       "forceUpdate": false,
       "phase": "published",
       "publishRequest": {
@@ -1273,7 +1273,7 @@
         "versionCode": 167,
         "apkSha256": "29abda246a25fece10b59d6da7414f52a435a8b2c8fc50a22a5f30817a5502a6",
         "signingCertificateSha256": "bef3f5cbb2989734f20740eddaac3e105dfecb6c63ea9275e178eedd892ec105",
-        "updateLog": "v2.8.4\uff1a\n1. \u4fee\u590d\u5206\u65f6\u5b9e\u65f6\u672b\u7aef\u548c\u5341\u5b57\u5149\u6807\u4e0e\u6700\u65b0\u62a5\u4ef7\u70b9\u7684\u5bf9\u5e94\u5173\u7cfb\uff0c\u5e76\u5b8c\u5584\u7f8e\u80a1\u6536\u76d8\u62a5\u4ef7\u72b6\u6001\u6838\u9a8c\u3002\n2. \u4f18\u5316A\u80a1ETF\u524d\u590d\u6743\u65e5K\u6570\u636e\u6e90\u7cbe\u5ea6\u6821\u9a8c\uff0c\u907f\u514d\u5386\u53f2K\u7ebf\u4e0d\u5fc5\u8981\u7684\u4ef7\u683c\u8df3\u53d8\u3002\n3. \u5ef6\u7eedv2.8.2\u7b56\u7565\u4fe1\u53f7\u989c\u8272\u548cA\u80a1\u6210\u4ea4\u989d\u5bf9\u6bd4\u6807\u7b7e\u4f18\u5316\u3002",
+        "updateLog": "v2.8.4：\n1. 修复分时实时末端和十字光标与最新报价点的对应关系，并完善美股收盘报价状态核验。\n2. 优化A股ETF前复权日K数据源精度校验，避免历史K线不必要的价格跳变。\n3. 延续v2.8.2策略信号颜色和A股成交额对比标签优化。",
         "forceUpdate": false
       },
       "publicRunId": 42582168549,
@@ -1289,7 +1289,7 @@
       "versionCode": 168,
       "testRunId": 42605542841,
       "signingRunId": 42607034506,
-      "updateLog": "v2.8.5\uff1a\n1. \u91cd\u6784\u884c\u60c5\u9875\u62a5\u4ef7\u6e90\u62e9\u4f18\u4e0e\u65f6\u95f4\u6838\u9a8c\uff0c\u9632\u6b62\u65e7\u62a5\u4ef7\u8986\u76d6\u66f4\u65b0\u884c\u60c5\uff0c\u5e76\u51c6\u786e\u6807\u793a\u5ef6\u65f6\u3001\u8fc7\u671f\u53ca\u5f85\u6838\u9a8c\u3002\n2. \u4f18\u5316\u5370\u5ea6SENSEX\u53ca\u5916\u76d8\u671f\u8d27\u540c\u6807\u7684/\u540c\u6708\u5206\u65f6\u62e9\u65b0\uff0c\u4fee\u590d\u8de8\u65f6\u533a\u3001\u5b9e\u65f6\u62a5\u4ef7\u70b9\u4e0e\u66f2\u7ebf\u672b\u7aef\u7684\u663e\u793a\u95ee\u9898\u3002\n3. \u589e\u5f3a\u5206\u65f6\u6e90\u7aef\u5ef6\u8fdf\u4e0e\u6536\u76d8\u5b8c\u6574\u6027\u56de\u5f52\uff0c\u4fdd\u6301\u539f\u6709\u884c\u60c5\u83b7\u53d6\u901a\u9053\u4e0e\u6570\u636e\u6e90\u914d\u7f6e\u4e0d\u53d8\u3002",
+      "updateLog": "v2.8.5：\n1. 重构行情页报价源择优与时间核验，防止旧报价覆盖更新行情，并准确标示延时、过期及待核验。\n2. 优化印度SENSEX及外盘期货同标的/同月分时择新，修复跨时区、实时报价点与曲线末端的显示问题。\n3. 增强分时源端延迟与收盘完整性回归，保持原有行情获取通道与数据源配置不变。",
       "forceUpdate": false,
       "phase": "published",
       "publishRequest": {
@@ -1300,7 +1300,7 @@
         "versionCode": 168,
         "apkSha256": "3ed47ea574dd136d0851241640902eece8f6a4ce4c9cfc4e1f464757be5c172b",
         "signingCertificateSha256": "bef3f5cbb2989734f20740eddaac3e105dfecb6c63ea9275e178eedd892ec105",
-        "updateLog": "v2.8.5\uff1a\n1. \u91cd\u6784\u884c\u60c5\u9875\u62a5\u4ef7\u6e90\u62e9\u4f18\u4e0e\u65f6\u95f4\u6838\u9a8c\uff0c\u9632\u6b62\u65e7\u62a5\u4ef7\u8986\u76d6\u66f4\u65b0\u884c\u60c5\uff0c\u5e76\u51c6\u786e\u6807\u793a\u5ef6\u65f6\u3001\u8fc7\u671f\u53ca\u5f85\u6838\u9a8c\u3002\n2. \u4f18\u5316\u5370\u5ea6SENSEX\u53ca\u5916\u76d8\u671f\u8d27\u540c\u6807\u7684/\u540c\u6708\u5206\u65f6\u62e9\u65b0\uff0c\u4fee\u590d\u8de8\u65f6\u533a\u3001\u5b9e\u65f6\u62a5\u4ef7\u70b9\u4e0e\u66f2\u7ebf\u672b\u7aef\u7684\u663e\u793a\u95ee\u9898\u3002\n3. \u589e\u5f3a\u5206\u65f6\u6e90\u7aef\u5ef6\u8fdf\u4e0e\u6536\u76d8\u5b8c\u6574\u6027\u56de\u5f52\uff0c\u4fdd\u6301\u539f\u6709\u884c\u60c5\u83b7\u53d6\u901a\u9053\u4e0e\u6570\u636e\u6e90\u914d\u7f6e\u4e0d\u53d8\u3002",
+        "updateLog": "v2.8.5：\n1. 重构行情页报价源择优与时间核验，防止旧报价覆盖更新行情，并准确标示延时、过期及待核验。\n2. 优化印度SENSEX及外盘期货同标的/同月分时择新，修复跨时区、实时报价点与曲线末端的显示问题。\n3. 增强分时源端延迟与收盘完整性回归，保持原有行情获取通道与数据源配置不变。",
         "forceUpdate": false
       },
       "publicRunId": 42608955452,
@@ -1316,7 +1316,7 @@
       "versionCode": 169,
       "testRunId": 42616366328,
       "signingRunId": 42618501012,
-      "updateLog": "v2.8.6\uff1a\n1. \u7edf\u4e00\u884c\u60c5\u9875\u3001\u6536\u76ca\u9875\u548c\u81ea\u9009\u9875\u7684\u62a5\u4ef7\u65f6\u6548\u5224\u5b9a\uff0c\u4fee\u590d\u6b63\u5e38\u62a5\u4ef7\u88ab\u8bef\u6807\u8fc7\u671f\u3001\u6ede\u540e\u53ca\u5b9e\u65f6\u7684\u95ee\u9898\u3002\n2. \u6b63\u5e38\u5ef6\u65f6\u4ec5\u4f5c\u63d0\u793a\uff0c\u4e0d\u8ba1\u5165\u6570\u636e\u5f02\u5e38\uff1b\u5348\u4f11\u3001\u4f11\u5e02\u3001\u5468\u672b\u53ca\u81f3\u5c11\u5ef6\u65f6\u884c\u60c5\u5206\u522b\u6838\u9a8c\u3002\n3. \u5206\u65f6\u672b\u7aef\u548c\u5f53\u65e5K\u7ebf\u968f\u6709\u6548\u62a5\u4ef7\u66f4\u65b0\uff0c\u5386\u53f2\u5206\u65f6\u4e0e\u5386\u53f2K\u7ebf\u72ec\u7acb\u5237\u65b0\uff0c\u9632\u6b62\u65e7\u62a5\u4ef7\u56de\u5199\u5386\u53f2\u3002",
+      "updateLog": "v2.8.6：\n1. 统一行情页、收益页和自选页的报价时效判定，修复正常报价被误标过期、滞后及实时的问题。\n2. 正常延时仅作提示，不计入数据异常；午休、休市、周末及至少延时行情分别核验。\n3. 分时末端和当日K线随有效报价更新，历史分时与历史K线独立刷新，防止旧报价回写历史。",
       "forceUpdate": false,
       "phase": "published",
       "publishRequest": {
@@ -1327,7 +1327,7 @@
         "versionCode": 169,
         "apkSha256": "97817b0d6b4fa90489c894f1f1aaa07fdfbd4b3a5176d916173ec0b17df1774c",
         "signingCertificateSha256": "bef3f5cbb2989734f20740eddaac3e105dfecb6c63ea9275e178eedd892ec105",
-        "updateLog": "v2.8.6\uff1a\n1. \u7edf\u4e00\u884c\u60c5\u9875\u3001\u6536\u76ca\u9875\u548c\u81ea\u9009\u9875\u7684\u62a5\u4ef7\u65f6\u6548\u5224\u5b9a\uff0c\u4fee\u590d\u6b63\u5e38\u62a5\u4ef7\u88ab\u8bef\u6807\u8fc7\u671f\u3001\u6ede\u540e\u53ca\u5b9e\u65f6\u7684\u95ee\u9898\u3002\n2. \u6b63\u5e38\u5ef6\u65f6\u4ec5\u4f5c\u63d0\u793a\uff0c\u4e0d\u8ba1\u5165\u6570\u636e\u5f02\u5e38\uff1b\u5348\u4f11\u3001\u4f11\u5e02\u3001\u5468\u672b\u53ca\u81f3\u5c11\u5ef6\u65f6\u884c\u60c5\u5206\u522b\u6838\u9a8c\u3002\n3. \u5206\u65f6\u672b\u7aef\u548c\u5f53\u65e5K\u7ebf\u968f\u6709\u6548\u62a5\u4ef7\u66f4\u65b0\uff0c\u5386\u53f2\u5206\u65f6\u4e0e\u5386\u53f2K\u7ebf\u72ec\u7acb\u5237\u65b0\uff0c\u9632\u6b62\u65e7\u62a5\u4ef7\u56de\u5199\u5386\u53f2\u3002",
+        "updateLog": "v2.8.6：\n1. 统一行情页、收益页和自选页的报价时效判定，修复正常报价被误标过期、滞后及实时的问题。\n2. 正常延时仅作提示，不计入数据异常；午休、休市、周末及至少延时行情分别核验。\n3. 分时末端和当日K线随有效报价更新，历史分时与历史K线独立刷新，防止旧报价回写历史。",
         "forceUpdate": false
       },
       "publicRunId": 42619229851,
@@ -1343,7 +1343,7 @@
       "versionCode": 170,
       "testRunId": 42643245759,
       "signingRunId": 42644835328,
-      "updateLog": "v2.8.7\uff1a\n1. \u4fee\u590d\u5370\u5ea6\u6307\u6570\u88ab\u65e7\u6536\u76d8\u5feb\u7167\u9501\u5b9a\u7684\u95ee\u9898\uff0c\u62a5\u4ef7\u4e0e\u65e5K\u5207\u6362\u81f3\u65b0\u6d6a\u73b0\u6709\u63a5\u53e3\uff0c\u7ee7\u7eed\u8865\u53d6\u7f3a\u5931\u7684\u6536\u76d8\u5206\u65f6\u3002\n2. \u6765\u6e90\u672a\u58f0\u660e\u5ef6\u65f6\u4ec5\u4fdd\u7559\u5728\u8be6\u60c5\uff0c\u4e0d\u518d\u663e\u793a\u4e3a\u5916\u76d8\u5546\u54c1\u5f85\u6838\u9a8c\u3002\n3. \u7f8e\u5143\u6307\u6570\u91c7\u7528\u72ec\u7acb\u8ba1\u7b97\u65f6\u6bb5\uff0c\u5206\u65f6\u4ece\u771f\u5b9e\u9996\u6761\u8bb0\u5f55\u8d77\u7ed8\u5e76\u63d0\u793a\u6e90\u7aef\u5f00\u76d8\u7f3a\u6570\u3002\n4. \u4fee\u590d\u7f8e\u80a1\u5206\u65f6\u672b\u7aef\u540c\u6b65\u8bef\u62a5\uff0c\u6309\u62a5\u4ef7\u4e0e\u5206\u65f6\u7684\u5b9e\u9645\u5148\u540e\u66f4\u65b0\uff0c\u4fdd\u7559\u771f\u5b9e\u7f3a\u6570\u63d0\u793a\u3002",
+      "updateLog": "v2.8.7：\n1. 修复印度指数被旧收盘快照锁定的问题，报价与日K切换至新浪现有接口，继续补取缺失的收盘分时。\n2. 来源未声明延时仅保留在详情，不再显示为外盘商品待核验。\n3. 美元指数采用独立计算时段，分时从真实首条记录起绘并提示源端开盘缺数。\n4. 修复美股分时末端同步误报，按报价与分时的实际先后更新，保留真实缺数提示。",
       "forceUpdate": false,
       "phase": "published",
       "publishRequest": {
@@ -1354,7 +1354,7 @@
         "versionCode": 170,
         "apkSha256": "c7ce0d22a042071f8b437508dc0db812340c4646c0d587f81fd0e1f4962ecc5f",
         "signingCertificateSha256": "bef3f5cbb2989734f20740eddaac3e105dfecb6c63ea9275e178eedd892ec105",
-        "updateLog": "v2.8.7\uff1a\n1. \u4fee\u590d\u5370\u5ea6\u6307\u6570\u88ab\u65e7\u6536\u76d8\u5feb\u7167\u9501\u5b9a\u7684\u95ee\u9898\uff0c\u62a5\u4ef7\u4e0e\u65e5K\u5207\u6362\u81f3\u65b0\u6d6a\u73b0\u6709\u63a5\u53e3\uff0c\u7ee7\u7eed\u8865\u53d6\u7f3a\u5931\u7684\u6536\u76d8\u5206\u65f6\u3002\n2. \u6765\u6e90\u672a\u58f0\u660e\u5ef6\u65f6\u4ec5\u4fdd\u7559\u5728\u8be6\u60c5\uff0c\u4e0d\u518d\u663e\u793a\u4e3a\u5916\u76d8\u5546\u54c1\u5f85\u6838\u9a8c\u3002\n3. \u7f8e\u5143\u6307\u6570\u91c7\u7528\u72ec\u7acb\u8ba1\u7b97\u65f6\u6bb5\uff0c\u5206\u65f6\u4ece\u771f\u5b9e\u9996\u6761\u8bb0\u5f55\u8d77\u7ed8\u5e76\u63d0\u793a\u6e90\u7aef\u5f00\u76d8\u7f3a\u6570\u3002\n4. \u4fee\u590d\u7f8e\u80a1\u5206\u65f6\u672b\u7aef\u540c\u6b65\u8bef\u62a5\uff0c\u6309\u62a5\u4ef7\u4e0e\u5206\u65f6\u7684\u5b9e\u9645\u5148\u540e\u66f4\u65b0\uff0c\u4fdd\u7559\u771f\u5b9e\u7f3a\u6570\u63d0\u793a\u3002",
+        "updateLog": "v2.8.7：\n1. 修复印度指数被旧收盘快照锁定的问题，报价与日K切换至新浪现有接口，继续补取缺失的收盘分时。\n2. 来源未声明延时仅保留在详情，不再显示为外盘商品待核验。\n3. 美元指数采用独立计算时段，分时从真实首条记录起绘并提示源端开盘缺数。\n4. 修复美股分时末端同步误报，按报价与分时的实际先后更新，保留真实缺数提示。",
         "forceUpdate": false
       },
       "publicRunId": 42645239428,
@@ -1370,7 +1370,7 @@
       "versionCode": 171,
       "testRunId": 42686132203,
       "signingRunId": 42695748865,
-      "updateLog": "v2.8.8\uff1a\n1. \u91cd\u6784\u6536\u76d8\u540e\u62a5\u4ef7\u65f6\u6548\u5224\u65ad\uff0c\u907f\u514d\u5df2\u6536\u76d8\u6807\u7684\u6b63\u5e38\u505c\u724c\u95f4\u9694\u8bef\u62a5\u201c\u62a5\u4ef7\u505c\u66f4\u201d\u3002\n2. \u4f9d\u636e\u5404\u4ea4\u6613\u6240\u65e5\u5386\u6838\u67e5\u5206\u65f6\u5c3e\u6bb5\uff0c\u533a\u5206\u5206\u65f6\u5b8c\u6574\u3001\u6536\u76d8\u6570\u636e\u5f85\u66f4\u65b0\u3001\u6b63\u5e38\u5ef6\u65f6\u4e0e\u5b9e\u9645\u7f3a\u5931\u3002\n3. \u4fee\u590d\u7eb3\u65af\u8fbe\u514b\u91d1\u9f99\u4e2d\u56fd\u6307\u6570\u4ea4\u6613\u65f6\u6bb5\u5224\u5b9a\uff0c\u5e76\u6062\u590d\u65e5K\u3001\u5468K\u3001\u6708K\u7684\u72ec\u7acb\u771f\u5b9e\u6570\u636e\u6e90\u3002\n4. \u7edf\u4e00\u884c\u60c5\u9875\u3001\u6301\u4ed3\u3001\u81ea\u9009\u3001\u6536\u76ca\u9875\u6240\u4f7f\u7528\u56fe\u8868\u7684\u62a5\u4ef7\u4e0e\u5386\u53f2\u6570\u636e\u72b6\u6001\u3002",
+      "updateLog": "v2.8.8：\n1. 重构收盘后报价时效判断，避免已收盘标的正常停牌间隔误报“报价停更”。\n2. 依据各交易所日历核查分时尾段，区分分时完整、收盘数据待更新、正常延时与实际缺失。\n3. 修复纳斯达克金龙中国指数交易时段判定，并恢复日K、周K、月K的独立真实数据源。\n4. 统一行情页、持仓、自选、收益页所使用图表的报价与历史数据状态。",
       "forceUpdate": false,
       "phase": "published",
       "publishRequest": {
@@ -1381,7 +1381,7 @@
         "versionCode": 171,
         "apkSha256": "b416805310bd9ef8427897ca29832ef3dad4052ed96b1a1bc8b2a109e568ee50",
         "signingCertificateSha256": "bef3f5cbb2989734f20740eddaac3e105dfecb6c63ea9275e178eedd892ec105",
-        "updateLog": "v2.8.8\uff1a\n1. \u91cd\u6784\u6536\u76d8\u540e\u62a5\u4ef7\u65f6\u6548\u5224\u65ad\uff0c\u907f\u514d\u5df2\u6536\u76d8\u6807\u7684\u6b63\u5e38\u505c\u724c\u95f4\u9694\u8bef\u62a5\u201c\u62a5\u4ef7\u505c\u66f4\u201d\u3002\n2. \u4f9d\u636e\u5404\u4ea4\u6613\u6240\u65e5\u5386\u6838\u67e5\u5206\u65f6\u5c3e\u6bb5\uff0c\u533a\u5206\u5206\u65f6\u5b8c\u6574\u3001\u6536\u76d8\u6570\u636e\u5f85\u66f4\u65b0\u3001\u6b63\u5e38\u5ef6\u65f6\u4e0e\u5b9e\u9645\u7f3a\u5931\u3002\n3. \u4fee\u590d\u7eb3\u65af\u8fbe\u514b\u91d1\u9f99\u4e2d\u56fd\u6307\u6570\u4ea4\u6613\u65f6\u6bb5\u5224\u5b9a\uff0c\u5e76\u6062\u590d\u65e5K\u3001\u5468K\u3001\u6708K\u7684\u72ec\u7acb\u771f\u5b9e\u6570\u636e\u6e90\u3002\n4. \u7edf\u4e00\u884c\u60c5\u9875\u3001\u6301\u4ed3\u3001\u81ea\u9009\u3001\u6536\u76ca\u9875\u6240\u4f7f\u7528\u56fe\u8868\u7684\u62a5\u4ef7\u4e0e\u5386\u53f2\u6570\u636e\u72b6\u6001\u3002",
+        "updateLog": "v2.8.8：\n1. 重构收盘后报价时效判断，避免已收盘标的正常停牌间隔误报“报价停更”。\n2. 依据各交易所日历核查分时尾段，区分分时完整、收盘数据待更新、正常延时与实际缺失。\n3. 修复纳斯达克金龙中国指数交易时段判定，并恢复日K、周K、月K的独立真实数据源。\n4. 统一行情页、持仓、自选、收益页所使用图表的报价与历史数据状态。",
         "forceUpdate": false
       },
       "publicRunId": 42696417502,
@@ -1397,7 +1397,7 @@
       "versionCode": 172,
       "testRunId": 42746886266,
       "signingRunId": 42748322901,
-      "updateLog": "v2.8.9\uff1a\n1. \u4fee\u590dDAX\u548cCAC40\u5e38\u89c4\u5206\u949f\u7ebf17:30\u7ed3\u675f\u540e\u7684\u72b6\u6001\u8bef\u62a5\uff0c\u533a\u5206\u6536\u76d8\u9636\u6bb5\u4e0e\u771f\u6b63\u7f3a\u6570\u3002\n2. \u63a5\u5165STOXX\u548cEuronext\u5b98\u65b9\u6307\u6570\u62a5\u4ef7\uff0c\u6838\u9a8c\u540e\u5355\u72ec\u6807\u8bb0\u6700\u7ec8\u6307\u6570\u5feb\u7167\uff0c\u4e0d\u4f2a\u9020\u5206\u949fK\u7ebf\u3002\n3. \u5b8c\u5584\u5df2\u6536\u76d8\u62a5\u4ef7\u65b0\u9c9c\u5ea6\u3001\u771f\u5b9e\u5206\u65f6\u672b\u7aef\u4e0e\u62a5\u4ef7\u65f6\u95f4\u7684\u4e00\u81f4\u6027\u6821\u9a8c\u3002\n4. \u4f18\u5316\u7f8e\u5143\u6307\u6570\u3001\u5370\u5ea6SENSEX\u5206\u65f6\u8865\u6570\u548cCOMEX\u6307\u5b9a\u4ea4\u5272\u6708\u5b9e\u65f6\u91c7\u6837\u663e\u793a\u3002",
+      "updateLog": "v2.8.9：\n1. 修复DAX和CAC40常规分钟线17:30结束后的状态误报，区分收盘阶段与真正缺数。\n2. 接入STOXX和Euronext官方指数报价，核验后单独标记最终指数快照，不伪造分钟K线。\n3. 完善已收盘报价新鲜度、真实分时末端与报价时间的一致性校验。\n4. 优化美元指数、印度SENSEX分时补数和COMEX指定交割月实时采样显示。",
       "forceUpdate": false,
       "phase": "published",
       "publishRequest": {
@@ -1408,7 +1408,7 @@
         "versionCode": 172,
         "apkSha256": "060d68eb419f22a6569a8bb18557143aebd0dd111e5ece3860af971329c4a413",
         "signingCertificateSha256": "bef3f5cbb2989734f20740eddaac3e105dfecb6c63ea9275e178eedd892ec105",
-        "updateLog": "v2.8.9\uff1a\n1. \u4fee\u590dDAX\u548cCAC40\u5e38\u89c4\u5206\u949f\u7ebf17:30\u7ed3\u675f\u540e\u7684\u72b6\u6001\u8bef\u62a5\uff0c\u533a\u5206\u6536\u76d8\u9636\u6bb5\u4e0e\u771f\u6b63\u7f3a\u6570\u3002\n2. \u63a5\u5165STOXX\u548cEuronext\u5b98\u65b9\u6307\u6570\u62a5\u4ef7\uff0c\u6838\u9a8c\u540e\u5355\u72ec\u6807\u8bb0\u6700\u7ec8\u6307\u6570\u5feb\u7167\uff0c\u4e0d\u4f2a\u9020\u5206\u949fK\u7ebf\u3002\n3. \u5b8c\u5584\u5df2\u6536\u76d8\u62a5\u4ef7\u65b0\u9c9c\u5ea6\u3001\u771f\u5b9e\u5206\u65f6\u672b\u7aef\u4e0e\u62a5\u4ef7\u65f6\u95f4\u7684\u4e00\u81f4\u6027\u6821\u9a8c\u3002\n4. \u4f18\u5316\u7f8e\u5143\u6307\u6570\u3001\u5370\u5ea6SENSEX\u5206\u65f6\u8865\u6570\u548cCOMEX\u6307\u5b9a\u4ea4\u5272\u6708\u5b9e\u65f6\u91c7\u6837\u663e\u793a\u3002",
+        "updateLog": "v2.8.9：\n1. 修复DAX和CAC40常规分钟线17:30结束后的状态误报，区分收盘阶段与真正缺数。\n2. 接入STOXX和Euronext官方指数报价，核验后单独标记最终指数快照，不伪造分钟K线。\n3. 完善已收盘报价新鲜度、真实分时末端与报价时间的一致性校验。\n4. 优化美元指数、印度SENSEX分时补数和COMEX指定交割月实时采样显示。",
         "forceUpdate": false
       },
       "publicRunId": 42749037389,
@@ -1424,7 +1424,7 @@
       "versionCode": 173,
       "testRunId": 42839063497,
       "signingRunId": 42841784253,
-      "updateLog": "v2.9.0\uff1a\n1. \u6539\u8fdb\u65e5\u7ecf225\u4e0eKOSPI\u7684\u591a\u6765\u6e90\u62a5\u4ef7\u9009\u53d6\uff0c\u9632\u6b62\u6536\u76d8\u540e\u540c\u65e5\u8f83\u65e9\u62a5\u4ef7\u8986\u76d6\u8f83\u65b0\u5feb\u7167\u3002\n2. \u4fee\u590dKOSPI\u628aNaver\u6536\u76d8\u540e\u7f51\u9875\u66f4\u65b0\u65f6\u95f4\u5f53\u4f5c\u5e38\u89c4\u6307\u6570\u6210\u4ea4\u65f6\u95f4\u7684\u95ee\u9898\uff0c\u6e05\u7406\u65e7\u7f13\u5b58\u4e2d\u7684\u5f02\u5e38\u5feb\u7167\u3002\n3. \u5b8c\u5584\u540c\u4e00\u4ea4\u6613\u65f6\u95f4\u7684\u6765\u6e90\u5207\u6362\u89c4\u5219\uff0c\u907f\u514d\u5df2\u6838\u9a8c\u72b6\u6001\u56de\u9000\u4e3a\u4e0d\u5fc5\u8981\u7684\u5ef6\u65f6\u63d0\u793a\u3002\n4. \u4fdd\u6301\u5206\u65f6\u548c\u5404\u5468\u671fK\u7ebf\u72ec\u7acb\u8bfb\u53d6\u53ca\u6821\u9a8c\uff0c\u4e0d\u501f\u7528\u62a5\u4ef7\u4f2a\u9020\u5386\u53f2\u66f2\u7ebf\u3002",
+      "updateLog": "v2.9.0：\n1. 改进日经225与KOSPI的多来源报价选取，防止收盘后同日较早报价覆盖较新快照。\n2. 修复KOSPI把Naver收盘后网页更新时间当作常规指数成交时间的问题，清理旧缓存中的异常快照。\n3. 完善同一交易时间的来源切换规则，避免已核验状态回退为不必要的延时提示。\n4. 保持分时和各周期K线独立读取及校验，不借用报价伪造历史曲线。",
       "forceUpdate": false,
       "phase": "published",
       "publishRequest": {
@@ -1435,7 +1435,7 @@
         "versionCode": 173,
         "apkSha256": "c74ea03bdbebc74c848544962f7ea63919884aae563a4167cc5445eb6a770232",
         "signingCertificateSha256": "bef3f5cbb2989734f20740eddaac3e105dfecb6c63ea9275e178eedd892ec105",
-        "updateLog": "v2.9.0\uff1a\n1. \u6539\u8fdb\u65e5\u7ecf225\u4e0eKOSPI\u7684\u591a\u6765\u6e90\u62a5\u4ef7\u9009\u53d6\uff0c\u9632\u6b62\u6536\u76d8\u540e\u540c\u65e5\u8f83\u65e9\u62a5\u4ef7\u8986\u76d6\u8f83\u65b0\u5feb\u7167\u3002\n2. \u4fee\u590dKOSPI\u628aNaver\u6536\u76d8\u540e\u7f51\u9875\u66f4\u65b0\u65f6\u95f4\u5f53\u4f5c\u5e38\u89c4\u6307\u6570\u6210\u4ea4\u65f6\u95f4\u7684\u95ee\u9898\uff0c\u6e05\u7406\u65e7\u7f13\u5b58\u4e2d\u7684\u5f02\u5e38\u5feb\u7167\u3002\n3. \u5b8c\u5584\u540c\u4e00\u4ea4\u6613\u65f6\u95f4\u7684\u6765\u6e90\u5207\u6362\u89c4\u5219\uff0c\u907f\u514d\u5df2\u6838\u9a8c\u72b6\u6001\u56de\u9000\u4e3a\u4e0d\u5fc5\u8981\u7684\u5ef6\u65f6\u63d0\u793a\u3002\n4. \u4fdd\u6301\u5206\u65f6\u548c\u5404\u5468\u671fK\u7ebf\u72ec\u7acb\u8bfb\u53d6\u53ca\u6821\u9a8c\uff0c\u4e0d\u501f\u7528\u62a5\u4ef7\u4f2a\u9020\u5386\u53f2\u66f2\u7ebf\u3002",
+        "updateLog": "v2.9.0：\n1. 改进日经225与KOSPI的多来源报价选取，防止收盘后同日较早报价覆盖较新快照。\n2. 修复KOSPI把Naver收盘后网页更新时间当作常规指数成交时间的问题，清理旧缓存中的异常快照。\n3. 完善同一交易时间的来源切换规则，避免已核验状态回退为不必要的延时提示。\n4. 保持分时和各周期K线独立读取及校验，不借用报价伪造历史曲线。",
         "forceUpdate": false
       },
       "publicRunId": 42842261393,
@@ -1451,7 +1451,7 @@
       "versionCode": 174,
       "testRunId": 42876981350,
       "signingRunId": 42878802272,
-      "updateLog": "v2.9.1\uff1a\n1. \u4fee\u590d\u7f8e\u80a1\u6301\u4ed3 A \u7b49\u6807\u7684\u56e0\u5f00\u9ad8\u4f4e\u5b57\u6bb5\u51b2\u7a81\u800c\u8bef\u62a5\u201c\u62a5\u4ef7\u672a\u8bfb\u53d6\u201d\uff0c\u6709\u6548\u62a5\u4ef7\u4e0e\u5f02\u5e38OHLC\u5206\u522b\u6821\u9a8c\u3002\n2. \u4fee\u590d\u6052\u751f\u4e0e\u6052\u751f\u79d1\u6280\u6536\u76d8\u5feb\u7167\u88ab\u8bef\u5224\u4e3a\u5206\u65f6\u91c7\u6837\u7f3a\u53e3\uff0c\u4fdd\u7559\u771f\u5b9e\u4ef7\u683c\u4e0e\u516c\u5e03\u65f6\u95f4\u3002\n3. \u79fb\u9664\u767e\u5ea6\u8d22\u7ecf\u4e0e\u66f2\u5408\u884c\u60c5\u901a\u9053\uff0c\u8c03\u6574\u5916\u76d8\u5546\u54c1\u62a5\u4ef7\u548c\u56fe\u8868\u5339\u914d\u3002\n4. \u79fb\u9664\u65e0\u6cd5\u7a33\u5b9a\u53d6\u5f97\u5b8c\u6574\u884c\u60c5\u53ca\u56fe\u8868\u7684\u6c99\u7279\u6307\u6570\uff0c\u6539\u4e3a\u5bcc\u65f6\u65b0\u52a0\u5761\u6d77\u5ce1\u65f6\u62a5\u6307\u6570 STI\uff08100.STI\uff09\uff0c\u9002\u914d\u62a5\u4ef7\u3001\u5206\u65f6\u3001K\u7ebf\u53ca\u4ea4\u6613\u65e5\u5386\u3002\n5. \u4fee\u590dA\u80a1\u6536\u76d8\u540e\u7b56\u7565\u4fe1\u53f7\u8bef\u53d8\u5f85\u6838\u7684\u95ee\u9898\u3002",
+      "updateLog": "v2.9.1：\n1. 修复美股持仓 A 等标的因开高低字段冲突而误报“报价未读取”，有效报价与异常OHLC分别校验。\n2. 修复恒生与恒生科技收盘快照被误判为分时采样缺口，保留真实价格与公布时间。\n3. 移除百度财经与曲合行情通道，调整外盘商品报价和图表匹配。\n4. 移除无法稳定取得完整行情及图表的沙特指数，改为富时新加坡海峡时报指数 STI（100.STI），适配报价、分时、K线及交易日历。\n5. 修复A股收盘后策略信号误变待核的问题。",
       "forceUpdate": false,
       "phase": "published",
       "publishRequest": {
@@ -1462,7 +1462,7 @@
         "versionCode": 174,
         "apkSha256": "07d44d4f110ab4cb42604a0fca85af5f1c59c65fa6610c90dc728a80f6fde8bb",
         "signingCertificateSha256": "bef3f5cbb2989734f20740eddaac3e105dfecb6c63ea9275e178eedd892ec105",
-        "updateLog": "v2.9.1\uff1a\n1. \u4fee\u590d\u7f8e\u80a1\u6301\u4ed3 A \u7b49\u6807\u7684\u56e0\u5f00\u9ad8\u4f4e\u5b57\u6bb5\u51b2\u7a81\u800c\u8bef\u62a5\u201c\u62a5\u4ef7\u672a\u8bfb\u53d6\u201d\uff0c\u6709\u6548\u62a5\u4ef7\u4e0e\u5f02\u5e38OHLC\u5206\u522b\u6821\u9a8c\u3002\n2. \u4fee\u590d\u6052\u751f\u4e0e\u6052\u751f\u79d1\u6280\u6536\u76d8\u5feb\u7167\u88ab\u8bef\u5224\u4e3a\u5206\u65f6\u91c7\u6837\u7f3a\u53e3\uff0c\u4fdd\u7559\u771f\u5b9e\u4ef7\u683c\u4e0e\u516c\u5e03\u65f6\u95f4\u3002\n3. \u79fb\u9664\u767e\u5ea6\u8d22\u7ecf\u4e0e\u66f2\u5408\u884c\u60c5\u901a\u9053\uff0c\u8c03\u6574\u5916\u76d8\u5546\u54c1\u62a5\u4ef7\u548c\u56fe\u8868\u5339\u914d\u3002\n4. \u79fb\u9664\u65e0\u6cd5\u7a33\u5b9a\u53d6\u5f97\u5b8c\u6574\u884c\u60c5\u53ca\u56fe\u8868\u7684\u6c99\u7279\u6307\u6570\uff0c\u6539\u4e3a\u5bcc\u65f6\u65b0\u52a0\u5761\u6d77\u5ce1\u65f6\u62a5\u6307\u6570 STI\uff08100.STI\uff09\uff0c\u9002\u914d\u62a5\u4ef7\u3001\u5206\u65f6\u3001K\u7ebf\u53ca\u4ea4\u6613\u65e5\u5386\u3002\n5. \u4fee\u590dA\u80a1\u6536\u76d8\u540e\u7b56\u7565\u4fe1\u53f7\u8bef\u53d8\u5f85\u6838\u7684\u95ee\u9898\u3002",
+        "updateLog": "v2.9.1：\n1. 修复美股持仓 A 等标的因开高低字段冲突而误报“报价未读取”，有效报价与异常OHLC分别校验。\n2. 修复恒生与恒生科技收盘快照被误判为分时采样缺口，保留真实价格与公布时间。\n3. 移除百度财经与曲合行情通道，调整外盘商品报价和图表匹配。\n4. 移除无法稳定取得完整行情及图表的沙特指数，改为富时新加坡海峡时报指数 STI（100.STI），适配报价、分时、K线及交易日历。\n5. 修复A股收盘后策略信号误变待核的问题。",
         "forceUpdate": false
       },
       "publicRunId": 42880783169,
@@ -1478,7 +1478,7 @@
       "versionCode": 175,
       "testRunId": 42889859070,
       "signingRunId": 42892269412,
-      "updateLog": "v2.9.2\uff1a\n1. \u7f8e\u80a1 A \u7b49\u6807\u7684\u91c7\u7528\u5b8c\u6574\u540c\u6e90\u62a5\u4ef7\u5feb\u7167\u6821\u9a8c\uff0c\u817e\u8baf OHLC \u51b2\u7a81\u65f6\u6709\u6761\u4ef6\u5c1d\u8bd5\u65b0\u6d6a\u5907\u7528\uff0c\u4fdd\u7559\u6709\u6548\u62a5\u4ef7\u4e0e\u6765\u6e90\u65f6\u95f4\u3002\n2. \u7f8e\u80a1\u524d\u590d\u6743\u65e5K\u589e\u52a0\u9010\u6839 OHLC \u5408\u6cd5\u6027\u68c0\u67e5\uff0c\u9996\u6b21\u9009\u62e9\u5386\u53f2\u6570\u636e\u6e90\u65f6\u53ef\u6392\u9664\u5f02\u5e38\u6570\u636e\u5e76\u91c7\u7528\u5408\u683c\u5907\u7528\u6e90\uff0c\u6062\u590d\u7b56\u7565\u4fe1\u53f7\u8ba1\u7b97\u3002\n3. \u4fee\u590d DAX\u3001CAC40 \u6536\u76d8\u5c3e\u6bb5\u9519\u8bef\u62a5\u7f3a\u6570\uff0c\u8bc6\u522b\u771f\u5b9e\u6307\u6570\u6536\u76d8\u5feb\u7167\uff0c\u4e0d\u4f2a\u9020\u7ade\u4ef7\u671f\u95f4\u9010\u5206\u949f\u6570\u636e\u3002\n4. \u65e5\u7ecf225 CFD \u533a\u5206\u6e90\u7aef\u91c7\u6837\u95f4\u9694\u4e0e\u771f\u5b9e\u884c\u60c5\u7f3a\u5931\uff0c\u56fe\u8868\u6807\u8bb0\u66f4\u51c6\u786e\uff0c\u672a\u63d2\u8865\u865a\u6784\u4ef7\u683c\u3002\n5. \u5ef6\u7eed 2.9.1 \u6052\u751f\u5206\u65f6\u3001STI \u66ff\u6362\u3001A\u80a1\u6536\u76d8\u7b56\u7565\u72b6\u6001\u53ca\u6570\u636e\u6e90\u6e05\u7406\u7b49\u6539\u8fdb\u3002",
+      "updateLog": "v2.9.2：\n1. 美股 A 等标的采用完整同源报价快照校验，腾讯 OHLC 冲突时有条件尝试新浪备用，保留有效报价与来源时间。\n2. 美股前复权日K增加逐根 OHLC 合法性检查，首次选择历史数据源时可排除异常数据并采用合格备用源，恢复策略信号计算。\n3. 修复 DAX、CAC40 收盘尾段错误报缺数，识别真实指数收盘快照，不伪造竞价期间逐分钟数据。\n4. 日经225 CFD 区分源端采样间隔与真实行情缺失，图表标记更准确，未插补虚构价格。\n5. 延续 2.9.1 恒生分时、STI 替换、A股收盘策略状态及数据源清理等改进。",
       "forceUpdate": false,
       "phase": "published",
       "publishRequest": {
@@ -1489,7 +1489,7 @@
         "versionCode": 175,
         "apkSha256": "9e15a0c57308ff562be3ee3d688a19d9f1303a426554ebc35d797c5704589d6d",
         "signingCertificateSha256": "bef3f5cbb2989734f20740eddaac3e105dfecb6c63ea9275e178eedd892ec105",
-        "updateLog": "v2.9.2\uff1a\n1. \u7f8e\u80a1 A \u7b49\u6807\u7684\u91c7\u7528\u5b8c\u6574\u540c\u6e90\u62a5\u4ef7\u5feb\u7167\u6821\u9a8c\uff0c\u817e\u8baf OHLC \u51b2\u7a81\u65f6\u6709\u6761\u4ef6\u5c1d\u8bd5\u65b0\u6d6a\u5907\u7528\uff0c\u4fdd\u7559\u6709\u6548\u62a5\u4ef7\u4e0e\u6765\u6e90\u65f6\u95f4\u3002\n2. \u7f8e\u80a1\u524d\u590d\u6743\u65e5K\u589e\u52a0\u9010\u6839 OHLC \u5408\u6cd5\u6027\u68c0\u67e5\uff0c\u9996\u6b21\u9009\u62e9\u5386\u53f2\u6570\u636e\u6e90\u65f6\u53ef\u6392\u9664\u5f02\u5e38\u6570\u636e\u5e76\u91c7\u7528\u5408\u683c\u5907\u7528\u6e90\uff0c\u6062\u590d\u7b56\u7565\u4fe1\u53f7\u8ba1\u7b97\u3002\n3. \u4fee\u590d DAX\u3001CAC40 \u6536\u76d8\u5c3e\u6bb5\u9519\u8bef\u62a5\u7f3a\u6570\uff0c\u8bc6\u522b\u771f\u5b9e\u6307\u6570\u6536\u76d8\u5feb\u7167\uff0c\u4e0d\u4f2a\u9020\u7ade\u4ef7\u671f\u95f4\u9010\u5206\u949f\u6570\u636e\u3002\n4. \u65e5\u7ecf225 CFD \u533a\u5206\u6e90\u7aef\u91c7\u6837\u95f4\u9694\u4e0e\u771f\u5b9e\u884c\u60c5\u7f3a\u5931\uff0c\u56fe\u8868\u6807\u8bb0\u66f4\u51c6\u786e\uff0c\u672a\u63d2\u8865\u865a\u6784\u4ef7\u683c\u3002\n5. \u5ef6\u7eed 2.9.1 \u6052\u751f\u5206\u65f6\u3001STI \u66ff\u6362\u3001A\u80a1\u6536\u76d8\u7b56\u7565\u72b6\u6001\u53ca\u6570\u636e\u6e90\u6e05\u7406\u7b49\u6539\u8fdb\u3002",
+        "updateLog": "v2.9.2：\n1. 美股 A 等标的采用完整同源报价快照校验，腾讯 OHLC 冲突时有条件尝试新浪备用，保留有效报价与来源时间。\n2. 美股前复权日K增加逐根 OHLC 合法性检查，首次选择历史数据源时可排除异常数据并采用合格备用源，恢复策略信号计算。\n3. 修复 DAX、CAC40 收盘尾段错误报缺数，识别真实指数收盘快照，不伪造竞价期间逐分钟数据。\n4. 日经225 CFD 区分源端采样间隔与真实行情缺失，图表标记更准确，未插补虚构价格。\n5. 延续 2.9.1 恒生分时、STI 替换、A股收盘策略状态及数据源清理等改进。",
         "forceUpdate": false
       },
       "publicRunId": 42892631601,
@@ -1505,9 +1505,9 @@
       "versionCode": 176,
       "testRunId": 42982829892,
       "signingRunId": 42984229495,
-      "updateLog": "v2.9.3\uff08\u6e90\u7801\u5df2\u5347\u7ea7\uff0c\u5c1a\u672a\u6b63\u5f0f\u53d1\u5e03\uff09\uff1a\n1. \u5df2\u9a8c\u8bc1\u6807\u7684\u5b9e\u73b0\u62a5\u4ef7\u3001\u539f\u751f\u5206\u65f6\u3001\u5b9e\u65f6\u65e5K\u548c\u5386\u53f2\u65e5K\u5b8c\u6574\u540c\u6e90\uff0c\u5408\u683c\u5907\u7528\u6309\u6574\u7ec4\u5207\u6362\uff0c\u4e0d\u518d\u8de8\u6e90\u62fc\u56fe\u3002\n2. \u6765\u6e90\u5207\u6362\u65f6\u6e05\u7406\u539f\u56fe\u8868\u7f13\u5b58\uff1b\u5bf9\u771f\u5b9e\u62a5\u4ef7\u4e0e\u5206\u949f\u672b\u7aef\u589e\u52a0\u65f6\u95f4\u3001\u4ef7\u683c\u548c\u5408\u7ea6\u8eab\u4efd\u6821\u9a8c\u3002\n3. \u4fee\u590dA\u80a111:30\u201413:00\u5348\u95f4\u4f11\u5e02\u5206\u65f6\u526f\u56fe\u7b56\u7565\u4fe1\u53f7\u9519\u8bef\u53d8\u4e3a\u5f85\u6838\uff0c\u4fdd\u7559\u5408\u683c\u4e0a\u5348\u4fe1\u53f7\u5e76\u6807\u4e3a\u5348\u95f4\u9884\u4f30\u3002\n4. \u672a\u9a8c\u8bc1\u53cc\u6e90\u53ca\u6d77\u5916\u8fde\u7eed\u5408\u7ea6\u6362\u6708\u7684\u6807\u7684\u575a\u6301\u53ef\u4fe1\u5355\u6e90\uff0c\u4e0d\u4f7f\u7528\u4e0d\u5408\u683c\u5907\u7528\u3002\n5. \u6b63\u5f0fAPK\u7b7e\u540d\u3001\u53d1\u5e03\u53ca\u5b8c\u6574\u5b9e\u76d8\u884c\u60c5\u56de\u5f52\u4ecd\u9700\u9a8c\u6536\u3002",
+      "updateLog": "v2.9.3（源码已升级，尚未正式发布）：\n1. 已验证标的实现报价、原生分时、实时日K和历史日K完整同源，合格备用按整组切换，不再跨源拼图。\n2. 来源切换时清理原图表缓存；对真实报价与分钟末端增加时间、价格和合约身份校验。\n3. 修复A股11:30—13:00午间休市分时副图策略信号错误变为待核，保留合格上午信号并标为午间预估。\n4. 未验证双源及海外连续合约换月的标的坚持可信单源，不使用不合格备用。\n5. 正式APK签名、发布及完整实盘行情回归仍需验收。",
       "forceUpdate": false,
-      "phase": "publishing",
+      "phase": "published",
       "publishRequest": {
         "sourceUrl": "https://github.com/chaonpu/Runner/releases/download/staged-apk-v2.9.3-signrun-42984229495/ziwuxilv-verified-v2.9.3.zip",
         "artifactSha256": "4fa6557e48adc72c638530db6222ad78ad274135875013aeda682c164d74db6b",
@@ -1516,10 +1516,12 @@
         "versionCode": 176,
         "apkSha256": "7abd03d433976e4f933e177a027489ce3275ee4da9716117571d9594c983dcef",
         "signingCertificateSha256": "bef3f5cbb2989734f20740eddaac3e105dfecb6c63ea9275e178eedd892ec105",
-        "updateLog": "v2.9.3\uff08\u6e90\u7801\u5df2\u5347\u7ea7\uff0c\u5c1a\u672a\u6b63\u5f0f\u53d1\u5e03\uff09\uff1a\n1. \u5df2\u9a8c\u8bc1\u6807\u7684\u5b9e\u73b0\u62a5\u4ef7\u3001\u539f\u751f\u5206\u65f6\u3001\u5b9e\u65f6\u65e5K\u548c\u5386\u53f2\u65e5K\u5b8c\u6574\u540c\u6e90\uff0c\u5408\u683c\u5907\u7528\u6309\u6574\u7ec4\u5207\u6362\uff0c\u4e0d\u518d\u8de8\u6e90\u62fc\u56fe\u3002\n2. \u6765\u6e90\u5207\u6362\u65f6\u6e05\u7406\u539f\u56fe\u8868\u7f13\u5b58\uff1b\u5bf9\u771f\u5b9e\u62a5\u4ef7\u4e0e\u5206\u949f\u672b\u7aef\u589e\u52a0\u65f6\u95f4\u3001\u4ef7\u683c\u548c\u5408\u7ea6\u8eab\u4efd\u6821\u9a8c\u3002\n3. \u4fee\u590dA\u80a111:30\u201413:00\u5348\u95f4\u4f11\u5e02\u5206\u65f6\u526f\u56fe\u7b56\u7565\u4fe1\u53f7\u9519\u8bef\u53d8\u4e3a\u5f85\u6838\uff0c\u4fdd\u7559\u5408\u683c\u4e0a\u5348\u4fe1\u53f7\u5e76\u6807\u4e3a\u5348\u95f4\u9884\u4f30\u3002\n4. \u672a\u9a8c\u8bc1\u53cc\u6e90\u53ca\u6d77\u5916\u8fde\u7eed\u5408\u7ea6\u6362\u6708\u7684\u6807\u7684\u575a\u6301\u53ef\u4fe1\u5355\u6e90\uff0c\u4e0d\u4f7f\u7528\u4e0d\u5408\u683c\u5907\u7528\u3002\n5. \u6b63\u5f0fAPK\u7b7e\u540d\u3001\u53d1\u5e03\u53ca\u5b8c\u6574\u5b9e\u76d8\u884c\u60c5\u56de\u5f52\u4ecd\u9700\u9a8c\u6536\u3002",
+        "updateLog": "v2.9.3（源码已升级，尚未正式发布）：\n1. 已验证标的实现报价、原生分时、实时日K和历史日K完整同源，合格备用按整组切换，不再跨源拼图。\n2. 来源切换时清理原图表缓存；对真实报价与分钟末端增加时间、价格和合约身份校验。\n3. 修复A股11:30—13:00午间休市分时副图策略信号错误变为待核，保留合格上午信号并标为午间预估。\n4. 未验证双源及海外连续合约换月的标的坚持可信单源，不使用不合格备用。\n5. 正式APK签名、发布及完整实盘行情回归仍需验收。",
         "forceUpdate": false
       },
-      "publicRunId": 42985484451
+      "publicRunId": 42985484451,
+      "completionMode": "reconciled_original_publication",
+      "reconciledPublicRunId": 42985484451
     }
   }
 }
