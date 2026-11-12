@@ -246,22 +246,49 @@ def runner_account(repo, account, env):
     return account
 
 
-def runner_ready(repo, name, account, env):
-    r = runner_for_repo(repo, name, runner_account(repo, account, env), env)
-    ready = (r.get("read") == "readable" and r.get("status") == "online" and r.get("busy") is False
-             and r.get("labelsVerified") is True)
-    reason = ("state_unreadable" if r.get("read") != "readable" else
-              "not_registered" if r.get("status") == "not_registered" else
-              "offline" if r.get("status") == "offline" else
-              "status_unknown" if r.get("status") != "online" else
-              "labels_mismatch" if r.get("labelsVerified") is not True else
-              "busy" if r.get("busy") is True else
-              "busy_state_unknown" if r.get("busy") is not False else "ready")
-    record_public(None, "runner_readiness", repository=repo, runnerName=name,
-                  ready=ready, reason=reason, probe={
-                      "read": r.get("read"), "status": r.get("status"),
-                      "busy": r.get("busy"), "labelsVerified": r.get("labelsVerified")})
-    return ready
+def runner_ready(repo, name, account, env, *, wait_if_busy=False, busy_wait_seconds=2700):
+    """Fail closed for anything except a verified online runner temporarily busy.
+
+    New Windows Test dispatch may wait a bounded interval while the same runner
+    finishes a push-only chart validation or source preflight. Never turn an
+    offline/unknown/permission failure into a retry, or reserve a build while busy.
+    """
+    require(type(wait_if_busy) is bool and type(busy_wait_seconds) is int
+            and 0 <= busy_wait_seconds <= 2700, "runner_wait_policy_invalid")
+    deadline = time.monotonic() + busy_wait_seconds if wait_if_busy else None
+    waiting_reported = False
+    while True:
+        r = runner_for_repo(repo, name, runner_account(repo, account, env), env)
+        ready = (r.get("read") == "readable" and r.get("status") == "online"
+                 and r.get("busy") is False and r.get("labelsVerified") is True)
+        reason = ("state_unreadable" if r.get("read") != "readable" else
+                  "not_registered" if r.get("status") == "not_registered" else
+                  "offline" if r.get("status") == "offline" else
+                  "status_unknown" if r.get("status") != "online" else
+                  "labels_mismatch" if r.get("labelsVerified") is not True else
+                  "busy" if r.get("busy") is True else
+                  "busy_state_unknown" if r.get("busy") is not False else "ready")
+        if wait_if_busy and reason == "busy":
+            remaining = deadline - time.monotonic()
+            if remaining > 0:
+                if not waiting_reported:
+                    record_public(None, "runner_busy_bounded_wait",
+                                  repository=repo, runnerName=name,
+                                  maxWaitSeconds=busy_wait_seconds,
+                                  dispatches=0, reservations=0)
+                    waiting_reported = True
+                time.sleep(min(POLL_SECONDS, remaining))
+                continue
+            record_public(None, "runner_readiness", repository=repo, runnerName=name,
+                          ready=False, reason="busy_timeout", probe={
+                              "read": r.get("read"), "status": r.get("status"),
+                              "busy": r.get("busy"), "labelsVerified": r.get("labelsVerified")})
+            raise Hold("private_test_runner_busy_timeout_no_dispatch")
+        record_public(None, "runner_readiness", repository=repo, runnerName=name,
+                      ready=ready, reason=reason, probe={
+                          "read": r.get("read"), "status": r.get("status"),
+                          "busy": r.get("busy"), "labelsVerified": r.get("labelsVerified")})
+        return ready
 
 
 def dispatch(token, repo, workflow, inputs):
@@ -1249,8 +1276,15 @@ def run(env, *, execute=False, resume=False, requested_sha="", live_smoke=False,
         check_idle(SIGNER, CLOUD_SIGN_WORKFLOW, sign_account, env)
         choose_signer_route(task, sign_account, env)
         require(route == "hosted" or runner_ready(
-                    TEST, task["runnerName"], test_account, env),
+                    TEST, task["runnerName"], test_account, env,
+                    wait_if_busy=True),
                 "required_private_test_runner_not_ready")
+        # A manual Test or signer job may have started during the bounded wait.
+        # Revalidate all workflows BEFORE reserving or dispatching anything.
+        check_idle(TEST, TEST_WORKFLOW, test_account, env)
+        check_idle(TEST, HOSTED_WORKFLOW, test_account, env)
+        check_idle(SIGNER, SIGN_WORKFLOW, sign_account, env)
+        check_idle(SIGNER, CLOUD_SIGN_WORKFLOW, sign_account, env)
         reserve(pub, source, route=route, live_smoke=live_smoke)
         # This exact route is fixed before the first potentially irreversible POST.
         # A failed cloud job must NOT be redispatched to Windows after it starts.
