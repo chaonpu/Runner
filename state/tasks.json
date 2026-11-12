@@ -58,6 +58,21 @@
       "workflow": "run-a-share.yml"
     }
   ],
+  "retiredPrebusinessReservations": [
+    {
+      "coordinatorRunId": 43122839081,
+      "createdAt": "2026-11-11T23:54:46.445138+00:00",
+      "id": "stock_us:2026-11-11",
+      "publicationMode": "formal",
+      "repo": "chaonpu/Stock",
+      "route": "cloud",
+      "sourceSha": "b69b20d07a7fcc2cd3741891b2bdaf47b63f4e12",
+      "status": "reserved",
+      "task": "stock_us",
+      "updatedAt": "2026-11-11T23:54:46.445138+00:00",
+      "workflow": "run-us.yml"
+    }
+  ],
   "schema": 1,
   "tasks": [
     {
@@ -575,12 +590,10 @@
       "task": "stock_a",
       "updatedAt": "2026-11-11T07:33:16Z",
       "workflow": "run-a-share.yml"
-    }
-  ],
-  "retiredPrebusinessReservations": [
+    },
     {
-      "coordinatorRunId": 43122839081,
-      "createdAt": "2026-11-11T23:54:46.445138+00:00",
+      "coordinatorRunId": 43133469413,
+      "createdAt": "2026-11-12T01:22:40.601660+00:00",
       "id": "stock_us:2026-11-11",
       "publicationMode": "formal",
       "repo": "chaonpu/Stock",
@@ -588,7 +601,7 @@
       "sourceSha": "b69b20d07a7fcc2cd3741891b2bdaf47b63f4e12",
       "status": "reserved",
       "task": "stock_us",
-      "updatedAt": "2026-11-11T23:54:46.445138+00:00",
+      "updatedAt": "2026-11-12T01:22:40.601660+00:00",
       "workflow": "run-us.yml"
     }
   ]
