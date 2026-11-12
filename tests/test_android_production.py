@@ -562,6 +562,173 @@ class SignerRetryResumeTests(unittest.TestCase):
             self.assertEqual(artifact.call_count, 2)
             saved.assert_called_once_with("p", sha, "signed_verified")
 
+
+class WindowsTestHandoffRerunTests(unittest.TestCase):
+    """No new dispatch: accept only the original isolated private handoff failure."""
+
+    sha = "a" * 40
+    rid = 812
+    runner = "ziwuxilv-test-win"
+    publish = "Publish verified Test handoff to PRIVATE Release Assets (not Actions Artifact)"
+    required = (
+        "Verify exact checked out commit",
+        "Build unsigned Release APK on Windows",
+        "Verify release version and Test source guardrails",
+        "Run unit tests, release lint and debug APK build",
+        "Verify release and debug notification manifests",
+        "Prepare private verified Windows signing handoff",
+        "Verify private Release transport policy",
+        publish,
+    )
+
+    def run_record(self, attempt, conclusion):
+        return dict(id=self.rid, repository={"full_name": a.TEST},
+                    head_sha=self.sha, head_branch="main",
+                    event="workflow_dispatch", run_attempt=attempt,
+                    path=".github/workflows/" + a.TEST_WORKFLOW,
+                    status="completed", conclusion=conclusion)
+
+    def jobs(self, attempt, conclusion):
+        steps = [{"name": name,
+                  "conclusion": "failure" if name == self.publish and attempt == 1
+                  else "success"} for name in self.required]
+        return {"total_count": 2, "jobs": [
+            {"name": "test", "run_id": self.rid, "run_attempt": attempt,
+             "runner_name": self.runner, "status": "completed",
+             "conclusion": conclusion, "steps": steps},
+            {"name": "Verify private Release handoff idempotence (no APK)",
+             "status": "completed", "conclusion": "skipped", "steps": []},
+        ]}
+
+    def evidence(self):
+        latest = self.run_record(2, "success")
+        return [latest, self.run_record(1, "failure"),
+                self.jobs(1, "failure"), self.jobs(2, "success"),
+                dict(latest)]
+
+    def verify(self, evidence=None):
+        with patch.object(a, "api", side_effect=evidence or self.evidence()) as api, \\
+             patch.object(a, "dispatch", side_effect=AssertionError("redispatch")):
+            result = a.verify_completed_test_handoff_retry(
+                "test_token", a.TEST_WORKFLOW, self.rid, self.sha, self.runner)
+        return result, api.call_count
+
+    def test_second_attempt_full_handoff_verified_without_dispatch(self):
+        result, calls = self.verify()
+        self.assertTrue(result)
+        self.assertEqual(calls, 5)
+
+    def test_wrong_origin_or_attempt_never_authorizes(self):
+        import copy
+        for index, key, value in (
+                (0, "run_attempt", 3),
+                (0, "conclusion", "failure"),
+                (0, "event", "push"),
+                (0, "head_sha", "b" * 40),
+                (1, "conclusion", "success"),
+                (1, "head_branch", "foreign")):
+            rows = copy.deepcopy(self.evidence())
+            rows[index][key] = value
+            with self.subTest(index=index, key=key), self.assertRaises(a.Hold):
+                self.verify(rows)
+
+    def test_other_failures_missing_steps_or_wrong_runner_are_rejected(self):
+        import copy
+        changes = [
+            (2, "runner_name", "untrusted-runner"),
+            (3, "run_attempt", 3),
+            (3, "status", "in_progress"),
+        ]
+        for index, key, value in changes:
+            rows = copy.deepcopy(self.evidence())
+            rows[index]["jobs"][0][key] = value
+            with self.subTest(index=index, key=key), self.assertRaises(a.Hold):
+                self.verify(rows)
+        rows = copy.deepcopy(self.evidence())
+        rows[2]["jobs"][0]["steps"][1]["conclusion"] = "failure"
+        with self.assertRaises(a.Hold):
+            self.verify(rows)
+        rows = copy.deepcopy(self.evidence())
+        rows[3]["jobs"][0]["steps"].pop()
+        with self.assertRaises(a.Hold):
+            self.verify(rows)
+        rows = copy.deepcopy(self.evidence())
+        rows[3]["jobs"][1]["conclusion"] = "success"
+        with self.assertRaises(a.Hold):
+            self.verify(rows)
+        rows = copy.deepcopy(self.evidence())
+        rows[4]["run_attempt"] = 3
+        with self.assertRaisesRegex(a.Hold, "changed_during_verification"):
+            self.verify(rows)
+
+    def test_recorded_proof_must_match_exact_same_run(self):
+        record = dict(route="windows", liveSmoke=False, testRunId=self.rid,
+                      verifiedTestRetry={
+                          "testRunId": self.rid, "originalAttempt": 1,
+                          "successfulAttempt": 2,
+                          "originalFailure": "android_test_private_handoff_failed_manual_review",
+                          "method": "same_run_isolated_private_handoff_retry"})
+        self.assertTrue(a.registered_test_handoff_retry(record, self.rid))
+        with self.assertRaises(a.Hold):
+            a.registered_test_handoff_retry(record, 999)
+        record["lastFailure"] = {"code": "stale"}
+        with self.assertRaises(a.Hold):
+            a.registered_test_handoff_retry(record, self.rid)
+
+    def test_test_verified_state_preserves_attempt_one_failure_history(self):
+        row = dict(sourceSha=self.sha, phase="test_started", route="windows",
+                   liveSmoke=False, testRunId=self.rid,
+                   lastFailure=dict(stage="test", runId=self.rid,
+                                    code="android_test_private_handoff_failed_manual_review"))
+        state = dict(version=1, builds={self.sha: row})
+        with patch.object(a, "json_file", return_value=(state, "blob")), \\
+             patch.object(a, "api", return_value={"commit": {"sha": "abc"}}):
+            a.put_state("public", self.sha, "test_verified",
+                        verified_test_retry=True)
+        self.assertEqual(row["phase"], "test_verified")
+        self.assertNotIn("lastFailure", row)
+        self.assertTrue(a.registered_test_handoff_retry(row, self.rid))
+
+    def test_resume_signs_only_after_attempt_and_asset_are_reverified(self):
+        cfg = dict(accounts={"anwpustudent-lab": {}, "chaonpu": {}},
+                   tasks={"android": {
+                       "repo": a.TEST, "signingRepo": a.SIGNER,
+                       "windowsWorkflow": a.TEST_WORKFLOW,
+                       "signingWindowsWorkflow": a.SIGN_WORKFLOW,
+                       "runnerName": self.runner,
+                       "signingRunnerName": "ziwuxilv-sign-win"}})
+        row = dict(sourceSha=self.sha, phase="test_started", route="windows",
+                   liveSmoke=False, testRunId=self.rid,
+                   lastFailure=dict(stage="test", runId=self.rid,
+                                    code="android_test_private_handoff_failed_manual_review"))
+        def documents(token, path):
+            if path == a.CONFIG_PATH:
+                return cfg, "config"
+            return dict(version=1, builds={self.sha: row}), "state"
+        with patch.object(a, "json_file", side_effect=documents), \\
+             patch.object(a, "verify_completed_test_handoff_retry", return_value=True) as verified, \\
+             patch.object(a, "wait_recorded") as wait, \\
+             patch.object(a, "verify_execution_runner"), \\
+             patch.object(a, "verify_artifact"), \\
+             patch.object(a, "check_idle"), \\
+             patch.object(a, "choose_signer_route", return_value=("cloud", a.CLOUD_SIGN_WORKFLOW)), \\
+             patch.object(a, "dispatch", return_value=930) as dispatch, \\
+             patch.object(a, "verify_hosted_execution"), \\
+             patch.object(a, "put_state") as state, \\
+             patch.object(a, "record_public"):
+            a.run({"GH_TOKEN": "p", "TEST_ACTIONS_READ_TOKEN": "t",
+                   "CHAONPU_ACTIONS_READ_TOKEN": "s"},
+                  execute=True, resume=True, requested_sha=self.sha)
+        self.assertEqual(verified.call_count, 2)
+        self.assertEqual(wait.call_count, 1)
+        self.assertEqual(wait.call_args.args[2], "signer")
+        self.assertEqual(dispatch.call_count, 1)
+        self.assertEqual(dispatch.call_args.args[1], a.SIGNER)
+        self.assertEqual(state.call_args_list[0].args,
+                         ("p", self.sha, "test_verified"))
+        self.assertIs(state.call_args_list[0].kwargs["verified_test_retry"], True)
+
+
 if __name__ == "__main__":
     unittest.main()
 
