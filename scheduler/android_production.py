@@ -112,7 +112,7 @@ def json_file(token, path):
     return data, item["sha"]
 
 
-def put_state(public_token, source, phase, *, test_run_id=None, signing_run_id=None, signing_route=None):
+def put_state(public_token, source, phase, *, test_run_id=None, signing_run_id=None, signing_route=None, verified_test_retry=False):
     """Optimistic-SHA write. A conflict is never silently retried."""
     require(bool(SHA.fullmatch(source)) and phase in PHASES, "invalid_state_transition")
     record, blob = json_file(public_token, STATE_PATH)
@@ -145,6 +145,24 @@ def put_state(public_token, source, phase, *, test_run_id=None, signing_run_id=N
         require(phase == "signer_reserved" and signing_route in ("windows", "cloud")
                 and not entry.get("signingRoute"), "signing_route_change_forbidden")
         entry["signingRoute"] = signing_route
+    if verified_test_retry:
+        failure = entry.get("lastFailure")
+        require(previous == "test_started" and phase == "test_verified"
+                and entry.get("route") == "windows"
+                and isinstance(failure, dict)
+                and failure.get("stage") == "test"
+                and failure.get("runId") == entry.get("testRunId")
+                and failure.get("code") == "android_test_private_handoff_failed_manual_review"
+                and not entry.get("verifiedTestRetry"),
+                "test_retry_reconciliation_not_eligible")
+        entry["verifiedTestRetry"] = {
+            "testRunId": entry["testRunId"],
+            "originalAttempt": 1,
+            "successfulAttempt": 2,
+            "originalFailure": failure["code"],
+            "method": "same_run_isolated_private_handoff_retry",
+        }
+        entry.pop("lastFailure", None)
     entry["phase"] = phase
     entry["updatedAt"] = datetime.now(timezone.utc).isoformat()
     body = {"message": "Track verified Android build/sign stage",
@@ -260,6 +278,101 @@ def validate_run(item, repo, workflow, rid, source=None):
             "run_origin_mismatch")
     if source is not None:
         require(item.get("head_sha") == source, "source_moved_during_dispatch")
+
+
+def verify_completed_test_handoff_retry(token, workflow, rid, source, expected_runner):
+    """Explicit resume: attest a SAME-RUN Windows Test handoff-only retry.
+
+    Only an original attempt-1 failure isolated to private Release publishing
+    followed by a fully successful attempt 2 can advance. Do not accept a new
+    run ID, hosted rerun, attempt 3, compilation/test failure or partial asset.
+    No workflow dispatch or publication happens in this verifier.
+    """
+    require(workflow == TEST_WORKFLOW and type(rid) is int and rid > 0
+            and isinstance(source, str) and SHA.fullmatch(source),
+            "test_retry_origin_invalid")
+    latest = api(token, TEST, f"/actions/runs/{rid}")
+    require(type(latest.get("run_attempt")) is int
+            and latest["run_attempt"] == 2
+            and latest.get("status") == "completed"
+            and latest.get("conclusion") == "success",
+            "test_retry_requires_completed_second_attempt")
+    validate_run(dict(latest, run_attempt=1), TEST, workflow, rid, source)
+    original = api(token, TEST, f"/actions/runs/{rid}/attempts/1")
+    validate_run(original, TEST, workflow, rid, source)
+    require(original.get("status") == "completed"
+            and original.get("conclusion") == "failure",
+            "test_retry_original_must_fail")
+
+    publish = "Publish verified Test handoff to PRIVATE Release Assets (not Actions Artifact)"
+    required = (
+        "Verify exact checked out commit",
+        "Build unsigned Release APK on Windows",
+        "Verify release version and Test source guardrails",
+        "Run unit tests, release lint and debug APK build",
+        "Verify release and debug notification manifests",
+        "Prepare private verified Windows signing handoff",
+        "Verify private Release transport policy",
+        publish,
+    )
+    for attempt, conclusion in ((1, "failure"), (2, "success")):
+        result = api(token, TEST, f"/actions/runs/{rid}/attempts/{attempt}/jobs?per_page=100")
+        jobs = result.get("jobs")
+        require(result.get("total_count") == 2 and isinstance(jobs, list)
+                and len(jobs) == 2 and all(isinstance(x, dict) for x in jobs),
+                "test_retry_jobs_incomplete")
+        builds = [x for x in jobs if x.get("name") == "test"]
+        companions = [x for x in jobs if x.get("name") ==
+                      "Verify private Release handoff idempotence (no APK)"]
+        require(len(builds) == 1 and len(companions) == 1
+                and companions[0].get("conclusion") == "skipped"
+                and companions[0].get("steps") in (None, []),
+                "test_retry_job_set_invalid")
+        job = builds[0]
+        require(job.get("run_id") == rid and job.get("run_attempt") == attempt
+                and job.get("runner_name") == expected_runner
+                and job.get("status") == "completed"
+                and job.get("conclusion") == conclusion
+                and isinstance(job.get("steps"), list),
+                "test_retry_runner_or_job_invalid")
+        steps = job["steps"]
+        require(all(isinstance(x, dict) and isinstance(x.get("name"), str)
+                    for x in steps), "test_retry_steps_invalid")
+        names = [x["name"] for x in steps]
+        require(len(names) == len(set(names))
+                and all(names.count(name) == 1 for name in required),
+                "test_retry_critical_steps_ambiguous")
+        results = {x["name"]: x.get("conclusion") for x in steps}
+        require(all(results[name] == "success" for name in required[:-1]),
+                "test_retry_compilation_or_checks_unverified")
+        require(results[publish] == ("failure" if attempt == 1 else "success")
+                and [x["name"] for x in steps if x.get("conclusion") == "failure"]
+                == ([publish] if attempt == 1 else []),
+                "test_retry_not_isolated_handoff_failure")
+    # A newly started third attempt or changed conclusion revokes this proof.
+    require(api(token, TEST, f"/actions/runs/{rid}") == latest,
+            "test_retry_changed_during_verification")
+    return True
+
+
+def registered_test_handoff_retry(entry, rid):
+    """A previously persisted retry proof must name this exact Test Run."""
+    proof = entry.get("verifiedTestRetry")
+    if proof is None:
+        return False
+    require(isinstance(proof, dict)
+            and proof == {
+                "testRunId": rid,
+                "originalAttempt": 1,
+                "successfulAttempt": 2,
+                "originalFailure": "android_test_private_handoff_failed_manual_review",
+                "method": "same_run_isolated_private_handoff_retry",
+            }
+            and entry.get("route") == "windows"
+            and entry.get("liveSmoke") is False
+            and "lastFailure" not in entry,
+            "test_retry_recorded_proof_invalid")
+    return True
 
 
 def verify_completed_signer_retry(token, workflow, rid, expected_runner):
@@ -1030,22 +1143,32 @@ def run(env, *, execute=False, resume=False, requested_sha="", live_smoke=False,
         state, _ = json_file(pub, STATE_PATH)
         entry = state["builds"][source]
 
+    retry_verified = False
     if entry["phase"] == "test_started":
         test_run = entry.get("testRunId")
         require(type(test_run) is int and test_run > 0, "unknown_test_dispatch_no_retry")
-        try:
-            wait_recorded(pub, source, "test", test, TEST,
-                          source_workflow, test_run, source)
-        except Hold as failure:
-            if str(failure) != "network_retry_exhausted_same_run_no_publication":
-                raise
-            latest, _ = json_file(pub, STATE_PATH)
-            recorded = latest["builds"].get(source, {})
-            retry_env = dict(env, _test_runner_name=task["runnerName"])
-            test_run = retry_checkout_before_business(pub, test, source, recorded,
-                                                      test_account, retry_env, source_workflow)
-            wait_recorded(pub, source, "test", test, TEST,
-                          source_workflow, test_run, source)
+        failure = entry.get("lastFailure")
+        if (resume and route == "windows" and not live_smoke
+                and isinstance(failure, dict)
+                and failure.get("stage") == "test"
+                and failure.get("runId") == test_run
+                and failure.get("code") == "android_test_private_handoff_failed_manual_review"):
+            retry_verified = verify_completed_test_handoff_retry(
+                test, source_workflow, test_run, source, task["runnerName"])
+        if not retry_verified:
+            try:
+                wait_recorded(pub, source, "test", test, TEST,
+                              source_workflow, test_run, source)
+            except Hold as failure:
+                if str(failure) != "network_retry_exhausted_same_run_no_publication":
+                    raise
+                latest, _ = json_file(pub, STATE_PATH)
+                recorded = latest["builds"].get(source, {})
+                retry_env = dict(env, _test_runner_name=task["runnerName"])
+                test_run = retry_checkout_before_business(pub, test, source, recorded,
+                                                          test_account, retry_env, source_workflow)
+                wait_recorded(pub, source, "test", test, TEST,
+                              source_workflow, test_run, source)
         if route == "hosted":
             verify_hosted_execution(test, TEST, test_run)
         else:
@@ -1053,16 +1176,27 @@ def run(env, *, execute=False, resume=False, requested_sha="", live_smoke=False,
         verify_artifact(env.get("TEST_SOURCE_READ_TOKEN") or test, TEST, test_run, source_artifact, source)
         if live_smoke:
             verify_live_execution(test, test_run)
-        put_state(pub, source, "test_verified")
+        if retry_verified:
+            put_state(pub, source, "test_verified", verified_test_retry=True)
+            record_public(source, "test_handoff_retry_verified", testRunId=test_run,
+                          originalAttempt=1, successfulAttempt=2,
+                          publication="not_authorized")
+        else:
+            put_state(pub, source, "test_verified")
         record_public(source, "test_verified", testRunId=test_run,
                       liveValidation="passed" if live_smoke else "not_requested")
         entry = {"phase": "test_verified", "testRunId": test_run}
 
     if entry["phase"] == "test_verified":
         test_run = entry["testRunId"]
-        # Never create another Test job on resume; revalidate the original run.
-        wait_recorded(pub, source, "test", test, TEST,
-                      source_workflow, test_run, source)
+        # Never create another Test job on resume. On an attested same-run
+        # handoff rerun, reverify BOTH attempts instead of rejecting attempt 2.
+        if retry_verified or registered_test_handoff_retry(entry, test_run):
+            verify_completed_test_handoff_retry(
+                test, source_workflow, test_run, source, task["runnerName"])
+        else:
+            wait_recorded(pub, source, "test", test, TEST,
+                          source_workflow, test_run, source)
         verify_artifact(env.get("TEST_SOURCE_READ_TOKEN") or test, TEST, test_run, source_artifact, source)
         if live_smoke:
             verify_live_execution(test, test_run)
@@ -1087,8 +1221,14 @@ def run(env, *, execute=False, resume=False, requested_sha="", live_smoke=False,
         recovered_retry = False
         if resume and signing_route == "windows":
             # A finished signer rerun still relies on the original exact Test.
-            wait_recorded(pub, source, "test", test, TEST,
-                          source_workflow, entry["testRunId"], source)
+            if (retry_verified or
+                    registered_test_handoff_retry(entry, entry["testRunId"])):
+                verify_completed_test_handoff_retry(
+                    test, source_workflow, entry["testRunId"], source,
+                    task["runnerName"])
+            else:
+                wait_recorded(pub, source, "test", test, TEST,
+                              source_workflow, entry["testRunId"], source)
             if route == "hosted":
                 verify_hosted_execution(test, TEST, entry["testRunId"])
             else:
