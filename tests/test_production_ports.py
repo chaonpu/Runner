@@ -177,6 +177,49 @@ class PortsTests(unittest.TestCase):
         with self.assertRaises(RegistryGuard): self.begin(self.ports())
         self.assertEqual(self.effects("POST"), [])
 
+    def test_transient_stale_main_after_reservation_never_duplicates_effects(self):
+        """A confirmed Contents PUT may precede main visibility by a few GETs."""
+        original = self.backend.request
+        old_state = deepcopy(self.backend.state)
+        stale = [3]
+
+        def delayed_main(token, method, path, body=None):
+            if (method == "GET" and "/contents/state/tasks.json?ref=" in path
+                    and self.backend.state["tasks"] and stale[0] > 0):
+                stale[0] -= 1
+                self.backend.calls.append((method, path))
+                return record("state/tasks.json", old_state)
+            return original(token, method, path, body)
+
+        ports = self.ports()
+        ports.requester = delayed_main
+        with patch("scheduler.production_session.time.sleep", return_value=None):
+            session = self.begin(ports)
+        self.assertEqual(session["runId"], TARGET)
+        self.assertEqual(stale[0], 0)
+        self.assertEqual((len(self.effects("PUT")), len(self.effects("POST"))), (2, 1))
+
+    def test_unresolved_stale_main_holds_without_new_dispatch_or_put(self):
+        """Read-only visibility timeout does not convert to another CAS/POST."""
+        original = self.backend.request
+        old_state = deepcopy(self.backend.state)
+
+        def permanently_old(token, method, path, body=None):
+            if (method == "GET" and "/contents/state/tasks.json?ref=" in path
+                    and self.backend.state["tasks"]):
+                self.backend.calls.append((method, path))
+                return record("state/tasks.json", old_state)
+            return original(token, method, path, body)
+
+        ports = self.ports()
+        ports.requester = permanently_old
+        with patch("scheduler.production_session.time.sleep", return_value=None):
+            with self.assertRaisesRegex(RegistryGuard, "visibility_timeout_no_redispatch"):
+                self.begin(ports)
+        self.assertEqual(self.backend.state["tasks"][0]["status"], "reserved")
+        self.assertEqual((len(self.effects("PUT")), len(self.effects("POST"))), (1, 0))
+        self.assertEqual(ports._armed, {})
+
     def test_post_timeout_consumes_instance_arm_and_never_resends(self):
         self.backend.post_timeout = True
         ports = self.ports()
