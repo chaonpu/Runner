@@ -118,6 +118,69 @@ class PortsTests(unittest.TestCase):
         self.assertEqual(session['runId'], TARGET)
         self.assertEqual(len(self.effects('POST')), 1)
 
+    def test_accepted_exact_run_404_is_polled_without_redispatch(self):
+        from urllib.error import HTTPError
+        ports = self.ports()
+        original_reader = self.backend.reader
+        missing = [3]
+
+        def delayed_reader(token):
+            original = original_reader(token)
+
+            class Reader:
+                def get(self, path):
+                    if path == PRIVATE + f"/actions/runs/{TARGET}" and missing[0] > 0:
+                        missing[0] -= 1
+                        raise HTTPError("private-read", 404, "not yet visible", {}, None)
+                    return original.get(path)
+
+            return Reader()
+
+        ports.reader_factory = delayed_reader
+        with patch("scheduler.production_ports.time.sleep") as sleep:
+            session = self.begin(ports)
+        self.assertEqual(session["runId"], TARGET)
+        self.assertEqual(missing[0], 0)
+        self.assertEqual(sleep.call_count, 3)
+        self.assertEqual((len(self.effects("POST")), len(self.effects("PUT"))), (1, 2))
+        self.assertEqual(self.backend.state["tasks"][0]["status"], "dispatched")
+
+    def test_accepted_exact_run_permanent_404_holds_before_binding(self):
+        from urllib.error import HTTPError
+        ports = self.ports()
+
+        class NeverVisible:
+            def __init__(self, original):
+                self.original = original
+
+            def get(self, path):
+                if path == PRIVATE + f"/actions/runs/{TARGET}":
+                    raise HTTPError("private-read", 404, "not visible", {}, None)
+                return self.original.get(path)
+
+        orig = self.backend.reader
+        ports.reader_factory = lambda token: NeverVisible(orig(token))
+        with patch("scheduler.production_ports.time.sleep") as sleep:
+            with self.assertRaisesRegex(RegistryGuard, "private_actions_read_not_found"):
+                self.begin(ports)
+        self.assertEqual(sleep.call_count, 14)
+        self.assertEqual(len(self.effects("POST")), 1)
+        self.assertEqual(len(self.effects("PUT")), 1)
+        self.assertEqual(self.backend.state["tasks"][0]["status"], "reserved")
+        self.assertNotIn("runId", self.backend.state["tasks"][0])
+
+    def test_404_for_unaccepted_id_is_not_retried(self):
+        from urllib.error import HTTPError
+        ports = self.ports(ReadOnlyPorts)
+        class NotFound:
+            def get(self, path):
+                raise HTTPError("private-read", 404, "other", {}, None)
+        ports.reader_factory = lambda token: NotFound()
+        with patch("scheduler.production_ports.time.sleep") as sleep:
+            with self.assertRaisesRegex(RegistryGuard, "private_actions_read_not_found"):
+                ports.run("chaonpu/Stock", TARGET)
+        sleep.assert_not_called()
+
     def test_writer_rejects_missing_changed_or_unrequested_calendar_before_network(self):
         payload = {'ref': 'main', 'return_run_details': True, 'inputs': {
             'task_id': 'stock_us:' + DAY, 'coordinator_run_id': str(OWNER),
