@@ -1185,7 +1185,7 @@
     "e95cc5624dbca36e944a28af5afabe8b35d91697": {
       "createdAt": "2026-11-12T11:42:31.664476+00:00",
       "liveSmoke": false,
-      "phase": "signer_started",
+      "phase": "signed_verified",
       "route": "windows",
       "signingPrekeyRecovery": {
         "method": "explicit_prekey_failed_hosted_signer_new_policy",
@@ -1202,7 +1202,7 @@
       "signingRunId": 43236161085,
       "sourceSha": "e95cc5624dbca36e944a28af5afabe8b35d91697",
       "testRunId": 43211457277,
-      "updatedAt": "2026-11-12T14:20:30.496195+00:00",
+      "updatedAt": "2026-11-12T14:22:04.841115+00:00",
       "verifiedTestRetry": {
         "method": "same_run_isolated_private_handoff_retry",
         "originalAttempt": 1,
