@@ -178,6 +178,11 @@ def validate(config: dict, state: dict) -> dict:
                    and now["coordinatorRunId"] == old["coordinatorRunId"]
                    for now in state["tasks"]):
                 raise RegistryGuard("retired_reservation_reused_coordinator")
+    # A session gets at most one independently attested prebusiness retry,
+    # whether the original failure happened before or after a POST. Different
+    # archive kinds must not circumvent one another's single-retry limit.
+    if {x["id"] for x in archived} & {x["id"] for x in reservations}:
+        raise RegistryGuard("multiple_prebusiness_retries_for_same_session")
     return state
 
 
