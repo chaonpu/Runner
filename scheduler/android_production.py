@@ -355,6 +355,26 @@ def verify_completed_test_handoff_retry(token, workflow, rid, source, expected_r
     return True
 
 
+def registered_test_handoff_retry(entry, rid):
+    """A previously persisted retry proof must name this exact Test Run."""
+    proof = entry.get("verifiedTestRetry")
+    if proof is None:
+        return False
+    require(isinstance(proof, dict)
+            and proof == {
+                "testRunId": rid,
+                "originalAttempt": 1,
+                "successfulAttempt": 2,
+                "originalFailure": "android_test_private_handoff_failed_manual_review",
+                "method": "same_run_isolated_private_handoff_retry",
+            }
+            and entry.get("route") == "windows"
+            and entry.get("liveSmoke") is False
+            and "lastFailure" not in entry,
+            "test_retry_recorded_proof_invalid")
+    return True
+
+
 def verify_completed_signer_retry(token, workflow, rid, expected_runner):
     """Reconcile one finished rerun of the SAME Windows signer, without dispatch.
 
@@ -1123,11 +1143,11 @@ def run(env, *, execute=False, resume=False, requested_sha="", live_smoke=False,
         state, _ = json_file(pub, STATE_PATH)
         entry = state["builds"][source]
 
+    retry_verified = False
     if entry["phase"] == "test_started":
         test_run = entry.get("testRunId")
         require(type(test_run) is int and test_run > 0, "unknown_test_dispatch_no_retry")
         failure = entry.get("lastFailure")
-        retry_verified = False
         if (resume and route == "windows" and not live_smoke
                 and isinstance(failure, dict)
                 and failure.get("stage") == "test"
@@ -1169,9 +1189,14 @@ def run(env, *, execute=False, resume=False, requested_sha="", live_smoke=False,
 
     if entry["phase"] == "test_verified":
         test_run = entry["testRunId"]
-        # Never create another Test job on resume; revalidate the original run.
-        wait_recorded(pub, source, "test", test, TEST,
-                      source_workflow, test_run, source)
+        # Never create another Test job on resume. On an attested same-run
+        # handoff rerun, reverify BOTH attempts instead of rejecting attempt 2.
+        if retry_verified or registered_test_handoff_retry(entry, test_run):
+            verify_completed_test_handoff_retry(
+                test, source_workflow, test_run, source, task["runnerName"])
+        else:
+            wait_recorded(pub, source, "test", test, TEST,
+                          source_workflow, test_run, source)
         verify_artifact(env.get("TEST_SOURCE_READ_TOKEN") or test, TEST, test_run, source_artifact, source)
         if live_smoke:
             verify_live_execution(test, test_run)
@@ -1196,8 +1221,14 @@ def run(env, *, execute=False, resume=False, requested_sha="", live_smoke=False,
         recovered_retry = False
         if resume and signing_route == "windows":
             # A finished signer rerun still relies on the original exact Test.
-            wait_recorded(pub, source, "test", test, TEST,
-                          source_workflow, entry["testRunId"], source)
+            if (retry_verified or
+                    registered_test_handoff_retry(entry, entry["testRunId"])):
+                verify_completed_test_handoff_retry(
+                    test, source_workflow, entry["testRunId"], source,
+                    task["runnerName"])
+            else:
+                wait_recorded(pub, source, "test", test, TEST,
+                              source_workflow, entry["testRunId"], source)
             if route == "hosted":
                 verify_hosted_execution(test, TEST, entry["testRunId"])
             else:
