@@ -884,6 +884,91 @@ class SignerPrekeyRecoveryTests(unittest.TestCase):
                       requested_sha=source, recover_signer_prekey=True)
 
 
+
+class RunnerBusyWaitTests(unittest.TestCase):
+    def ready(self, busy):
+        return dict(read="readable", status="online", busy=busy,
+                    labelsVerified=True)
+
+    def test_busy_then_ready_waits_without_reserving_or_dispatching(self):
+        sequence = [self.ready(True), self.ready(True), self.ready(False)]
+        with patch.object(a, "runner_for_repo", side_effect=sequence) as probe, \
+             patch.object(a.time, "sleep") as sleep, \
+             patch.object(a, "record_public") as report, \
+             patch.object(a, "reserve", side_effect=AssertionError("reserve")), \
+             patch.object(a, "dispatch", side_effect=AssertionError("dispatch")):
+            self.assertTrue(a.runner_ready(
+                a.TEST, "ziwuxilv-test-win", {}, {},
+                wait_if_busy=True, busy_wait_seconds=100))
+        self.assertEqual(probe.call_count, 3)
+        self.assertEqual(sleep.call_count, 2)
+        self.assertEqual(report.call_args.kwargs["reason"], "ready")
+        self.assertEqual(report.call_args_list[0].args[1], "runner_busy_bounded_wait")
+
+    def test_offline_unknown_or_labels_mismatch_never_waits(self):
+        for bad in (
+                dict(read="readable", status="offline", busy=True, labelsVerified=True),
+                dict(read="missing", status="online", busy=True, labelsVerified=True),
+                dict(read="readable", status="online", busy=None, labelsVerified=True),
+                dict(read="readable", status="online", busy=True, labelsVerified=False)):
+            with self.subTest(bad=bad), \
+                 patch.object(a, "runner_for_repo", return_value=bad) as probe, \
+                 patch.object(a.time, "sleep") as sleep, \
+                 patch.object(a, "record_public"):
+                self.assertFalse(a.runner_ready(
+                    a.TEST, "ziwuxilv-test-win", {}, {},
+                    wait_if_busy=True, busy_wait_seconds=2700))
+                probe.assert_called_once()
+                sleep.assert_not_called()
+
+    def test_permanently_busy_times_out_without_any_side_effect(self):
+        with patch.object(a, "runner_for_repo", return_value=self.ready(True)) as probe, \
+             patch.object(a.time, "sleep") as sleep, \
+             patch.object(a, "record_public"), \
+             patch.object(a, "reserve", side_effect=AssertionError("reserve")), \
+             patch.object(a, "dispatch", side_effect=AssertionError("dispatch")):
+            with self.assertRaisesRegex(a.Hold, "private_test_runner_busy_timeout_no_dispatch"):
+                a.runner_ready(a.TEST, "ziwuxilv-test-win", {}, {},
+                               wait_if_busy=True, busy_wait_seconds=0)
+            probe.assert_called_once()
+            sleep.assert_not_called()
+        for timeout in (-1, 2701, 0.5):
+            with self.subTest(timeout=timeout), self.assertRaises(a.Hold):
+                a.runner_ready(a.TEST, "ziwuxilv-test-win", {}, {},
+                               wait_if_busy=True, busy_wait_seconds=timeout)
+
+    def test_active_manual_run_appearing_after_wait_blocks_reservation(self):
+        sha = "a" * 40
+        config = dict(accounts={"anwpustudent-lab": {}, "chaonpu": {}},
+                      tasks={"android": dict(
+                          repo=a.TEST, signingRepo=a.SIGNER,
+                          windowsWorkflow=a.TEST_WORKFLOW,
+                          signingWindowsWorkflow=a.SIGN_WORKFLOW,
+                          runnerName="ziwuxilv-test-win",
+                          signingRunnerName="ziwuxilv-sign-win")})
+        def json_doc(token, path):
+            return (config if path == a.CONFIG_PATH else
+                    dict(version=1, builds={})), "blob"
+        with patch.object(a, "json_file", side_effect=json_doc), \
+             patch.object(a, "current_source", return_value=sha), \
+             patch.object(a, "choose_route", return_value=dict(
+                 route="windows", reason="verified_fixture")), \
+             patch.object(a, "check_idle", side_effect=[
+                 None, None, None, None,
+                 a.Hold("active_or_unknown_private_workflow_no_dispatch")
+             ]) as idle, \
+             patch.object(a, "choose_signer_route", return_value=(
+                 "cloud", a.CLOUD_SIGN_WORKFLOW)), \
+             patch.object(a, "runner_ready", return_value=True) as ready, \
+             patch.object(a, "reserve", side_effect=AssertionError("reserve")), \
+             patch.object(a, "dispatch", side_effect=AssertionError("dispatch")):
+            with self.assertRaisesRegex(a.Hold, "active_or_unknown_private_workflow"):
+                a.run({"GH_TOKEN": "p", "TEST_ACTIONS_READ_TOKEN": "t"},
+                      execute=True, requested_sha=sha)
+            self.assertEqual(idle.call_count, 5)
+            self.assertTrue(ready.call_args.kwargs.get("wait_if_busy"))
+
+
 if __name__ == "__main__":
     unittest.main()
 
