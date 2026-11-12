@@ -18,11 +18,12 @@ jobs:
       - name: Compile Python coordinator source without secrets
         run: python3 -m py_compile scheduler/android_production.py tests/test_android_production.py
       - name: Run original and same-run handoff recovery regressions
-        run: python3 -m unittest -q \
-          tests/test_android_production.py \
-          tests/test_android_verified_test_recovery.py \
-          tests/test_android_live_validation.py \
-          tests/test_android_live_recovery.py \
-          tests/test_android_signing_recovery.py \
-          tests/test_android_private_release.py \
-          tests/test_apk_stage.py
+        run: |
+          python3 -m unittest -q \
+            tests/test_android_production.py \
+            tests/test_android_verified_test_recovery.py \
+            tests/test_android_live_validation.py \
+            tests/test_android_live_recovery.py \
+            tests/test_android_signing_recovery.py \
+            tests/test_android_private_release.py \
+            tests/test_apk_stage.py
