@@ -1,0 +1,27 @@
+name: Android signer prekey recovery safety tests (temporary)
+on:
+  push:
+    branches:
+      - fix/android-signer-prekey-resume-20261112
+permissions:
+  contents: read
+jobs:
+  offline-safety:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Check Python syntax and run Android regression suite
+        run: |
+          python3 -m py_compile scheduler/android_production.py tests/test_android_production.py
+          python3 -m unittest -q \
+            tests/test_android_production.py \
+            tests/test_android_verified_test_recovery.py \
+            tests/test_android_live_validation.py \
+            tests/test_android_live_recovery.py \
+            tests/test_android_signing_recovery.py \
+            tests/test_android_private_release.py \
+            tests/test_apk_stage.py
