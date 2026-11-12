@@ -124,6 +124,18 @@ class ProductionRegistryTests(unittest.TestCase):
         with self.assertRaisesRegex(RegistryGuard, "retired_reservation_record_invalid"):
             validate(cfg, duplicate)
 
+    def test_one_recovery_limit_is_shared_across_both_prebusiness_archives(self):
+        cfg = enabled_config()
+        base = pending(cfg, date="2026-10-19", task="stock_us")
+        base["tasks"][0]["sourceSha"] = SHA
+        state = archive_unstarted_reservation(cfg, base, "stock_us:2026-10-19")
+        duplicate = copy.deepcopy(state["retiredPrebusinessReservations"][0])
+        duplicate["status"] = "hold"
+        duplicate["runId"] = 38967039826
+        state["retiredPrebusinessFailures"] = [duplicate]
+        with self.assertRaisesRegex(RegistryGuard, "multiple_prebusiness_retries_for_same_session"):
+            validate(cfg, state)
+
     def test_reservation_is_a_pure_copy_and_bound_to_single_task(self):
         cfg, old = enabled_config(), blank()
         current = pending(cfg)
