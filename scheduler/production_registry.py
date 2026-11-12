@@ -69,7 +69,8 @@ def _time(value: object) -> None:
 def validate(config: dict, state: dict) -> dict:
     if (not isinstance(state, dict)
             or not {"schema", "tasks"}.issubset(state)
-            or not set(state).issubset({"schema", "tasks", "description", "retiredPrebusinessFailures"})
+            or not set(state).issubset({"schema", "tasks", "description", "retiredPrebusinessFailures",
+                                        "retiredPrebusinessReservations"})
             or state["schema"] != 1 or not isinstance(state["tasks"], list)):
         raise RegistryGuard("registry_schema_invalid")
     if "description" in state and (
@@ -155,7 +156,54 @@ def validate(config: dict, state: dict) -> dict:
         active_runs = {x.get("runId") for x in state["tasks"] if x.get("runId")}
         if any(x["runId"] in active_runs for x in archived):
             raise RegistryGuard("retired_and_active_run_identity_conflict")
+    # A no-run-id cloud reservation may be retired once ONLY after independent
+    # evidence proves the coordinator stopped before business dispatch. Keep
+    # original task identity and coordinator ID for permanent audit.
+    reservations = state.get("retiredPrebusinessReservations", [])
+    if not isinstance(reservations, list) or len(reservations) > 64:
+        raise RegistryGuard("retired_reservation_metadata_invalid")
+    if reservations:
+        if (any(not isinstance(x, dict)
+                or x.get("status") != "reserved"
+                or x.get("route") != "cloud"
+                or x.get("task") not in ("stock_a", "stock_us")
+                or x.get("runId") is not None
+                or not re.fullmatch(r"[0-9a-f]{40}", str(x.get("sourceSha", "")))
+                for x in reservations)
+                or len({x.get("id") for x in reservations}) != len(reservations)):
+            raise RegistryGuard("retired_reservation_record_invalid")
+        validate(config, {"schema": 1, "tasks": reservations})
+        for old in reservations:
+            if any(now["id"] == old["id"]
+                   and now["coordinatorRunId"] == old["coordinatorRunId"]
+                   for now in state["tasks"]):
+                raise RegistryGuard("retired_reservation_reused_coordinator")
     return state
+
+
+def archive_unstarted_reservation(config: dict, state: dict, key: str) -> dict:
+    """Pure one-off archival transform; caller MUST independently prove no POST.
+
+    This function NEVER queries Actions or a ledger, authorizes dispatch, or
+    runs automatically. Without immutable external pre-dispatch evidence,
+    callers must not commit its output to GitHub.
+    """
+    validate(config, state)
+    rows = [x for x in state["tasks"] if x.get("id") == key]
+    if len(rows) != 1:
+        raise RegistryGuard("reservation_original_missing")
+    row = rows[0]
+    if (row.get("status") != "reserved" or row.get("route") != "cloud"
+            or row.get("task") not in ("stock_a", "stock_us")
+            or row.get("runId") is not None
+            or not re.fullmatch(r"[0-9a-f]{40}", str(row.get("sourceSha", "")))
+            or any(x.get("id") == key
+                   for x in state.get("retiredPrebusinessReservations", []))):
+        raise RegistryGuard("reservation_archive_not_permitted")
+    output = deepcopy(state)
+    output["tasks"] = [x for x in output["tasks"] if x["id"] != key]
+    output.setdefault("retiredPrebusinessReservations", []).append(deepcopy(row))
+    return validate(config, output)
 
 
 def reserve(config: dict, state: dict, task_name: str, *, route: str,
