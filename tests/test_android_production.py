@@ -607,7 +607,7 @@ class WindowsTestHandoffRerunTests(unittest.TestCase):
                 dict(latest)]
 
     def verify(self, evidence=None):
-        with patch.object(a, "api", side_effect=evidence or self.evidence()) as api, \\
+        with patch.object(a, "api", side_effect=evidence or self.evidence()) as api, \
              patch.object(a, "dispatch", side_effect=AssertionError("redispatch")):
             result = a.verify_completed_test_handoff_retry(
                 "test_token", a.TEST_WORKFLOW, self.rid, self.sha, self.runner)
@@ -681,7 +681,7 @@ class WindowsTestHandoffRerunTests(unittest.TestCase):
                    lastFailure=dict(stage="test", runId=self.rid,
                                     code="android_test_private_handoff_failed_manual_review"))
         state = dict(version=1, builds={self.sha: row})
-        with patch.object(a, "json_file", return_value=(state, "blob")), \\
+        with patch.object(a, "json_file", return_value=(state, "blob")), \
              patch.object(a, "api", return_value={"commit": {"sha": "abc"}}):
             a.put_state("public", self.sha, "test_verified",
                         verified_test_retry=True)
@@ -705,16 +705,16 @@ class WindowsTestHandoffRerunTests(unittest.TestCase):
             if path == a.CONFIG_PATH:
                 return cfg, "config"
             return dict(version=1, builds={self.sha: row}), "state"
-        with patch.object(a, "json_file", side_effect=documents), \\
-             patch.object(a, "verify_completed_test_handoff_retry", return_value=True) as verified, \\
-             patch.object(a, "wait_recorded") as wait, \\
-             patch.object(a, "verify_execution_runner"), \\
-             patch.object(a, "verify_artifact"), \\
-             patch.object(a, "check_idle"), \\
-             patch.object(a, "choose_signer_route", return_value=("cloud", a.CLOUD_SIGN_WORKFLOW)), \\
-             patch.object(a, "dispatch", return_value=930) as dispatch, \\
-             patch.object(a, "verify_hosted_execution"), \\
-             patch.object(a, "put_state") as state, \\
+        with patch.object(a, "json_file", side_effect=documents), \
+             patch.object(a, "verify_completed_test_handoff_retry", return_value=True) as verified, \
+             patch.object(a, "wait_recorded") as wait, \
+             patch.object(a, "verify_execution_runner"), \
+             patch.object(a, "verify_artifact"), \
+             patch.object(a, "check_idle"), \
+             patch.object(a, "choose_signer_route", return_value=("cloud", a.CLOUD_SIGN_WORKFLOW)), \
+             patch.object(a, "dispatch", return_value=930) as dispatch, \
+             patch.object(a, "verify_hosted_execution"), \
+             patch.object(a, "put_state") as state, \
              patch.object(a, "record_public"):
             a.run({"GH_TOKEN": "p", "TEST_ACTIONS_READ_TOKEN": "t",
                    "CHAONPU_ACTIONS_READ_TOKEN": "s"},
