@@ -21,7 +21,7 @@ from scheduler.exchange_schedule import evaluate
 from scheduler.production_evidence import inspect, WORKFLOWS as READY_WINDOWS, CLOUD_WORKFLOWS
 from scheduler.policies import hosted_capacity
 from scheduler.production_registry import RegistryGuard, validate, observe_run
-from scheduler.production_session import context, dispatch_inputs, readiness, WORKFLOWS, SHA, RUN_ID
+from scheduler.production_session import context, dispatch_inputs, readiness, confirm_persisted_state, WORKFLOWS, SHA, RUN_ID
 from scheduler.production_store import save as registry_save, verify_change
 from scheduler.probes import GitHubReadOnly, account_usage, runner_for_repo, existing_attempt, retryable_get_error, safe_error
 
@@ -345,9 +345,8 @@ class ProductionPorts(ReadOnlyPorts):
         if old is None:
             # Arm only a reservation created by THIS adapter, after confirmed
             # storage. Existing reservations are intentionally never armed.
-            confirmed_config, confirmed_state, confirmed_sha = self.load()
-            need(confirmed_config == config and confirmed_state == after and confirmed_sha != sha,
-                 "ports_reservation_confirmation_failed")
+            confirmed_state, confirmed_sha = confirm_persisted_state(
+                self, config, before, after, sha)
             self._armed[key] = {"sha": confirmed_sha, "sourceSha": source, "route": route,
                                 "publicationMode": row.get("publicationMode", "formal")}
         return result
