@@ -128,13 +128,27 @@ class ReadOnlyPorts:
     def run(self, repo, rid):
         need(repo == "chaonpu/Stock" and type(rid) is int and RUN_ID.fullmatch(str(rid)),
              "ports_run_target_invalid")
-        try:
-            result = self.private_reader().get(PRIVATE + f"/actions/runs/{rid}")
-        except (OSError, ValueError) as exc:
-            raise RegistryGuard("private_actions_read_" + safe_error(exc)) from None
-        need(isinstance(result, dict) and type(result.get("id")) is int and result["id"] == rid
-             and result.get("repository", {}).get("full_name") == repo, "ports_run_response_invalid")
-        return result
+        # GitHub may return the exact Run ID in dispatch acknowledgement before
+        # GET /actions/runs/<id> becomes visible. Only the in-process ID returned
+        # by our ONE accepted POST is eligible for bounded 404 readback polling.
+        # No additional POST/PUT and no fallback to an unrelated run are allowed.
+        just_dispatched = any(
+            x.get("runId") == rid for x in getattr(self, "_accepted", {}).values())
+        attempts = 15 if just_dispatched else 1
+        for index in range(attempts):
+            try:
+                result = self.private_reader().get(PRIVATE + f"/actions/runs/{rid}")
+            except (OSError, ValueError) as exc:
+                if (just_dispatched and safe_error(exc) == "not_found"
+                        and index + 1 < attempts):
+                    time.sleep(2)
+                    continue
+                raise RegistryGuard("private_actions_read_" + safe_error(exc)) from None
+            need(isinstance(result, dict) and type(result.get("id")) is int and result["id"] == rid
+                 and result.get("repository", {}).get("full_name") == repo,
+                 "ports_run_response_invalid")
+            return result
+        raise RegistryGuard("private_actions_read_not_found")
 
     def audit(self, config, state, task, day):
         need(task in WORKFLOWS and isinstance(config, dict), "ports_task_not_allowed")
