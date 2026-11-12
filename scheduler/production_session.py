@@ -14,6 +14,7 @@ from __future__ import annotations
 from copy import deepcopy
 from datetime import datetime, timezone
 import re
+import time
 
 from scheduler.policies import hosted_capacity, runner_available
 from scheduler.production_registry import (
@@ -50,6 +51,10 @@ def context(env):
 def call(method, *args):
     try:
         return method(*deepcopy(args))
+    except RegistryGuard:
+        # Keep deliberately public-safe guard codes for actionable diagnosis;
+        # unrelated transport exceptions remain opaque and never leak payloads.
+        raise
     except Exception:
         # Never expose private API errors, payloads or credentials.
         raise RegistryGuard("session_port_uncertain_no_retry") from None
@@ -120,14 +125,30 @@ def readiness(ports, config, state, task, day, clock):
     return route, audit["sourceSha"]
 
 
+def confirm_persisted_state(ports, config, before, after, previous_sha, *, attempts=10):
+    """Read-only bounded confirmation after ONE CAS write; never repeat a PUT.
+
+    GitHub's moving main branch can briefly return the exact previous snapshot
+    even after Contents PUT succeeded. Only that known-old snapshot may be
+    retried. Any different content/config is a genuine drift and fails closed.
+    """
+    for index in range(attempts):
+        seen_config, seen_state, seen_sha = load(ports)
+        if seen_config == config and seen_state == after and seen_sha != previous_sha:
+            return seen_state, seen_sha
+        need((seen_config, seen_state, seen_sha) ==
+             (config, before, previous_sha), "session_registry_confirmation_mismatch")
+        if index + 1 < attempts:
+            time.sleep(0.5)
+    raise RegistryGuard("session_registry_visibility_timeout_no_redispatch")
+
+
 def persist(ports, config, before, after, sha, env):
     verify_change(config, before, after, int(env["GITHUB_RUN_ID"]))
     call(ports.save, config, before, after, sha, env)
-    # A successful PUT response alone cannot authorize the next effect.
-    current_config, current, current_sha = load(ports)
-    need(current_config == config and current == after and current_sha != sha,
-         "session_registry_confirmation_mismatch")
-    return current, current_sha
+    # A successful PUT response alone cannot authorize the next effect. A
+    # temporarily old main read is never mistaken for a failed write.
+    return confirm_persisted_state(ports, config, before, after, sha)
 
 
 def dispatch_inputs(run, key, owner, route, publication_mode="formal"):
