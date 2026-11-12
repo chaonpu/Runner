@@ -1185,12 +1185,13 @@
     "e95cc5624dbca36e944a28af5afabe8b35d91697": {
       "createdAt": "2026-11-12T11:42:31.664476+00:00",
       "liveSmoke": false,
-      "phase": "signer_reserved",
+      "phase": "signer_started",
       "route": "windows",
       "signingRoute": "cloud",
+      "signingRunId": 43233129694,
       "sourceSha": "e95cc5624dbca36e944a28af5afabe8b35d91697",
       "testRunId": 43211457277,
-      "updatedAt": "2026-11-12T14:02:34.400904+00:00",
+      "updatedAt": "2026-11-12T14:02:37.822750+00:00",
       "verifiedTestRetry": {
         "method": "same_run_isolated_private_handoff_retry",
         "originalAttempt": 1,
