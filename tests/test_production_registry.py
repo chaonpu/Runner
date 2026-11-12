@@ -75,6 +75,7 @@ class ProductionRegistryTests(unittest.TestCase):
     def test_independently_attested_cloud_reservation_archives_once(self):
         cfg = enabled_config()
         first = pending(cfg, date="2026-10-19", task="stock_us")
+        first["tasks"][0]["sourceSha"] = SHA
         key = "stock_us:2026-10-19"
         archived = archive_unstarted_reservation(cfg, first, key)
         self.assertEqual(archived["tasks"], [])
@@ -97,6 +98,7 @@ class ProductionRegistryTests(unittest.TestCase):
     def test_reservation_archive_rejects_any_ambiguous_business_execution(self):
         cfg = enabled_config()
         before = pending(cfg, date="2026-10-19", task="stock_us")
+        before["tasks"][0]["sourceSha"] = SHA
         key = "stock_us:2026-10-19"
         for changed in ({"status": "dispatched", "runId": 38967039826},
                         {"runId": 38967039826},
@@ -110,6 +112,7 @@ class ProductionRegistryTests(unittest.TestCase):
     def test_archive_schema_rejects_forged_and_duplicate_reservations(self):
         cfg = enabled_config()
         first = pending(cfg, date="2026-10-19", task="stock_us")
+        first["tasks"][0]["sourceSha"] = SHA
         saved = archive_unstarted_reservation(cfg, first, "stock_us:2026-10-19")
         forged = copy.deepcopy(saved)
         forged["retiredPrebusinessReservations"][0]["runId"] = 38967039826
