@@ -729,6 +729,161 @@ class WindowsTestHandoffRerunTests(unittest.TestCase):
         self.assertIs(state.call_args_list[0].kwargs["verified_test_retry"], True)
 
 
+
+class SignerPrekeyRecoveryTests(unittest.TestCase):
+    sha = "a" * 40
+    run_id = 9876
+    test_id = 4567
+    test_source_proof = dict(
+        testRunId=4567, originalAttempt=1, successfulAttempt=2,
+        originalFailure="android_test_private_handoff_failed_manual_review",
+        method="same_run_isolated_private_handoff_retry")
+
+    def signer_evidence(self):
+        run = dict(
+            id=self.run_id, repository={"full_name": a.SIGNER},
+            event="workflow_dispatch", head_branch="main", run_attempt=1,
+            path=".github/workflows/" + a.CLOUD_SIGN_WORKFLOW,
+            status="completed", conclusion="failure", head_sha="b" * 40)
+        good = [
+            "Checkout private signing policy only",
+            "Verify immutable private signing policy SHA",
+            "Run actions/setup-java@v4",
+            "Verify signing policy tests and install Android build-tools",
+        ]
+        failed = "Verify exact Test run and download only approved private handoff"
+        guarded = [
+            "Independently verify exact source archive, tests, lint and unsigned APK",
+            "Restore signing key in trusted ephemeral signer only",
+            "Sign verified unsigned APK without executing Test source",
+            "Verify exact production certificate, APK package/version and SHA",
+            "Build verified private release candidate metadata (no publication)",
+            "Verify private Release transport policy",
+            "Publish verified signed APK to PRIVATE Release Assets (not Actions Artifact)",
+        ]
+        steps = ([dict(name=n, conclusion="success") for n in good]
+                 + [dict(name=failed, conclusion="failure")]
+                 + [dict(name=n, conclusion="skipped") for n in guarded])
+        job = dict(name="Verify Test handoff and sign exact APK on trusted hosted runner",
+                   run_id=self.run_id, run_attempt=1,
+                   labels=["ubuntu-24.04"], status="completed",
+                   conclusion="failure", steps=steps)
+        return run, dict(total_count=1, jobs=[job]), dict(run)
+
+    def row(self):
+        return dict(
+            sourceSha=self.sha, phase="signer_started", route="windows",
+            signingRoute="cloud", liveSmoke=False,
+            testRunId=self.test_id, signingRunId=self.run_id,
+            verifiedTestRetry=dict(self.test_source_proof),
+            lastFailure=dict(stage="signer", runId=self.run_id,
+                             code="android_signer_setup_or_handoff_failed_manual_review"))
+
+    def test_only_before_key_failure_is_eligible(self):
+        with patch.object(a, "api", side_effect=self.signer_evidence()) as api:
+            self.assertTrue(a.verify_cloud_signer_prekey_failure("s", self.run_id))
+        self.assertEqual(api.call_count, 3)
+
+    def test_signing_or_missing_proof_never_retries(self):
+        import copy
+        for i, mutation in enumerate((
+            lambda e: e[0].update(run_attempt=2),
+            lambda e: e[0].update(event="push"),
+            lambda e: e[1]["jobs"][0].update(labels=["self-hosted"]),
+            lambda e: e[1]["jobs"][0]["steps"][5].update(conclusion="success"),
+            lambda e: e[1]["jobs"][0]["steps"][7].update(conclusion="success"),
+            lambda e: e[1]["jobs"][0]["steps"].pop(5),
+            lambda e: e[2].update(conclusion="success"),
+        )):
+            evidence = copy.deepcopy(self.signer_evidence())
+            mutation(evidence)
+            with self.subTest(i=i), self.assertRaises(a.Hold), \
+                 patch.object(a, "api", side_effect=evidence):
+                a.verify_cloud_signer_prekey_failure("s", self.run_id)
+
+    def test_state_reservation_is_one_time_and_preserves_failure(self):
+        row = self.row()
+        data = dict(version=1, builds={self.sha: row})
+        with patch.object(a, "json_file", return_value=(data, "state_blob")), \
+             patch.object(a, "api", return_value={"commit": {"sha": "xyz"}}):
+            a.reserve_signer_prekey_recovery("pub", self.sha, dict(row))
+        self.assertEqual(row["phase"], "signer_retry_reserved")
+        self.assertNotIn("lastFailure", row)
+        self.assertEqual(row["signingPrekeyRecovery"]["oldSigningRunId"],
+                         self.run_id)
+        self.assertEqual(row["signingPrekeyRecovery"]["originalFailure"]["stage"],
+                         "signer")
+        with patch.object(a, "json_file", return_value=(data, "state_blob")), \
+             patch.object(a, "api", side_effect=AssertionError("write duplicate")):
+            with self.assertRaises(a.Hold):
+                a.reserve_signer_prekey_recovery("pub", self.sha, dict(row))
+
+    def test_state_transition_only_rebinds_reserved_new_signer(self):
+        row = self.row()
+        row["phase"] = "signer_retry_reserved"
+        row["signingPrekeyRecovery"] = {
+            "oldSigningRunId": self.run_id, "recoveryCount": 1,
+            "originalFailure": {"stage": "signer"}}
+        state = dict(version=1, builds={self.sha: row})
+        with patch.object(a, "json_file", return_value=(state, "state_blob")), \
+             patch.object(a, "api", return_value={"commit": {"sha": "xyz"}}):
+            with self.assertRaises(a.Hold):
+                a.put_state("pub", self.sha, "signer_started",
+                            signing_run_id=self.run_id)
+            a.put_state("pub", self.sha, "signer_started",
+                        signing_run_id=self.run_id + 1)
+        self.assertEqual(row["signingRunId"], self.run_id + 1)
+
+    def test_explicit_resume_never_rebuilds_test_and_dispatches_one_signer(self):
+        row = self.row()
+        task = dict(repo=a.TEST, signingRepo=a.SIGNER,
+                    windowsWorkflow=a.TEST_WORKFLOW,
+                    signingWindowsWorkflow=a.SIGN_WORKFLOW,
+                    runnerName="ziwuxilv-test-win",
+                    signingRunnerName="ziwuxilv-sign-win")
+        cfg = dict(accounts={"anwpustudent-lab": {}, "chaonpu": {}},
+                   tasks={"android": task})
+        def json_doc(token, path):
+            return (cfg if path == a.CONFIG_PATH else
+                    dict(version=1, builds={self.sha: row})), "blob"
+        with patch.object(a, "json_file", side_effect=json_doc), \
+             patch.object(a, "verify_completed_test_handoff_retry", return_value=True) as test, \
+             patch.object(a, "verify_cloud_signer_prekey_failure", return_value=True) as prekey, \
+             patch.object(a, "verify_execution_runner"), \
+             patch.object(a, "verify_artifact"), \
+             patch.object(a, "check_idle"), \
+             patch.object(a, "choose_signer_route", return_value=("cloud", a.CLOUD_SIGN_WORKFLOW)), \
+             patch.object(a, "reserve_signer_prekey_recovery") as reserve, \
+             patch.object(a, "dispatch", return_value=self.run_id + 1) as dispatch, \
+             patch.object(a, "wait_recorded") as wait, \
+             patch.object(a, "verify_hosted_execution"), \
+             patch.object(a, "put_state") as state, \
+             patch.object(a, "record_public"):
+            a.run(dict(GH_TOKEN="p", TEST_ACTIONS_READ_TOKEN="t",
+                       CHAONPU_ACTIONS_READ_TOKEN="s"),
+                  execute=True, resume=True, requested_sha=self.sha,
+                  recover_signer_prekey=True)
+        test.assert_called_once()
+        prekey.assert_called_once()
+        reserve.assert_called_once()
+        dispatch.assert_called_once()
+        self.assertEqual(dispatch.call_args.args[1:3],
+                         (a.SIGNER, a.CLOUD_SIGN_WORKFLOW))
+        self.assertEqual(wait.call_count, 1)
+        self.assertEqual(wait.call_args.args[2], "signer")
+        state.assert_any_call("p", self.sha, "signer_started",
+                              signing_run_id=self.run_id + 1)
+
+    def test_recovery_flag_requires_explicit_execute_resume(self):
+        for execute, resume, source in (
+            (False, True, self.sha), (True, False, self.sha),
+            (True, True, "")):
+            with self.assertRaises(a.Hold), \
+                 patch.object(a, "dispatch", side_effect=AssertionError("POST")):
+                a.run({}, execute=execute, resume=resume,
+                      requested_sha=source, recover_signer_prekey=True)
+
+
 if __name__ == "__main__":
     unittest.main()
 

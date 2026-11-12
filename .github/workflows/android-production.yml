@@ -18,6 +18,11 @@ on:
         type: boolean
         required: true
         default: false
+      recover_signer_prekey:
+        description: "仅签名前来源校验失败，复核后一次性续签（须选执行+续跑）"
+        type: boolean
+        required: true
+        default: false
       source_sha:
         description: "源码 SHA（通常留空；续跑填原40位）"
         type: string
@@ -56,6 +61,7 @@ jobs:
       EXECUTE: ${{ inputs.execute }}
       RESUME: ${{ inputs.resume }}
       RECOVER_LIVE_VALIDATION: ${{ inputs.recover_live_validation }}
+      RECOVER_SIGNER_PREKEY: ${{ inputs.recover_signer_prekey }}
       SOURCE_SHA: ${{ inputs.source_sha }}
       VERIFIED_TEST_RUN_ID: ${{ inputs.verified_test_run_id }}
     steps:
@@ -95,6 +101,7 @@ jobs:
           if [[ "$EXECUTE" == 'true' ]]; then args+=(--execute); fi
           if [[ "$RESUME" == 'true' ]]; then args+=(--resume); fi
           if [[ "$RECOVER_LIVE_VALIDATION" == 'true' ]]; then args+=(--recover-live-validation); fi
+          if [[ "$RECOVER_SIGNER_PREKEY" == 'true' ]]; then args+=(--recover-signer-prekey); fi
           if [[ -n "$VERIFIED_TEST_RUN_ID" ]]; then args+=(--verified-test-run-id "$VERIFIED_TEST_RUN_ID"); fi
           python3 -m scheduler.android_production "${args[@]}" 2>&1 | tee "$RUNNER_TEMP/entry-result.jsonl"
       - name: Explain next manual step

@@ -31,7 +31,7 @@ CONFIG_PATH = "config/repositories.json"
 SHA = re.compile(r"^[0-9a-f]{40}$")
 RUN_ID = re.compile(r"^[1-9][0-9]*$")
 PHASES = {"reserved", "test_started", "test_retry_reserved", "test_verified",
-          "signer_reserved", "signer_started", "signed_verified"}
+          "signer_reserved", "signer_started", "signer_retry_reserved", "signed_verified"}
 POLL_SECONDS = 30
 MAX_WAIT_SECONDS = 3 * 60 * 60
 
@@ -128,7 +128,8 @@ def put_state(public_token, source, phase, *, test_run_id=None, signing_run_id=N
         "test_retry_reserved": {"test_started"},
         "test_verified": {"signer_reserved"},
         "signer_reserved": {"signer_started"},
-        "signer_started": {"signed_verified"},
+        "signer_started": {"signed_verified", "signer_retry_reserved"},
+        "signer_retry_reserved": {"signer_started"},
         "signed_verified": set(),
     }
     require(phase in allowed[previous], "state_transition_not_allowed")
@@ -138,8 +139,16 @@ def put_state(public_token, source, phase, *, test_run_id=None, signing_run_id=N
         entry["testRunId"] = test_run_id
     if signing_run_id is not None:
         require(type(signing_run_id) is int and signing_run_id > 0, "invalid_sign_run_id")
-        require(entry.get("signingRunId") in (None, signing_run_id),
-                "sign_run_binding_mismatch")
+        if previous == "signer_retry_reserved":
+            recovery = entry.get("signingPrekeyRecovery")
+            require(phase == "signer_started" and isinstance(recovery, dict)
+                    and recovery.get("oldSigningRunId") == entry.get("signingRunId")
+                    and recovery.get("recoveryCount") == 1
+                    and signing_run_id != entry.get("signingRunId"),
+                    "signer_prekey_recovery_binding_invalid")
+        else:
+            require(entry.get("signingRunId") in (None, signing_run_id),
+                    "sign_run_binding_mismatch")
         entry["signingRunId"] = signing_run_id
     if signing_route is not None:
         require(phase == "signer_reserved" and signing_route in ("windows", "cloud")
@@ -370,9 +379,116 @@ def registered_test_handoff_retry(entry, rid):
             }
             and entry.get("route") == "windows"
             and entry.get("liveSmoke") is False
-            and "lastFailure" not in entry,
+            and ("lastFailure" not in entry or
+                 (isinstance(entry.get("lastFailure"), dict)
+                  and entry["lastFailure"].get("stage") == "signer"
+                  and entry["lastFailure"].get("runId") == entry.get("signingRunId"))),
             "test_retry_recorded_proof_invalid")
     return True
+
+
+def verify_cloud_signer_prekey_failure(token, signer_run_id):
+    """Only an original hosted signer that stopped before any key usage qualifies."""
+    require(type(signer_run_id) is int and signer_run_id > 0,
+            "signer_prekey_run_id_invalid")
+    original = api(token, SIGNER, "/actions/runs/" + str(signer_run_id))
+    validate_run(original, SIGNER, CLOUD_SIGN_WORKFLOW, signer_run_id)
+    require(original.get("status") == "completed"
+            and original.get("conclusion") == "failure",
+            "signer_prekey_original_not_failed")
+    response = api(token, SIGNER,
+                   f"/actions/runs/{signer_run_id}/attempts/1/jobs?per_page=100")
+    jobs = response.get("jobs")
+    require(response.get("total_count") == 1
+            and isinstance(jobs, list) and len(jobs) == 1
+            and isinstance(jobs[0], dict), "signer_prekey_jobs_ambiguous")
+    job = jobs[0]
+    labels = job.get("labels")
+    require(job.get("run_id") == signer_run_id
+            and job.get("run_attempt") == 1
+            and job.get("name") ==
+                "Verify Test handoff and sign exact APK on trusted hosted runner"
+            and job.get("conclusion") == "failure"
+            and job.get("status") == "completed"
+            and isinstance(labels, list) and "ubuntu-24.04" in labels
+            and "self-hosted" not in labels
+            and isinstance(job.get("steps"), list),
+            "signer_prekey_hosted_job_invalid")
+    steps = job["steps"]
+    require(all(isinstance(x, dict) and isinstance(x.get("name"), str)
+                for x in steps), "signer_prekey_step_schema_invalid")
+    names = [x["name"] for x in steps]
+    require(len(names) == len(set(names)), "signer_prekey_duplicate_steps")
+    expected_good = (
+        "Checkout private signing policy only",
+        "Verify immutable private signing policy SHA",
+        "Run actions/setup-java@v4",
+        "Verify signing policy tests and install Android build-tools",
+    )
+    failed = "Verify exact Test run and download only approved private handoff"
+    guarded = (
+        "Independently verify exact source archive, tests, lint and unsigned APK",
+        "Restore signing key in trusted ephemeral signer only",
+        "Sign verified unsigned APK without executing Test source",
+        "Verify exact production certificate, APK package/version and SHA",
+        "Build verified private release candidate metadata (no publication)",
+        "Verify private Release transport policy",
+        "Publish verified signed APK to PRIVATE Release Assets (not Actions Artifact)",
+    )
+    require(all(names.count(n) == 1 for n in expected_good + (failed,) + guarded),
+            "signer_prekey_critical_steps_missing")
+    results = {x["name"]: x.get("conclusion") for x in steps}
+    require(all(results[n] == "success" for n in expected_good)
+            and results[failed] == "failure"
+            and all(results[n] == "skipped" for n in guarded)
+            and [x["name"] for x in steps if x.get("conclusion") == "failure"]
+                == [failed],
+            "signer_prekey_boundary_not_proven")
+    require(api(token, SIGNER, "/actions/runs/" + str(signer_run_id)) == original,
+            "signer_prekey_original_changed")
+    return True
+
+
+def reserve_signer_prekey_recovery(token, source, entry):
+    """One immutable recovery reservation before ANY new signer dispatch."""
+    state, blob = json_file(token, STATE_PATH)
+    require(state.get("version") == 1 and isinstance(state.get("builds"), dict)
+            and state["builds"].get(source) == entry,
+            "signer_prekey_state_changed")
+    row = state["builds"][source]
+    failure = row.get("lastFailure")
+    require(row.get("phase") == "signer_started"
+            and row.get("sourceSha") == source
+            and row.get("route") == "windows"
+            and row.get("signingRoute") == "cloud"
+            and not row.get("signingPrekeyRecovery")
+            and registered_test_handoff_retry(row, row.get("testRunId"))
+            and isinstance(failure, dict)
+            and failure.get("stage") == "signer"
+            and failure.get("runId") == row.get("signingRunId")
+            and failure.get("code") ==
+                "android_signer_setup_or_handoff_failed_manual_review",
+            "signer_prekey_recovery_not_eligible")
+    row["signingPrekeyRecovery"] = {
+        "oldSigningRunId": row["signingRunId"],
+        "originalFailure": dict(failure),
+        "method": "explicit_prekey_failed_hosted_signer_new_policy",
+        "recoveryCount": 1,
+    }
+    row["phase"] = "signer_retry_reserved"
+    row.pop("lastFailure", None)
+    row["updatedAt"] = datetime.now(timezone.utc).isoformat()
+    payload = {"branch": "main", "sha": blob,
+               "message": "Reserve one reviewed pre-key cloud signer recovery",
+               "content": base64.b64encode((
+                   json.dumps(state, indent=2, sort_keys=True) + "\n"
+               ).encode()).decode()}
+    saved = api(token, RUNNER, "/contents/" + STATE_PATH,
+                method="PUT", payload=payload)
+    require(bool(saved.get("commit", {}).get("sha")),
+            "signer_prekey_reservation_uncertain")
+    confirmed, _ = json_file(token, STATE_PATH)
+    require(confirmed == state, "signer_prekey_reservation_unconfirmed")
 
 
 def verify_completed_signer_retry(token, workflow, rid, expected_runner):
@@ -987,11 +1103,16 @@ def verify_live_execution(token, rid):
 
 
 def run(env, *, execute=False, resume=False, requested_sha="", live_smoke=False,
-        recover_live_validation=False, verified_test_run_id=0):
+        recover_live_validation=False, verified_test_run_id=0,
+        recover_signer_prekey=False):
     require(not recover_live_validation or (execute and resume),
             "live_recovery_requires_explicit_execute_resume")
     require(type(verified_test_run_id) is int and verified_test_run_id >= 0,
             "verified_test_run_id_invalid")
+    require(not recover_signer_prekey or
+            (execute and resume and bool(requested_sha)
+             and not recover_live_validation and not verified_test_run_id),
+            "signer_prekey_recovery_requires_explicit_resume")
     require(not verified_test_run_id or
             (execute and resume and bool(requested_sha) and not recover_live_validation),
             "verified_test_recovery_requires_explicit_owner_resume")
@@ -1093,6 +1214,11 @@ def run(env, *, execute=False, resume=False, requested_sha="", live_smoke=False,
     if recover_live_validation:
         require(isinstance(entry, dict) and entry.get("phase") == "test_started",
                 "live_recovery_no_failed_test_to_review")
+    if recover_signer_prekey:
+        require(isinstance(entry, dict) and entry.get("phase") == "signer_started"
+                and entry.get("sourceSha") == source
+                and entry.get("signingRoute") == "cloud",
+                "signer_prekey_no_failed_hosted_signer_to_review")
 
     # A signed and verified exact-SHA source is already complete. This is a
     # truthful no-op, not an error and never a second dispatch/build/sign.
@@ -1218,6 +1344,37 @@ def run(env, *, execute=False, resume=False, requested_sha="", live_smoke=False,
         require(type(sign_run) is int and sign_run > 0,
                 "unknown_signing_dispatch_no_retry")
         signing_route, signing_workflow = sign_route_for(entry)
+        if recover_signer_prekey:
+            require(route == "windows" and not live_smoke
+                    and registered_test_handoff_retry(entry, entry.get("testRunId")),
+                    "signer_prekey_requires_attested_test_retry")
+            verify_completed_test_handoff_retry(
+                test, source_workflow, entry["testRunId"], source,
+                task["runnerName"])
+            verify_execution_runner(test, TEST, entry["testRunId"], task["runnerName"])
+            verify_artifact(env.get("TEST_SOURCE_READ_TOKEN") or test, TEST,
+                            entry["testRunId"], source_artifact, source)
+            verify_cloud_signer_prekey_failure(sign, sign_run)
+            check_idle(SIGNER, SIGN_WORKFLOW, sign_account, env)
+            check_idle(SIGNER, CLOUD_SIGN_WORKFLOW, sign_account, env)
+            new_route, new_workflow = choose_signer_route(task, sign_account, env)
+            require(new_route == "cloud" and new_workflow == CLOUD_SIGN_WORKFLOW,
+                    "signer_prekey_recovery_requires_hosted_capacity")
+            reserve_signer_prekey_recovery(pub, source, entry)
+            # Exactly one new signer dispatch, after durable reservation; a
+            # failed/uncertain POST is never replayed.
+            old_run = sign_run
+            sign_run = dispatch(sign, SIGNER, CLOUD_SIGN_WORKFLOW, {
+                "test_run_id": str(entry["testRunId"]), "source_commit": source})
+            require(sign_run != old_run, "signer_prekey_same_signer_run_id")
+            put_state(pub, source, "signer_started", signing_run_id=sign_run)
+            record_public(source, "signer_prekey_recovery_started",
+                          oldSigningRunId=old_run, signingRunId=sign_run,
+                          testRunId=entry["testRunId"],
+                          publication="not_authorized")
+            entry = {**entry, "phase": "signer_started", "signingRunId": sign_run,
+                     "signingPrekeyRecovery": {"oldSigningRunId": old_run,
+                                              "recoveryCount": 1}}
         recovered_retry = False
         if resume and signing_route == "windows":
             # A finished signer rerun still relies on the original exact Test.
@@ -1262,6 +1419,7 @@ def main():
     parser.add_argument("--resume", action="store_true")
     parser.add_argument("--live-smoke", action="store_true")
     parser.add_argument("--recover-live-validation", action="store_true")
+    parser.add_argument("--recover-signer-prekey", action="store_true")
     parser.add_argument("--source-sha", default="")
     parser.add_argument("--verified-test-run-id", type=int, default=0)
     args = parser.parse_args()
@@ -1270,7 +1428,8 @@ def main():
         run(os.environ, execute=args.execute, resume=args.resume,
             requested_sha=args.source_sha, live_smoke=args.live_smoke,
             recover_live_validation=args.recover_live_validation,
-            verified_test_run_id=args.verified_test_run_id)
+            verified_test_run_id=args.verified_test_run_id,
+            recover_signer_prekey=args.recover_signer_prekey)
         return 0
     except Hold as exc:
         reason = str(exc)
