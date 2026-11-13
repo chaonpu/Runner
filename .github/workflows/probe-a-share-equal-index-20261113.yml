@@ -1,4 +1,4 @@
-name: 883957 市场广度字段全量实测
+name: 同花顺市场广度缺失字段实测
 on:
   push:
     branches: [probe-a-share-equal-index-20261113]
@@ -6,51 +6,48 @@ on:
 permissions:
   contents: read
 jobs:
-  index-probe:
+  probe:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Read all 883957 summary fields and source time
+      - name: Inspect THS public market aggregates
         shell: bash
         run: |
           python3 - <<'PY'
-          import urllib.request, urllib.error, html, json, re, datetime, time, hashlib
+          import urllib.request,urllib.error,urllib.parse,re,html,json,time,concurrent.futures,datetime
           from html.parser import HTMLParser
-          URL = "https://q.10jqka.com.cn/thshy/detail/code/883957/"
-          class Parser(HTMLParser):
-           def __init__(self): super().__init__(); self.skip=0; self.out=[]
-           def handle_starttag(self,tag,attrs):
-            if tag in ('script','style','noscript'): self.skip+=1
-            if tag in ('tr','td','th','p','div','h1','h2','h3','li','span'): self.out.append(" ")
-           def handle_endtag(self,tag):
-            if tag in ('script','style','noscript') and self.skip:self.skip-=1
-            if tag in ('tr','td','th','p','div','h1','h2','h3','li','span'):self.out.append(" ")
-           def handle_data(self,data):
-            if not self.skip:self.out.append(data)
-          def get():
-           started=time.monotonic()
-           req=urllib.request.Request(URL,headers={"User-Agent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/122.0.0.0 Safari/537.36", "Accept-Language":"zh-CN,zh;q=0.9","Referer":"https://q.10jqka.com.cn/" ,"Cache-Control":"no-cache","Accept":"text/html,*/*"})
-           with urllib.request.urlopen(req,timeout=10) as rsp:
-            b=rsp.read(350000);h=dict(rsp.headers);status=rsp.status
-           scores={}
-           for c in ("utf-8","gb18030"):
-            t=b.decode(c,errors="replace");scores[c]=(sum(t.count(x) for x in ("同花顺","涨跌家数","板块涨幅","全A"))-t.count(chr(65533))*2,t)
-           codec=max(scores,key=lambda c:scores[c][0]);raw=scores[codec][1]
-           parser=Parser();parser.feed(raw);txt=re.sub(r"\s+"," ",html.unescape("".join(parser.out)))
-           meta={"status":status,"length":len(b),"encoding":codec,"http_date":h.get("Date"),"last_modified":h.get("Last-Modified"),"cache_control":h.get("Cache-Control"),"etag":h.get("ETag"),"time_ms":round((time.monotonic()-started)*1000),"sha256":hashlib.sha256(b).hexdigest()[:16]}
-           for k in ("同花顺全A(沪深京)","883957","板块涨幅","涨跌家数","资金净流入","成交额(亿)","成交量(万手)","涨停","跌停","平盘","涨跌幅分布","涨跌分布","更新时间","最新","今开","昨收","最低","最高","指数","资金流向","2026"):
-            pos=txt.find(k)
-            meta["text_"+k]=(txt[max(0,pos-22):pos+140] if pos>=0 else None)
-           for k in ("883957","涨跌家数","涨跌幅分布","涨停","跌停","平盘","2026-11-13","2026/11/13","updateTime","lastTime","last_trade","timestamp","data-time","iopv"):
-            found=list(re.finditer(re.escape(k),raw,re.I))
-            meta["html_"+k]={"count":len(found),"first":raw[max(0,found[0].start()-170):found[0].start()+200].replace('\n',' ')[:370] if found else None}
-           meta["summary_before_rows"]=txt[txt.find("同花顺全A(沪深京)"):txt.find("同花顺全A(沪深京)")+550]
-           return meta
-          print("PROBE_CONTEXT",json.dumps({"utc":datetime.datetime.now(datetime.timezone.utc).isoformat(),"china":(datetime.datetime.now(datetime.timezone.utc)+datetime.timedelta(hours=8)).isoformat()},ensure_ascii=False),flush=True)
-          for j in range(2):
+          pages=[
+           ("q_home","https://q.10jqka.com.cn/"),
+           ("q_home_index","https://q.10jqka.com.cn/index/"),
+           ("q_883957","https://q.10jqka.com.cn/thshy/detail/code/883957/"),
+           ("ths_data","https://data.10jqka.com.cn/"),
+           ("ths_limit_up","https://data.10jqka.com.cn/limit_up/"),
+           ("ths_limit_up_detail","https://data.10jqka.com.cn/limit_up/zt/"),
+           ("ths_limit_down_detail","https://data.10jqka.com.cn/limit_up/dt/"),
+           ("ths_official_api_no_key","https://fuyao.aicubes.cn/api/a-share/special-data/limit-up-statistics")
+          ]
+          def task(item):
+           n,u=item;t=time.monotonic();ret={"name":n}
+           req=urllib.request.Request(u,headers={"User-Agent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/122.0.0.0 Safari/537.36","Accept-Language":"zh-CN,zh;q=0.9","Accept":"text/html,application/json,*/*","Referer":"https://q.10jqka.com.cn/"})
            try:
-            r=get()
-            print("FIELDS_883957",json.dumps({"round":j+1,**r},ensure_ascii=False),flush=True)
-           except Exception as e:print("FIELDS_ERROR",repr(e),flush=True)
-           if j==0:time.sleep(3)
+            with urllib.request.urlopen(req,timeout=12) as r:b=r.read(300000);h=dict(r.headers);ret["status"]=r.status;ret["date"]=h.get("Date")
+           except urllib.error.HTTPError as e:
+            b=e.read(12000);ret["status"]=e.code
+           except Exception as e:return {"name":n,"error":type(e).__name__+": "+str(e)[:100]}
+           cands={c:b.decode(c,errors="replace") for c in ("utf-8","gb18030")};code=max(cands,key=lambda c:sum(cands[c].count(x) for x in ("同花顺","涨停","跌停","涨跌","全A","同花顺全A","doctype"))-cands[c].count(chr(65533))*2)
+           s=cands[code];ret.update({"bytes":len(b),"encoding":code,"elapsed_ms":round((time.monotonic()-t)*1000)})
+           clean=re.sub(r"\s+"," ",html.unescape(re.sub(r"<[^>]*>"," ",re.sub(r"<(script|style)[^>]*>.*?</\1>"," ",s,flags=re.I|re.S))))
+           ret["summary"]={}
+           for term in ["涨跌分布","涨跌停","涨停","跌停","平盘","涨跌家数","880","行业成分","涨幅区间","区间分布","分时","当天涨停","涨停数","跌停数"]:
+            m=re.search(re.escape(term),clean);ret["summary"][term]=clean[max(0,m.start()-20):m.start()+90] if m else None
+           ret["scripts"]=re.findall(r'<script\b[^>]*\bsrc=["\']([^"\']+)',s,flags=re.I)[:35]
+           ret["xhr_tokens"]=list(dict.fromkeys(re.findall(r'(?:(?:https?:)?//[\w.\-/]+|/[a-zA-Z0-9_\-/]{10,})(?:[?][^"\']{0,70})?',s)))[:30]
+           ret["inline_hits"]={}
+           for term in ["涨跌分布","涨跌停","upCount","downCount","upNum","downNum","zdfb","ztNum","dtNum","ajax","dataType","Echarts","涨跌家数"]:
+            m=re.search(re.escape(term),s,flags=re.I);ret["inline_hits"][term]=s[max(0,m.start()-110):m.start()+200].replace("\n"," ")[:310] if m else None
+           ret["first200"]=clean[:220]
+           return ret
+          print("THS_MORE_DATE",datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=8))).isoformat())
+          with concurrent.futures.ThreadPoolExecutor(max_workers=7) as ex:
+           for p in ex.map(task,pages):print("THS_MORE_RESULT",json.dumps(p,ensure_ascii=False),flush=True)
           PY
