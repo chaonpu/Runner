@@ -10,44 +10,30 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Inspect THS public market aggregates
+      - name: Trace public THS summary JavaScript endpoints
         shell: bash
         run: |
           python3 - <<'PY'
-          import urllib.request,urllib.error,urllib.parse,re,html,json,time,concurrent.futures,datetime
-          from html.parser import HTMLParser
-          pages=[
-           ("q_home","https://q.10jqka.com.cn/"),
-           ("q_home_index","https://q.10jqka.com.cn/index/"),
-           ("q_883957","https://q.10jqka.com.cn/thshy/detail/code/883957/"),
-           ("ths_data","https://data.10jqka.com.cn/"),
-           ("ths_limit_up","https://data.10jqka.com.cn/limit_up/"),
-           ("ths_limit_up_detail","https://data.10jqka.com.cn/limit_up/zt/"),
-           ("ths_limit_down_detail","https://data.10jqka.com.cn/limit_up/dt/"),
-           ("ths_official_api_no_key","https://fuyao.aicubes.cn/api/a-share/special-data/limit-up-statistics")
+          import urllib.request,urllib.error,urllib.parse,re,json,time,concurrent.futures
+          urls=[
+           ("q_index2","https://s.thsi.cn/js/q/newq/index2.js"),
+           ("q_hssc","https://s.thsi.cn/website/datacenter/rzrq/hssc_v1.min.js"),
+           ("q_ths_index","https://s.thsi.cn/cb?js/home/;ths_core.min.js;ths_quote.min.js;ths_index_v3.3.min.js"),
+           ("q_flash","https://s.thsi.cn/cb?js/q/newq/flash.min.js"),
+           ("q_common","https://s.thsi.cn/js/q/newq/common_v2.1.min.js"),
           ]
-          def task(item):
-           n,u=item;t=time.monotonic();ret={"name":n}
-           req=urllib.request.Request(u,headers={"User-Agent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/122.0.0.0 Safari/537.36","Accept-Language":"zh-CN,zh;q=0.9","Accept":"text/html,application/json,*/*","Referer":"https://q.10jqka.com.cn/"})
+          def get(item):
+           n,u=item
            try:
-            with urllib.request.urlopen(req,timeout=12) as r:b=r.read(300000);h=dict(r.headers);ret["status"]=r.status;ret["date"]=h.get("Date")
-           except urllib.error.HTTPError as e:
-            b=e.read(12000);ret["status"]=e.code
-           except Exception as e:return {"name":n,"error":type(e).__name__+": "+str(e)[:100]}
-           cands={c:b.decode(c,errors="replace") for c in ("utf-8","gb18030")};code=max(cands,key=lambda c:sum(cands[c].count(x) for x in ("同花顺","涨停","跌停","涨跌","全A","同花顺全A","doctype"))-cands[c].count(chr(65533))*2)
-           s=cands[code];ret.update({"bytes":len(b),"encoding":code,"elapsed_ms":round((time.monotonic()-t)*1000)})
-           clean=re.sub(r"\s+"," ",html.unescape(re.sub(r"<[^>]*>"," ",re.sub(r"<(script|style)[^>]*>.*?</\1>"," ",s,flags=re.I|re.S))))
-           ret["summary"]={}
-           for term in ["涨跌分布","涨跌停","涨停","跌停","平盘","涨跌家数","880","行业成分","涨幅区间","区间分布","分时","当天涨停","涨停数","跌停数"]:
-            m=re.search(re.escape(term),clean);ret["summary"][term]=clean[max(0,m.start()-20):m.start()+90] if m else None
-           ret["scripts"]=re.findall(r'<script\b[^>]*\bsrc=["\']([^"\']+)',s,flags=re.I)[:35]
-           ret["xhr_tokens"]=list(dict.fromkeys(re.findall(r'(?:(?:https?:)?//[\w.\-/]+|/[a-zA-Z0-9_\-/]{10,})(?:[?][^"\']{0,70})?',s)))[:30]
-           ret["inline_hits"]={}
-           for term in ["涨跌分布","涨跌停","upCount","downCount","upNum","downNum","zdfb","ztNum","dtNum","ajax","dataType","Echarts","涨跌家数"]:
-            m=re.search(re.escape(term),s,flags=re.I);ret["inline_hits"][term]=s[max(0,m.start()-110):m.start()+200].replace("\n"," ")[:310] if m else None
-           ret["first200"]=clean[:220]
-           return ret
-          print("THS_MORE_DATE",datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=8))).isoformat())
-          with concurrent.futures.ThreadPoolExecutor(max_workers=7) as ex:
-           for p in ex.map(task,pages):print("THS_MORE_RESULT",json.dumps(p,ensure_ascii=False),flush=True)
+            req=urllib.request.Request(u,headers={"User-Agent":"Mozilla/5.0","Referer":"https://q.10jqka.com.cn/"})
+            with urllib.request.urlopen(req,timeout=10) as f:b=f.read(700000);status=f.status
+            s=b.decode("utf-8","replace");o={"name":n,"status":status,"bytes":len(b)}
+            for word in ["zdfb","zdt","zt","dt","chart","涨跌分布","涨停","跌停","flat","upDown","updown","zdf","rise","fall","data.10jqka","q.10jqka","d.10jqka","thsData","Ajax","ajax"]:
+             matches=list(re.finditer(re.escape(word),s,re.I))
+             o["hits_"+word]={"n":len(matches),"examples":[s[max(0,m.start()-145):m.start()+180][:325].replace("\n"," ") for m in matches[:2]]}
+            o["urls"]=list(dict.fromkeys(re.findall(r'(?:https?:)?//[a-zA-Z0-9_.-]+(?:/[A-Za-z0-9_/?=+%&.;:{}-]{3,})?',s)))[:40]
+            return o
+           except Exception as e:return {"name":n,"error":type(e).__name__+":"+str(e)[:120]}
+          with concurrent.futures.ThreadPoolExecutor(max_workers=5) as ex:
+           for r in ex.map(get,urls):print("THS_JS_RESULT",json.dumps(r,ensure_ascii=False),flush=True)
           PY
