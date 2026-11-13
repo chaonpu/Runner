@@ -1262,11 +1262,11 @@
     "ebe39ab0f8afd657d718fde8a8e4b7628c74d7c2": {
       "createdAt": "2026-11-13T12:22:47.802306+00:00",
       "liveSmoke": false,
-      "phase": "test_started",
+      "phase": "test_verified",
       "route": "windows",
       "sourceSha": "ebe39ab0f8afd657d718fde8a8e4b7628c74d7c2",
       "testRunId": 43424652392,
-      "updatedAt": "2026-11-13T12:22:51.403809+00:00"
+      "updatedAt": "2026-11-13T12:53:12.381484+00:00"
     },
     "ed516fc5f89b37a38d0dc54e9a1845b89f39594f": {
       "createdAt": "2026-10-18T09:11:41.357146+00:00",
