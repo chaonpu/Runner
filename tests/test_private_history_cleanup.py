@@ -120,7 +120,7 @@ class Tests(unittest.TestCase):
         repo = 'chaonpu/Runner'
         keep = c.REPOSITORIES[repo]['keep']
         names = c.STALE_RETIRED[repo]
-        self.assertEqual(len(names), 3)
+        self.assertEqual(len(names), 7)
         self.assertNotIn('.github/workflows/stock-us.yml', names)
         for path in names:
             endpoint = '/contents/' + path + '?ref=main'
@@ -158,6 +158,7 @@ class Tests(unittest.TestCase):
         self.assertEqual(keep, {
             'android-production.yml', 'android-publish.yml', 'calendar-health.yml',
             'private-history-cleanup.yml', 'production-dispatch.yml', 'stock-us.yml',
+            'reconcile-verified-holds.yml',
         })
         self.assertTrue(c.permitted(repo, '/actions/runs/123', 'DELETE'))
         self.assertFalse(c.permitted(repo, '/actions/artifacts/123', 'DELETE'))
