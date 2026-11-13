@@ -1,4 +1,4 @@
-name: A股等权指数公开行情实测（独立实验分支）
+name: 883957 市场广度字段全量实测
 on:
   push:
     branches: [probe-a-share-equal-index-20261113]
@@ -10,27 +10,47 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Verify server-side market mean and all-A board time
+      - name: Read all 883957 summary fields and source time
         shell: bash
         run: |
           python3 - <<'PY'
-          import urllib.request,urllib.parse,html,re,datetime,json,time
-          cases=[("cfi_average","https://quoteimg.cfi.cn/cfi_aSharesRate.aspx"),("tonghuashun_883957","https://q.10jqka.com.cn/thshy/detail/code/883957/")]
-          for name,url in cases:
-           t=time.monotonic()
+          import urllib.request, urllib.error, html, json, re, datetime, time, hashlib
+          from html.parser import HTMLParser
+          URL = "https://q.10jqka.com.cn/thshy/detail/code/883957/"
+          class Parser(HTMLParser):
+           def __init__(self): super().__init__(); self.skip=0; self.out=[]
+           def handle_starttag(self,tag,attrs):
+            if tag in ('script','style','noscript'): self.skip+=1
+            if tag in ('tr','td','th','p','div','h1','h2','h3','li','span'): self.out.append(" ")
+           def handle_endtag(self,tag):
+            if tag in ('script','style','noscript') and self.skip:self.skip-=1
+            if tag in ('tr','td','th','p','div','h1','h2','h3','li','span'):self.out.append(" ")
+           def handle_data(self,data):
+            if not self.skip:self.out.append(data)
+          def get():
+           started=time.monotonic()
+           req=urllib.request.Request(URL,headers={"User-Agent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/122.0.0.0 Safari/537.36", "Accept-Language":"zh-CN,zh;q=0.9","Referer":"https://q.10jqka.com.cn/" ,"Cache-Control":"no-cache","Accept":"text/html,*/*"})
+           with urllib.request.urlopen(req,timeout=10) as rsp:
+            b=rsp.read(350000);h=dict(rsp.headers);status=rsp.status
+           scores={}
+           for c in ("utf-8","gb18030"):
+            t=b.decode(c,errors="replace");scores[c]=(sum(t.count(x) for x in ("同花顺","涨跌家数","板块涨幅","全A"))-t.count(chr(65533))*2,t)
+           codec=max(scores,key=lambda c:scores[c][0]);raw=scores[codec][1]
+           parser=Parser();parser.feed(raw);txt=re.sub(r"\s+"," ",html.unescape("".join(parser.out)))
+           meta={"status":status,"length":len(b),"encoding":codec,"http_date":h.get("Date"),"last_modified":h.get("Last-Modified"),"cache_control":h.get("Cache-Control"),"etag":h.get("ETag"),"time_ms":round((time.monotonic()-started)*1000),"sha256":hashlib.sha256(b).hexdigest()[:16]}
+           for k in ("同花顺全A(沪深京)","883957","板块涨幅","涨跌家数","资金净流入","成交额(亿)","成交量(万手)","涨停","跌停","平盘","涨跌幅分布","涨跌分布","更新时间","最新","今开","昨收","最低","最高","指数","资金流向","2026"):
+            pos=txt.find(k)
+            meta["text_"+k]=(txt[max(0,pos-22):pos+140] if pos>=0 else None)
+           for k in ("883957","涨跌家数","涨跌幅分布","涨停","跌停","平盘","2026-11-13","2026/11/13","updateTime","lastTime","last_trade","timestamp","data-time","iopv"):
+            found=list(re.finditer(re.escape(k),raw,re.I))
+            meta["html_"+k]={"count":len(found),"first":raw[max(0,found[0].start()-170):found[0].start()+200].replace('\n',' ')[:370] if found else None}
+           meta["summary_before_rows"]=txt[txt.find("同花顺全A(沪深京)"):txt.find("同花顺全A(沪深京)")+550]
+           return meta
+          print("PROBE_CONTEXT",json.dumps({"utc":datetime.datetime.now(datetime.timezone.utc).isoformat(),"china":(datetime.datetime.now(datetime.timezone.utc)+datetime.timedelta(hours=8)).isoformat()},ensure_ascii=False),flush=True)
+          for j in range(2):
            try:
-            req=urllib.request.Request(url,headers={"User-Agent":"Mozilla/5.0","Referer":"https://www.10jqka.com.cn/" if "tonghuashun" in name else "https://www.cfi.cn/"})
-            with urllib.request.urlopen(req,timeout=10) as response:
-             raw=response.read(250000);headers=dict(response.headers);code=response.status
-            # Try Chinese legacy encoding when the page lacks UTF-8.
-            candidates={enc:raw.decode(enc,errors="replace") for enc in ["utf-8","gb18030"]}
-            enc=max(candidates,key=lambda e: sum(candidates[e].count(x) for x in ["全A","涨幅","板块","上涨","同花顺","涨跌"]))
-            body=candidates[enc]
-            clean=html.unescape(re.sub(r"<[^>]*>"," ",re.sub(r"<(script|style)[^>]*>.*?</\1>"," ",body,flags=re.I|re.S)))
-            clean=re.sub(r"\s+"," ",clean)
-            evidence={}
-            for pattern in [r"2026.{0,8}11.{0,6}13.{0,15}\d{1,2}:\d{2}",r"涨幅平均值.{0,35}",r"涨幅中位数.{0,35}",r"同花顺全A.{0,60}",r"板块涨幅.{0,30}",r"涨跌家数.{0,60}",r"上涨.{0,65}",r"下跌.{0,65}",r"全部A股.{0,50}",r"北交所.{0,40}"]:
-             m=re.search(pattern,clean);evidence[pattern]=m.group(0) if m else None
-            print("ROUND3_RESULT",json.dumps({"name":name,"http":code,"elapsed_ms":round(1000*(time.monotonic()-t)),"size":len(raw),"codec":enc,"http_date":headers.get("Date"),"last_modified":headers.get("Last-Modified"),"cache_control":headers.get("Cache-Control"),"evidence":evidence,"preview":clean[:200]},ensure_ascii=False),flush=True)
-           except Exception as e:print("ROUND3_RESULT",json.dumps({"name":name,"error":str(e)[:220]}),flush=True)
+            r=get()
+            print("FIELDS_883957",json.dumps({"round":j+1,**r},ensure_ascii=False),flush=True)
+           except Exception as e:print("FIELDS_ERROR",repr(e),flush=True)
+           if j==0:time.sleep(3)
           PY
