@@ -15,7 +15,8 @@ REPOSITORIES = {
     'chaonpu/Runner': {
         'actions': 'RUNNER_ACTIONS_TOKEN',
         'keep': {'android-production.yml', 'android-publish.yml', 'calendar-health.yml',
-                 'private-history-cleanup.yml', 'production-dispatch.yml', 'stock-us.yml'},
+                 'private-history-cleanup.yml', 'production-dispatch.yml', 'stock-us.yml',
+                 'reconcile-verified-holds.yml'},
     },
     'chaonpu/Stock': {
         'actions': 'CHAONPU_ACTIONS_READ_TOKEN',
@@ -39,6 +40,12 @@ STALE_RETIRED = {
         '.github/workflows/android-signing-recovery-launch.yml',
         '.github/workflows/android-release-transport-check.yml',
         '.github/workflows/verify-database-prebusiness-once.yml',
+        # Retired temporary workstreams: all four are absent from main,
+        # and the final probe workflow was explicitly removed from its branch.
+        '.github/workflows/probe-a-share-equal-index-20261113.yml',
+        '.github/workflows/temporary-test-runner-busy-check.yml',
+        '.github/workflows/temporary-signer-prekey-check.yml',
+        '.github/workflows/android-test-handoff-rerun-regression.yml',
     },
 }
 PATH = re.compile(r'\.github/workflows/[A-Za-z0-9_.-]+\.ya?ml\Z')
