@@ -10,49 +10,47 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Probe read-only HTTP quotes and control symbols
+      - name: Probe second-round public index symbols
         shell: bash
         run: |
           python3 - <<'PY'
-          import concurrent.futures, json, urllib.request, urllib.error, datetime, time, re
+          import urllib.request,urllib.error,concurrent.futures,time,json,re,datetime
+          prefix="https://push2.eastmoney.com/api/qt/stock/get?fields=f43,f57,f58,f60,f169,f170,f86&secid="
           cases=[
-           ("tencent","https://qt.gtimg.cn/q=sh932535,s_sh932535,sz932535,sh000985,sh000001"),
-           ("sina","https://hq.sinajs.cn/list=sh932535,s_sh932535,sz932535,sh000985,sh000001"),
-           ("eastmoney_932535_sh","https://push2.eastmoney.com/api/qt/stock/get?secid=1.932535&fields=f43,f57,f58,f60,f169,f170,f86"),
-           ("eastmoney_932535_sz","https://push2.eastmoney.com/api/qt/stock/get?secid=0.932535&fields=f43,f57,f58,f60,f169,f170,f86"),
-           ("eastmoney_control_000985","https://push2.eastmoney.com/api/qt/stock/get?secid=1.000985&fields=f43,f57,f58,f60,f169,f170,f86"),
-           ("csindex_daily","https://www.csindex.com.cn/csindex-home/perf/index-perf?indexCode=932535&startDate=20261112&endDate=20261113"),
-           ("changedist","https://api.ashareapi.com/v1/changedist")
-          ]
-          def call(item):
-           name,url=item;t=time.monotonic()
-           headers={"User-Agent":"Mozilla/5.0 (compatible; index-equal-weight-probe/1.0)","Accept":"*/*","Cache-Control":"no-cache","Referer":"https://finance.sina.com.cn/" if name=="sina" else ("https://www.csindex.com.cn/" if name=="csindex_daily" else "https://quote.eastmoney.com/")}
+          ("tencent_special","https://qt.gtimg.cn/q=sh880008,sz880008,sh883957,sz883957,sh800000,sz800000,sh800004,sz800004,sh000985"),
+          ("sina_special","https://hq.sinajs.cn/list=sh880008,sz880008,sh883957,sz883957,sh800000,sz800000,sh800004,sz800004,sh000985"),
+          ("official_932535_prior","https://www.csindex.com.cn/csindex-home/perf/index-perf?indexCode=932535&startDate=20261001&endDate=20261112"),
+          ("official_000985_control","https://www.csindex.com.cn/csindex-home/perf/index-perf?indexCode=000985&startDate=20261109&endDate=20261112"),
+          ("tonghuashun_page","https://q.10jqka.com.cn/thshy/detail/code/883957/"),
+          ("cfi_mean_page","https://quoteimg.cfi.cn/cfi_aSharesRate.aspx")
+          ]+[("east_"+x,prefix+x) for x in ["0.883957","1.883957","90.883957","0.880008","1.880008","90.880008","90.800000","90.800004"]]
+          def get(q):
+           n,u=q;t=time.monotonic()
+           h={"User-Agent":"Mozilla/5.0","Accept":"application/json,text/html,*/*","Referer":"https://finance.sina.com.cn/" if n=="sina_special" else "https://quote.eastmoney.com/"}
            try:
-            r=urllib.request.urlopen(urllib.request.Request(url,headers=headers),timeout=9)
-            raw=r.read(220000);body=raw.decode("gb18030" if name in ("tencent","sina") else "utf-8",errors="replace")
-            result={"name":name,"http":r.status,"elapsed_ms":round((time.monotonic()-t)*1000),"bytes":len(raw)}
-            if name=="tencent":
-             a=[]
-             for line in body.splitlines():
-              m=re.search(r'v_([^=]+)="([^"]*)"',line)
-              if not m: continue
-              f=m.group(2).split("~")
-              a.append({"id":m.group(1),"name":f[1] if len(f)>1 else None,"price":f[3] if len(f)>3 else None,"percent":f[32] if len(f)>32 else None,"stamp":f[30] if len(f)>30 else None,"parts":len(f)})
-             result["quotes"]=a
-            elif name=="sina":
-             result["quotes"]=[{"id":m.group(1),"sample":m.group(2)[:130]} for m in re.finditer(r'var hq_str_([^=]+)="([^"]*)"',body)]
-            elif name.startswith("eastmoney"):
-             obj=json.loads(body);result.update({"rc":obj.get("rc"),"msg":obj.get("msg"),"data":obj.get("data")})
-            elif name=="csindex_daily":
-             obj=json.loads(body); d=obj.get("data");result.update({"code":obj.get("code"),"rows":len(d) if isinstance(d,list) else None,"latest":d[-2:] if isinstance(d,list) else str(d)[:350]})
-            elif name=="changedist":
-             obj=json.loads(body);result.update({"ok":obj.get("ok"),"source":obj.get("source"),"structured":str(obj.get("structured"))[:550],"data":str(obj.get("data"))[:140]})
-            if (name in ("tencent","sina") and not result.get("quotes")) or (name.startswith("eastmoney") and not result.get("data")):result["preview"]=body[:160]
-            return result
-           except Exception as e:
-            return {"name":name,"error":type(e).__name__+":"+str(e)[:180],"elapsed_ms":round((time.monotonic()-t)*1000)}
-          print("PROBE_DATE_UTC",datetime.datetime.now(datetime.timezone.utc).isoformat(),flush=True)
-          with concurrent.futures.ThreadPoolExecutor(max_workers=7) as ex:
-           for r in ex.map(call,cases):
-            print("PROBE_RESULT",json.dumps(r,ensure_ascii=False,default=str),flush=True)
+            with urllib.request.urlopen(urllib.request.Request(u,headers=h),timeout=9) as resp:
+             raw=resp.read(220000);status=resp.status
+            body=raw.decode("gb18030" if n in ("tencent_special","sina_special") else "utf-8",errors="replace")
+            r={"name":n,"http":status,"elapsed_ms":round(1000*(time.monotonic()-t)),"bytes":len(raw)}
+            if n=="tencent_special":
+             r["quotes"]=[]
+             for s in body.splitlines():
+              m=re.search(r'v_([^=]+)="([^"]*)"',s)
+              if m:
+               f=m.group(2).split("~")
+               r["quotes"].append({"id":m.group(1),"name":f[1] if len(f)>1 else "", "price":f[3] if len(f)>3 else "", "pct":f[32] if len(f)>32 else "", "time":f[30] if len(f)>30 else ""})
+            elif n=="sina_special":
+             r["quotes"]=[{"id":m.group(1),"sample":m.group(2)[:65]} for m in re.finditer(r'var hq_str_([^=]+)="([^"]*)"',body)]
+            elif n.startswith("east_"):
+             o=json.loads(body);r.update({"rc":o.get("rc"),"data":o.get("data")})
+            elif n.startswith("official"):
+             o=json.loads(body);d=o.get("data");r.update({"code":o.get("code"),"rows":len(d) if isinstance(d,list) else None,"last":d[-1] if isinstance(d,list) and d else None})
+            else:
+             r["evidence"]=[m.group(0)[:140] for word in ["全A","涨幅平均值","涨幅中位数","板块涨幅","涨跌家数","2026-11-13"] for m in list(re.finditer(".{0,30}"+word+".{0,60}",re.sub("<[^>]+>"," ",body)))[:2]]
+             r["evidence"]=r["evidence"][:9]
+            return r
+           except Exception as e:return {"name":n,"error":type(e).__name__+":"+str(e)[:130],"elapsed_ms":round(1000*(time.monotonic()-t))}
+          print("ROUND2_UTC",datetime.datetime.now(datetime.timezone.utc).isoformat())
+          with concurrent.futures.ThreadPoolExecutor(max_workers=6) as ex:
+           for r in ex.map(get,cases):print("ROUND2_RESULT",json.dumps(r,ensure_ascii=False,default=str),flush=True)
           PY
