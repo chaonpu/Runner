@@ -1133,6 +1133,12 @@
     },
     "debde9e69241a3e91491dc47e553f6ec8fa5bb59": {
       "createdAt": "2026-11-13T10:40:21.641247+00:00",
+      "lastFailure": {
+        "code": "android_test_private_handoff_failed_manual_review",
+        "recordedAt": "2026-11-13T10:57:41.495449+00:00",
+        "runId": 43410876859,
+        "stage": "test"
+      },
       "liveSmoke": false,
       "phase": "test_started",
       "route": "windows",
