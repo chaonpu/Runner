@@ -285,10 +285,10 @@ def public_version() -> int:
                     or item.get("encoding") != "base64"
                     or not isinstance(item.get("content"), str)):
                 raise GuardError("public_version_unverified_schema")
-            data = base64.b64decode(item["content"].replace("\\n", ""), validate=True)
+            data = base64.b64decode(item["content"].replace("\n", ""), validate=True)
             if len(data) > 8192:
                 raise GuardError("public_version_unverified_schema")
-            blob = hashlib.sha1(b"blob " + str(len(data)).encode() + b"\\0" + data).hexdigest()
+            blob = hashlib.sha1(b"blob " + str(len(data)).encode() + b"\0" + data).hexdigest()
             if item.get("sha") != blob:
                 raise GuardError("public_version_unverified_blob")
             manifest = json.loads(data.decode("utf-8-sig"))
