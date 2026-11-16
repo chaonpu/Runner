@@ -18,8 +18,8 @@ def version_reply(code=190):
         "type": "file",
         "path": "android-native/version.json",
         "encoding": "base64",
-        "content": encoded[:30] + "\\n" + encoded[30:],
-        "sha": hashlib.sha1(b"blob " + str(len(raw)).encode() + b"\\0" + raw).hexdigest(),
+        "content": encoded[:30] + "\n" + encoded[30:],
+        "sha": hashlib.sha1(b"blob " + str(len(raw)).encode() + b"\0" + raw).hexdigest(),
     }
     return item
 
