@@ -625,12 +625,13 @@
     "88f873e0960c6bfda171a8203e0b39987ca4992d": {
       "createdAt": "2026-11-16T04:21:16.158977+00:00",
       "liveSmoke": false,
-      "phase": "signer_reserved",
+      "phase": "signer_started",
       "route": "windows",
       "signingRoute": "cloud",
+      "signingRunId": 43806010877,
       "sourceSha": "88f873e0960c6bfda171a8203e0b39987ca4992d",
       "testRunId": 43803598374,
-      "updatedAt": "2026-11-16T04:45:38.137717+00:00"
+      "updatedAt": "2026-11-16T04:45:40.894590+00:00"
     },
     "8ad40a606a5648a801d25029b5ef0f7e2168c3a8": {
       "createdAt": "2026-10-22T12:54:24.284526+00:00",
