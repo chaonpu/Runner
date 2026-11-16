@@ -251,26 +251,64 @@ def verify_apk_bytes(apk: Path, expected: dict, tools=None, command=command_outp
 
 
 def public_version() -> int:
+    """Verify the current public version through one fixed GitHub Contents path.
+
+    Production passes existing read-only credentials so anonymous API rate
+    limits do not block a signed release. Only bounded GET retries are allowed:
+    no write, release, dispatch, or fallback to an unverified version.
+    """
     fixed = ("https://api.github.com/repos/chaonpu/ziwuxilv/"
              "contents/android-native/version.json?ref=main")
-    request = urllib.request.Request(
-        fixed,
-        headers={"Accept": "application/vnd.github+json",
-                 "User-Agent": "ziwuxilv-release-candidate-staging/1.0"},
-        method="GET",
-    )
-    try:
-        with urllib.request.urlopen(request, timeout=20) as result:
-            item = json.load(result)
-        if (item.get("type") != "file" or item.get("encoding") != "base64"):
-            raise GuardError("public_version_unverified")
-        manifest = json.loads(base64.b64decode(item["content"]))
-        code = manifest.get("versionCode")
-        if type(code) is not int or code <= 0:
-            raise GuardError("public_version_unverified")
-        return code
-    except (OSError, KeyError, ValueError, TypeError) as exc:
-        raise GuardError("public_version_unverified") from exc
+    token = (os.environ.get("CHAONPU_SOURCE_READ_TOKEN")
+             or os.environ.get("CHAONPU_ACTIONS_READ_TOKEN") or "")
+    headers = {"Accept": "application/vnd.github+json",
+               "X-GitHub-Api-Version": "2026-03-10",
+               "User-Agent": "ziwuxilv-release-candidate-staging/1.0",
+               "Cache-Control": "no-cache"}
+    if token:
+        headers["Authorization"] = "Bearer " + token
+    request = urllib.request.Request(fixed, headers=headers, method="GET")
+
+    class _NoRedirect(urllib.request.HTTPRedirectHandler):
+        def redirect_request(self, req, fp, code, msg, headers, newurl):
+            return None
+
+    for attempt in range(3):
+        try:
+            with urllib.request.build_opener(_NoRedirect()).open(request, timeout=20) as result:
+                raw = result.read(32769)
+            if len(raw) > 32768:
+                raise GuardError("public_version_unverified_schema")
+            item = json.loads(raw)
+            if (not isinstance(item, dict) or item.get("type") != "file"
+                    or item.get("path") != "android-native/version.json"
+                    or item.get("encoding") != "base64"
+                    or not isinstance(item.get("content"), str)):
+                raise GuardError("public_version_unverified_schema")
+            data = base64.b64decode(item["content"].replace("\\n", ""), validate=True)
+            if len(data) > 8192:
+                raise GuardError("public_version_unverified_schema")
+            blob = hashlib.sha1(b"blob " + str(len(data)).encode() + b"\\0" + data).hexdigest()
+            if item.get("sha") != blob:
+                raise GuardError("public_version_unverified_blob")
+            manifest = json.loads(data.decode("utf-8-sig"))
+            code = manifest.get("versionCode") if isinstance(manifest, dict) else None
+            if type(code) is not int or code <= 0:
+                raise GuardError("public_version_unverified_schema")
+            return code
+        except urllib.error.HTTPError as exc:
+            if exc.code in (429, 500, 502, 503, 504) and attempt < 2:
+                continue
+            raise GuardError(f"public_version_unverified_http_{exc.code}") from None
+        except (urllib.error.URLError, TimeoutError, OSError):
+            if attempt < 2:
+                continue
+            raise GuardError("public_version_unverified_network") from None
+        except GuardError:
+            raise
+        except (KeyError, ValueError, TypeError, UnicodeError, AttributeError):
+            raise GuardError("public_version_unverified_schema") from None
+    raise GuardError("public_version_unverified")
 
 
 def package_public_transport(folder: Path, file_names: list[str], out: Path) -> str:
