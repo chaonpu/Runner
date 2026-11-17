@@ -808,12 +808,13 @@
     "a6945c3fb1044ef442daa82a12f1200d32153888": {
       "createdAt": "2026-11-17T05:33:37.628905+00:00",
       "liveSmoke": false,
-      "phase": "signer_reserved",
+      "phase": "signer_started",
       "route": "windows",
       "signingRoute": "cloud",
+      "signingRunId": 44030086017,
       "sourceSha": "a6945c3fb1044ef442daa82a12f1200d32153888",
       "testRunId": 44024963822,
-      "updatedAt": "2026-11-17T06:17:11.206487+00:00"
+      "updatedAt": "2026-11-17T06:17:14.337480+00:00"
     },
     "a6f898571789524e5b6c835c26a34564e574604d": {
       "createdAt": "2026-10-20T13:05:57.251095+00:00",
