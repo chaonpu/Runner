@@ -534,11 +534,11 @@
     "707d79b544d92f5606c95a238ce2bc35afb0dbc5": {
       "createdAt": "2026-11-19T07:34:34.329669+00:00",
       "liveSmoke": false,
-      "phase": "test_started",
+      "phase": "test_verified",
       "route": "windows",
       "sourceSha": "707d79b544d92f5606c95a238ce2bc35afb0dbc5",
       "testRunId": 44480678129,
-      "updatedAt": "2026-11-19T07:34:37.515884+00:00"
+      "updatedAt": "2026-11-19T07:56:54.525474+00:00"
     },
     "709c46bd7542e1c4f48583e2029ea7dd1a16ec5c": {
       "createdAt": "2026-11-06T03:45:23.778946+00:00",
