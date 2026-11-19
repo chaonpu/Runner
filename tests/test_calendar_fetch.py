@@ -29,26 +29,45 @@ class CalendarTransportTests(unittest.TestCase):
         with patch.dict(os.environ, {"ZIWU_CALENDAR_API_TOKEN": "test-secret", "GH_TOKEN": "other"}), \
                 patch.object(runtime.urllib.request, "build_opener") as build:
             build.return_value.open.return_value = self.response()
-            self.assertEqual(runtime.fetch_public(self.path), b'{"schemaVersion":1}')
+            self.assertEqual(runtime.fetch_public_api(self.path), b'{"schemaVersion":1}')
             req = build.return_value.open.call_args.args[0]
             self.assertEqual(req.get_header("Authorization"), "Bearer test-secret")
             self.assertEqual(req.full_url,
                              "https://api.github.com/repos/chaonpu/ziwuxilv/contents/calendars/current.json?ref=main")
 
-    def test_runner_token_is_supported_when_dedicated_token_absent(self):
-        with patch.dict(os.environ, {"ZIWU_CALENDAR_API_TOKEN": "", "GH_TOKEN": "runner-token"}), \
+    def test_ambient_workflow_token_cannot_be_used_cross_repository(self):
+        with patch.dict(os.environ, {"ZIWU_CALENDAR_API_TOKEN": "", "GH_TOKEN": "runner-token",
+                                      "GITHUB_TOKEN": "workflow-token"}), \
                 patch.object(runtime.urllib.request, "build_opener") as build:
             build.return_value.open.return_value = self.response()
-            runtime.fetch_public(self.path)
-            self.assertEqual(build.return_value.open.call_args.args[0].get_header("Authorization"),
-                             "Bearer runner-token")
+            runtime.fetch_public_api(self.path)
+            self.assertIsNone(build.return_value.open.call_args.args[0].get_header("Authorization"))
+
+    def test_public_raw_route_bypasses_rest_quota_and_has_no_token(self):
+        with patch.dict(os.environ, {"GH_TOKEN": "runner-token"}), \
+                patch.object(runtime.urllib.request, "build_opener") as build:
+            build.return_value.open.return_value = io.BytesIO(b'{"schemaVersion":1}')
+            self.assertEqual(runtime.fetch_public(self.path), b'{"schemaVersion":1}')
+            req = build.return_value.open.call_args.args[0]
+            self.assertEqual(req.full_url,
+                             "https://raw.githubusercontent.com/chaonpu/ziwuxilv/main/calendars/current.json")
+            self.assertIsNone(req.get_header("Authorization"))
+            self.assertEqual(build.return_value.open.call_count, 1)
+
+    def test_raw_route_failure_falls_back_to_validated_rest_response(self):
+        with patch.object(runtime.urllib.request, "build_opener") as build, \
+                patch.object(runtime.time, "sleep") as sleep, patch("builtins.print"):
+            build.return_value.open.side_effect = [self.error(404, "Not Found"), self.response()]
+            self.assertEqual(runtime.fetch_public(self.path), b'{"schemaVersion":1}')
+            self.assertEqual(build.return_value.open.call_count, 2)
+            sleep.assert_not_called()
 
     def test_rate_limited_403_retries_and_returns_verified_git_blob(self):
         limited = self.error(403, "rate limit exceeded", {"X-RateLimit-Remaining": "0"})
         with patch.object(runtime.urllib.request, "build_opener") as build, \
                 patch.object(runtime.time, "sleep") as sleep, patch("builtins.print") as output:
             build.return_value.open.side_effect = [limited, self.response()]
-            self.assertEqual(runtime.fetch_public(self.path), b'{"schemaVersion":1}')
+            self.assertEqual(runtime.fetch_public_api(self.path), b'{"schemaVersion":1}')
             self.assertEqual(build.return_value.open.call_count, 2)
             sleep.assert_called_once_with(2)
             self.assertNotIn("Authorization", str(output.call_args_list))
@@ -59,7 +78,7 @@ class CalendarTransportTests(unittest.TestCase):
                     patch.object(runtime.time, "sleep") as sleep:
                 build.return_value.open.side_effect = self.error(code)
                 with self.assertRaises(HTTPError):
-                    runtime.fetch_public(self.path)
+                    runtime.fetch_public_api(self.path)
                 self.assertEqual(build.return_value.open.call_count, 1)
                 sleep.assert_not_called()
 
@@ -72,10 +91,10 @@ class CalendarTransportTests(unittest.TestCase):
                     self.error(429, "limited", {"Retry-After": str(seconds)}), self.response()]
                 if expected_calls == 1:
                     with self.assertRaises(HTTPError):
-                        runtime.fetch_public(self.path)
+                        runtime.fetch_public_api(self.path)
                     sleep.assert_not_called()
                 else:
-                    self.assertEqual(runtime.fetch_public(self.path), b'{"schemaVersion":1}')
+                    self.assertEqual(runtime.fetch_public_api(self.path), b'{"schemaVersion":1}')
                     sleep.assert_called_once_with(seconds)
                 self.assertEqual(build.return_value.open.call_count, expected_calls)
 
@@ -85,7 +104,7 @@ class CalendarTransportTests(unittest.TestCase):
             build.return_value.open.side_effect = self.error(
                 403, "rate limit exceeded", {"X-RateLimit-Remaining": "0"})
             with self.assertRaises(HTTPError):
-                runtime.fetch_public(self.path)
+                runtime.fetch_public_api(self.path)
             self.assertEqual(build.return_value.open.call_count, 4)
             self.assertEqual([x.args[0] for x in sleep.call_args_list], [2, 5, 10])
 
