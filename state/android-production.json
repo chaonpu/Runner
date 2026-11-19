@@ -680,11 +680,11 @@
     "8abcd54f0c9c24dc5239e5645b5ca760e62367fa": {
       "createdAt": "2026-11-19T09:02:53.116149+00:00",
       "liveSmoke": false,
-      "phase": "test_started",
+      "phase": "test_verified",
       "route": "windows",
       "sourceSha": "8abcd54f0c9c24dc5239e5645b5ca760e62367fa",
       "testRunId": 44492830584,
-      "updatedAt": "2026-11-19T09:02:56.391436+00:00"
+      "updatedAt": "2026-11-19T09:24:13.417392+00:00"
     },
     "8ad40a606a5648a801d25029b5ef0f7e2168c3a8": {
       "createdAt": "2026-10-22T12:54:24.284526+00:00",
