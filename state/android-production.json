@@ -1142,11 +1142,12 @@
     "dd36a82b1ad98245b18be0eaf88eb9743fcd7086": {
       "createdAt": "2026-11-19T03:55:15.823658+00:00",
       "liveSmoke": false,
-      "phase": "test_verified",
+      "phase": "signer_reserved",
       "route": "windows",
+      "signingRoute": "cloud",
       "sourceSha": "dd36a82b1ad98245b18be0eaf88eb9743fcd7086",
       "testRunId": 44454742873,
-      "updatedAt": "2026-11-19T04:16:32.828025+00:00"
+      "updatedAt": "2026-11-19T04:16:39.367895+00:00"
     },
     "dda1309ede07326003def829c024c7ae347b80fb": {
       "abortedTestLiveRecoveryReservations": [
