@@ -19,6 +19,21 @@ from scheduler.production_watch import watch
 from scheduler.probes import existing_attempt, runner_for_repo
 
 
+def read_new_readiness_run(ports, run_id):
+    """Wait for the one exact run ID acknowledged by this readiness POST.
+
+    GitHub may acknowledge a new workflow before its run detail becomes visible.
+    A read-only 404 retry is safe; dispatching another workflow is not.
+    """
+    for index in range(15):
+        try:
+            return ports.run("chaonpu/Stock", run_id)
+        except RegistryGuard as exc:
+            if str(exc) != "private_actions_read_not_found" or index == 14:
+                raise
+            time.sleep(2)
+
+
 def prepare(ports, cfg, task, day, mode, state):
     spec, account = cfg["tasks"][task], cfg["accounts"]["chaonpu"]
     for workflow in ("run-a-share.yml", "run-us.yml"):
@@ -57,8 +72,12 @@ def prepare(ports, cfg, task, day, mode, state):
     need(type(rid) is int and rid > 0, "readiness_dispatch_unknown_do_not_repeat")
     print(json.dumps({"phase":"private_readiness_started","runId":rid,"taskId":task+":"+day,"route":route}),flush=True)
     deadline = time.monotonic()+14400
+    first_read = True
     while time.monotonic() < deadline:
-        run = ports.run("chaonpu/Stock",rid)
+        # Only the acknowledged, in-process readiness run gets the bounded 404
+        # visibility grace period. Subsequent reads retain the strict adapter.
+        run = read_new_readiness_run(ports, rid) if first_read else ports.run("chaonpu/Stock", rid)
+        first_read = False
         need(run.get("event") == "workflow_dispatch" and run.get("head_branch") == "main"
              and run.get("run_attempt") == 1
              and run.get("path","").split("@")[0] == ".github/workflows/"+workflow,
