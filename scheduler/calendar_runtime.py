@@ -141,21 +141,15 @@ def retry_delay(error, attempt):
     return delay
 
 
-def fetch_public(path):
-    require(path == "calendars/current.json" or bool(re.fullmatch(r"calendars/releases/[0-9a-f]{64}\.json", path)), "calendar_path_invalid")
-    headers = {"Accept": "application/vnd.github+json", "User-Agent": "ziwuxilv-calendar/1"}
-    token = (os.environ.get("ZIWU_CALENDAR_API_TOKEN") or os.environ.get("GH_TOKEN")
-             or os.environ.get("GITHUB_TOKEN"))
-    if token:
-        headers["Authorization"] = "Bearer " + token
-    req = urllib.request.Request("https://api.github.com/repos/" + REPO + "/contents/" + path + "?ref=main",
-                                 headers=headers)
+def read_bounded(req, limit):
+    """Never accept redirects or unbounded provider responses."""
     opener = urllib.request.build_opener(NoRedirect())
     for attempt in range(len(RETRY_BACKOFF_SECONDS) + 1):
         try:
             with opener.open(req, timeout=12) as response:
-                raw = response.read(MAX_BYTES * 2 + 1)
-            break
+                raw = response.read(limit + 1)
+            require(len(raw) <= limit, "calendar_response_oversized")
+            return raw
         except (urllib.error.URLError, TimeoutError, ConnectionError,
                 http.client.IncompleteRead) as error:
             delay = retry_delay(error, attempt)
@@ -164,7 +158,17 @@ def fetch_public(path):
             print(json.dumps({"phase": "calendar_fetch_retry", "attempt": attempt + 1,
                               "delaySeconds": delay, "httpStatus": getattr(error, "code", None)}), flush=True)
             time.sleep(delay)
-    require(len(raw) <= MAX_BYTES * 2, "calendar_response_oversized")
+
+
+def fetch_public_api(path):
+    """Validated REST fallback, optionally authenticated by a dedicated cross-repo token."""
+    headers = {"Accept": "application/vnd.github+json", "User-Agent": "ziwuxilv-calendar/1"}
+    token = os.environ.get("ZIWU_CALENDAR_API_TOKEN")
+    if token:
+        headers["Authorization"] = "Bearer " + token
+    req = urllib.request.Request("https://api.github.com/repos/" + REPO + "/contents/" + path + "?ref=main",
+                                 headers=headers)
+    raw = read_bounded(req, MAX_BYTES * 2)
     envelope = json.loads(raw)
     require(envelope.get("path") == path and envelope.get("encoding") == "base64"
             and envelope.get("type") == "file", "calendar_response_invalid")
@@ -173,6 +177,20 @@ def fetch_public(path):
     blob = hashlib.sha1(b"blob " + str(len(content)).encode() + b"\0" + content).hexdigest()
     require(blob == envelope.get("sha"), "calendar_git_blob_mismatch")
     return content
+
+
+def fetch_public(path):
+    require(path == "calendars/current.json" or bool(re.fullmatch(r"calendars/releases/[0-9a-f]{64}\.json", path)), "calendar_path_invalid")
+    # The public raw route avoids shared, unauthenticated REST API IP quotas.
+    # remote() still validates the SHA-256 release digest before installation.
+    req = urllib.request.Request("https://raw.githubusercontent.com/" + REPO + "/main/" + path,
+                                 headers={"User-Agent": "ziwuxilv-calendar/1"})
+    try:
+        return read_bounded(req, MAX_BYTES)
+    except (urllib.error.URLError, TimeoutError, ConnectionError, http.client.IncompleteRead) as error:
+        print(json.dumps({"phase": "calendar_raw_fallback_api",
+                          "httpStatus": getattr(error, "code", None)}), flush=True)
+        return fetch_public_api(path)
 
 
 def remote(revision="", *, fetch=fetch_public):
