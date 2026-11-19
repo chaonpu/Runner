@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import argparse
 import base64
+import http.client
 from datetime import date, datetime, timedelta, timezone
 import hashlib
 import json
@@ -14,12 +15,16 @@ import os
 from pathlib import Path
 import re
 import tempfile
+import time
+import urllib.error
 import urllib.request
 from zoneinfo import ZoneInfo
 
 REPO = "chaonpu/ziwuxilv"
 MAX_BYTES = 1_000_000
 HEX = re.compile(r"^[0-9a-f]{64}$")
+RETRY_BACKOFF_SECONDS = (2, 5, 10)
+MAX_RETRY_AFTER_SECONDS = 20
 _snapshot = None
 
 
@@ -107,12 +112,58 @@ class NoRedirect(urllib.request.HTTPRedirectHandler):
         raise CalendarUnavailable("calendar_redirect_rejected")
 
 
+def retry_delay(error, attempt):
+    """Retry only bounded transient reads; never retry access or integrity failures."""
+    if attempt >= len(RETRY_BACKOFF_SECONDS):
+        return None
+    delay = RETRY_BACKOFF_SECONDS[attempt]
+    if isinstance(error, urllib.error.HTTPError):
+        if error.code == 403:
+            headers = error.headers or {}
+            remaining = headers.get("X-RateLimit-Remaining", "")
+            retry_after = headers.get("Retry-After", "")
+            if (remaining != "0" and not retry_after
+                    and "rate limit" not in str(error.reason).lower()):
+                return None
+        elif error.code not in (429, 500, 502, 503, 504):
+            return None
+        retry_after = (error.headers or {}).get("Retry-After", "")
+        if retry_after:
+            try:
+                delay = max(delay, int(retry_after))
+            except ValueError:
+                return None
+            if delay > MAX_RETRY_AFTER_SECONDS:
+                return None
+    elif not isinstance(error, (urllib.error.URLError, TimeoutError,
+                                ConnectionError, http.client.IncompleteRead)):
+        return None
+    return delay
+
+
 def fetch_public(path):
     require(path == "calendars/current.json" or bool(re.fullmatch(r"calendars/releases/[0-9a-f]{64}\.json", path)), "calendar_path_invalid")
+    headers = {"Accept": "application/vnd.github+json", "User-Agent": "ziwuxilv-calendar/1"}
+    token = (os.environ.get("ZIWU_CALENDAR_API_TOKEN") or os.environ.get("GH_TOKEN")
+             or os.environ.get("GITHUB_TOKEN"))
+    if token:
+        headers["Authorization"] = "Bearer " + token
     req = urllib.request.Request("https://api.github.com/repos/" + REPO + "/contents/" + path + "?ref=main",
-                                 headers={"Accept": "application/vnd.github+json", "User-Agent": "ziwuxilv-calendar/1"})
-    with urllib.request.build_opener(NoRedirect()).open(req, timeout=12) as response:
-        raw = response.read(MAX_BYTES * 2 + 1)
+                                 headers=headers)
+    opener = urllib.request.build_opener(NoRedirect())
+    for attempt in range(len(RETRY_BACKOFF_SECONDS) + 1):
+        try:
+            with opener.open(req, timeout=12) as response:
+                raw = response.read(MAX_BYTES * 2 + 1)
+            break
+        except (urllib.error.URLError, TimeoutError, ConnectionError,
+                http.client.IncompleteRead) as error:
+            delay = retry_delay(error, attempt)
+            if delay is None:
+                raise
+            print(json.dumps({"phase": "calendar_fetch_retry", "attempt": attempt + 1,
+                              "delaySeconds": delay, "httpStatus": getattr(error, "code", None)}), flush=True)
+            time.sleep(delay)
     require(len(raw) <= MAX_BYTES * 2, "calendar_response_oversized")
     envelope = json.loads(raw)
     require(envelope.get("path") == path and envelope.get("encoding") == "base64"
