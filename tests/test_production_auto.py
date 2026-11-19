@@ -22,9 +22,10 @@ class AutomaticStrategyTests(unittest.TestCase):
                 ports = Mock()
                 ports.env = {"CHAONPU_ACTIONS_READ_TOKEN": "synthetic"}
                 ports.requester.return_value = {"workflow_run_id": 90000000001}
-                ports.run.return_value = {"event": "workflow_dispatch", "head_branch": "main",
+                visible = {"event": "workflow_dispatch", "head_branch": "main",
                     "run_attempt": 1, "path": ".github/workflows/" + workflow,
                     "status": "completed", "conclusion": "success", "head_sha": "b" * 40}
+                ports.run.side_effect = [RegistryGuard("private_actions_read_not_found"), visible]
                 cfg = {"tasks": {task: {}}, "accounts": {"chaonpu": {}}}
                 state = {"tasks": [
                     {"task": task, "status": "verified", "id": task + ":2026-10-16", "sourceSha": "a" * 40},
@@ -33,11 +34,66 @@ class AutomaticStrategyTests(unittest.TestCase):
                 with patch.object(c, "existing_attempt", return_value={"status": "no_active_run"}), \
                      patch.object(c, "hosted_capacity", return_value="available"), \
                      patch.object(c, "inspect", return_value={"marketDataReady": True, "sourceSha": "b" * 40}), \
+                     patch.object(c.time, "sleep") as sleep, \
                      patch("sys.stdout", new_callable=io.StringIO):
                     c.prepare(ports, cfg, task, "2026-10-19", "formal", state)
+                self.assertEqual(ports.run.call_count, 2)
+                self.assertEqual(sleep.call_count, 1)
+                sleep.assert_called_once_with(2)
+                ports.requester.assert_called_once()
                 inputs = ports.requester.call_args.args[3]["inputs"]
                 self.assertEqual(inputs["readiness_profile"], "auto")
                 self.assertEqual(inputs["previous_verified_sha"], "a" * 40)
+
+    def test_acknowledged_readiness_id_has_bounded_404_visibility_grace(self):
+        for task in ("stock_a", "stock_us"):
+            with self.subTest(task=task):
+                ports = Mock()
+                ports.env = {"CHAONPU_ACTIONS_READ_TOKEN": "synthetic"}
+                ports.requester.return_value = {"workflow_run_id": 90000000001}
+                ports.run.side_effect = RegistryGuard("private_actions_read_not_found")
+                cfg = {"tasks": {task: {}}, "accounts": {"chaonpu": {}}}
+                with patch.object(c, "existing_attempt", return_value={"status": "no_active_run"}), \
+                     patch.object(c, "hosted_capacity", return_value="available"), \
+                     patch.object(c.time, "sleep") as sleep, \
+                     patch("sys.stdout", new_callable=io.StringIO):
+                    with self.assertRaisesRegex(RegistryGuard, "private_actions_read_not_found"):
+                        c.prepare(ports, cfg, task, "2026-10-19", "formal", {"tasks": []})
+                self.assertEqual(ports.run.call_count, 15)
+                self.assertTrue(all(call.args == ("chaonpu/Stock", 90000000001)
+                                    for call in ports.run.call_args_list))
+                self.assertEqual(sleep.call_count, 14)
+                ports.requester.assert_called_once()
+
+    def test_non_404_readiness_failure_is_never_retried(self):
+        ports = Mock()
+        ports.env = {"CHAONPU_ACTIONS_READ_TOKEN": "synthetic"}
+        ports.requester.return_value = {"workflow_run_id": 90000000001}
+        ports.run.side_effect = RegistryGuard("private_actions_read_permission_denied")
+        cfg = {"tasks": {"stock_a": {}}, "accounts": {"chaonpu": {}}}
+        with patch.object(c, "existing_attempt", return_value={"status": "no_active_run"}), \
+             patch.object(c, "hosted_capacity", return_value="available"), \
+             patch.object(c.time, "sleep") as sleep, \
+             patch("sys.stdout", new_callable=io.StringIO):
+            with self.assertRaisesRegex(RegistryGuard, "private_actions_read_permission_denied"):
+                c.prepare(ports, cfg, "stock_a", "2026-10-19", "formal", {"tasks": []})
+        ports.run.assert_called_once_with("chaonpu/Stock", 90000000001)
+        sleep.assert_not_called()
+        ports.requester.assert_called_once()
+
+    def test_unacknowledged_readiness_dispatch_is_not_queried_or_repeated(self):
+        ports = Mock()
+        ports.env = {"CHAONPU_ACTIONS_READ_TOKEN": "synthetic"}
+        ports.requester.return_value = {}
+        cfg = {"tasks": {"stock_a": {}}, "accounts": {"chaonpu": {}}}
+        with patch.object(c, "existing_attempt", return_value={"status": "no_active_run"}), \
+             patch.object(c, "hosted_capacity", return_value="available"), \
+             patch.object(c.time, "sleep") as sleep:
+            with self.assertRaisesRegex(RegistryGuard, "readiness_dispatch_unknown_do_not_repeat"):
+                c.prepare(ports, cfg, "stock_a", "2026-10-19", "formal", {"tasks": []})
+        ports.requester.assert_called_once()
+        ports.run.assert_not_called()
+        sleep.assert_not_called()
 
     def test_a_close_boundary(self):
         before=c.resolve_request('stock_a',now=utc(10,19,6,59))
