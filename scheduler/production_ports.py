@@ -16,6 +16,7 @@ import os
 import re
 import time
 import urllib.request
+from urllib.parse import quote
 
 from scheduler.exchange_schedule import evaluate
 from scheduler.production_evidence import inspect, WORKFLOWS as READY_WINDOWS, CLOUD_WORKFLOWS
@@ -205,6 +206,197 @@ class ProductionPorts(ReadOnlyPorts):
         authorize(self.env, self.requester, self.reader_factory)
         self._armed, self._accepted = {}, {}
 
+    def original_dispatch_receipt(self, key, workflow, source_sha, owner,
+                                  mode, reserved_at, route):
+        """Find an original dispatched run by independent, read-only evidence.
+
+        A POST may have reached GitHub even when its response was lost. Never
+        issue a second POST, and never infer its identity from the newest run
+        alone: the exact job name binds the Stock run to our coordinator.
+        """
+        need(workflow in WORKFLOWS.values() and isinstance(key, str)
+             and type(owner) is int and owner > 0
+             and bool(SHA.fullmatch(str(source_sha)))
+             and mode in ("formal", "theoretical_catchup")
+             and route in ("cloud", "windows"),
+             "original_dispatch_identity_invalid")
+        try:
+            timestamp = datetime.fromisoformat(reserved_at.replace("Z", "+00:00"))
+            need(timestamp.tzinfo is not None, "original_dispatch_clock_invalid")
+        except (ValueError, AttributeError):
+            raise RegistryGuard("original_dispatch_clock_invalid") from None
+        after = timestamp.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        path = (PRIVATE + "/actions/workflows/" + workflow + "/runs"
+                + "?event=workflow_dispatch&branch=main&created="
+                + quote(">=" + after, safe="") + "&per_page=100")
+        try:
+            listing = self.private_reader().get(path)
+            rows = listing.get("workflow_runs")
+            count = listing.get("total_count")
+            need(type(count) is int and 0 <= count <= 100
+                 and isinstance(rows, list) and len(rows) == count,
+                 "original_dispatch_listing_incomplete")
+            found = []
+            expected = f"effect-v1:{key}:{owner}:{mode}"
+            for candidate in rows:
+                if (not isinstance(candidate, dict)
+                        or type(candidate.get("id")) is not int
+                        or not RUN_ID.fullmatch(str(candidate["id"]))):
+                    raise RegistryGuard("original_dispatch_listing_invalid")
+                if (candidate.get("event") != "workflow_dispatch"
+                        or candidate.get("head_branch") != "main"
+                        or candidate.get("path", "").split("@")[0]
+                            != ".github/workflows/" + workflow
+                        or candidate.get("head_sha") != source_sha
+                        or candidate.get("run_attempt") != 1):
+                    continue
+                try:
+                    created = datetime.fromisoformat(
+                        candidate["created_at"].replace("Z", "+00:00"))
+                    need(created.tzinfo is not None
+                         and created.astimezone(timezone.utc)
+                             >= timestamp.astimezone(timezone.utc),
+                         "original_dispatch_created_before_reservation")
+                except (KeyError, ValueError, AttributeError, TypeError):
+                    raise RegistryGuard("original_dispatch_created_at_invalid") from None
+                dispatch_inputs(candidate, key, owner, route, mode)
+                rid = candidate["id"]
+                jobs = self.private_reader().get(
+                    PRIVATE + f"/actions/runs/{rid}/jobs?filter=latest&per_page=100")
+                candidates = jobs.get("jobs")
+                need(type(jobs.get("total_count")) is int
+                     and isinstance(candidates, list)
+                     and jobs["total_count"] == len(candidates)
+                     and len(candidates) <= 100,
+                     "original_dispatch_jobs_incomplete")
+                if len(candidates) == 1 and candidates[0].get("name") == expected:
+                    need(candidates[0].get("run_id") == rid,
+                         "original_dispatch_job_identity_invalid")
+                    found.append((candidate, candidates[0]))
+            need(len(found) <= 1, "multiple_original_dispatch_candidates")
+            return found[0] if found else None
+        except RegistryGuard:
+            raise
+        except (OSError, ValueError, TypeError, KeyError, AttributeError):
+            raise RegistryGuard("original_dispatch_read_unavailable") from None
+
+    def recover_uncertain_dispatch(self, key, workflow, arm, owner, mode,
+                                   reserved_at):
+        """Bounded read-only recovery of the ONE ambiguous POST; no redispatch."""
+        for index in range(15):
+            receipt = self.original_dispatch_receipt(
+                key, workflow, arm["sourceSha"], owner, mode, reserved_at,
+                arm["route"])
+            if receipt is not None:
+                return receipt[0]["id"]
+            if index < 14:
+                time.sleep(2)
+        raise RegistryGuard("original_dispatch_unconfirmed_no_retry")
+
+    def retire_failed_cloud_admission(self, cfg, state, blob, row):
+        """One-shot recovery only for an observed, failed pre-business gate.
+
+        An unbound reservation is NOT proof that no POST occurred. First bind
+        it to the unique actual failed Stock job using independent Actions
+        metadata; only then archive its immutable identity for one retry.
+        """
+        key = row["id"]
+        need(row["status"] == "reserved" and row["route"] == "cloud"
+             and row["task"] in ("stock_a", "stock_us")
+             and row.get("runId") is None
+             and bool(SHA.fullmatch(str(row.get("sourceSha", "")))),
+             "cloud_admission_recovery_scope_invalid")
+        need(not any(x.get("id") == key for x in
+                     state.get("retiredPrebusinessFailures", []))
+             and not any(x.get("id") == key for x in
+                         state.get("retiredPrebusinessReservations", [])),
+             "prebusiness_recovery_once_per_session")
+        receipt = self.original_dispatch_receipt(
+            key, row["workflow"], row["sourceSha"], row["coordinatorRunId"],
+            row.get("publicationMode", "formal"), row["createdAt"], row["route"])
+        need(receipt is not None, "cloud_original_dispatch_not_proven")
+        candidate, job = receipt
+        coordinator = self.private_reader().get(
+            PUBLIC + f"/actions/runs/{row['coordinatorRunId']}")
+        need(coordinator.get("id") == row["coordinatorRunId"]
+             and coordinator.get("repository", {}).get("full_name") == "chaonpu/Runner"
+             and coordinator.get("path", "").split("@")[0]
+                 == ".github/workflows/production-dispatch.yml"
+             and coordinator.get("event") == "workflow_dispatch"
+             and coordinator.get("head_branch") == "main"
+             and coordinator.get("run_attempt") == 1
+             and coordinator.get("status") == "completed"
+             and coordinator.get("conclusion") == "failure",
+             "cloud_original_coordinator_not_failed")
+        if "inputs" in coordinator and coordinator["inputs"] is not None:
+            need(isinstance(coordinator["inputs"], dict)
+                 and coordinator["inputs"].get("task") == row["task"]
+                 and coordinator["inputs"].get("business_date")
+                     in (None, "", key.split(":", 1)[1]),
+                 "cloud_original_coordinator_inputs_conflict")
+        run = self.run("chaonpu/Stock", candidate["id"])
+        need(run.get("id") == candidate["id"]
+             and run.get("head_sha") == row["sourceSha"]
+             and run.get("event") == "workflow_dispatch"
+             and run.get("head_branch") == "main"
+             and run.get("path", "").split("@")[0]
+                == ".github/workflows/" + row["workflow"]
+             and run.get("run_attempt") == 1
+             and run.get("actor", {}).get("login") == "chaonpu"
+             and run.get("status") == "completed"
+             and run.get("conclusion") == "failure"
+             and job.get("status") == "completed"
+             and job.get("conclusion") == "failure",
+             "cloud_original_failed_run_not_attested")
+        steps = job.get("steps")
+        need(isinstance(steps, list) and len(steps) >= 2
+             and all(isinstance(x, dict) for x in steps)
+             and len({x.get("name") for x in steps}) == len(steps),
+             "cloud_failure_steps_invalid")
+        gate = "Admit exact RUNNER task and Stock run binding before coordinated business"
+        gates = [i for i, x in enumerate(steps) if x.get("name") == gate]
+        need(len(gates) == 1 and steps[gates[0]].get("conclusion") == "failure"
+             and sum(x.get("conclusion") == "failure" for x in steps) == 1,
+             "cloud_admission_failure_not_unique")
+        cleanup = ("Complete job", "Post ")
+        need(all(x.get("conclusion") == "skipped"
+                 or x.get("name") == cleanup[0]
+                 or str(x.get("name", "")).startswith(cleanup[1])
+                 for x in steps[gates[0] + 1:]),
+             "cloud_post_gate_business_not_proven_absent")
+        required_skips = (
+            "Check coordinated settled inputs are still current",
+            "Reconcile verified A-share ledger projection",
+            "Run A-share strategy with retry", "Run US strategy with retry",
+            "Publish verified snapshot and ledger to private database",
+            "Save successful strategy state",
+            "Verify and attest published ledger receipt",
+        )
+        phases = {x["name"]: x.get("conclusion") for x in steps}
+        need(phases.get("Publish verified snapshot and ledger to private database") == "skipped"
+             and phases.get("Save successful strategy state") == "skipped"
+             and phases.get("Verify and attest published ledger receipt") == "skipped"
+             and phases.get("Run A-share strategy with retry" if row["task"] == "stock_a"
+                            else "Run US strategy with retry") == "skipped"
+             and all(phases.get(name) in (None, "skipped") for name in required_skips),
+             "cloud_business_effect_not_proven_absent")
+        archived = deepcopy(row)
+        archived.update(status="hold", runId=run["id"])
+        next_state = deepcopy(state)
+        next_state["tasks"] = [x for x in state["tasks"] if x.get("id") != key]
+        next_state.setdefault("retiredPrebusinessFailures", []).append(archived)
+        validate(cfg, next_state)
+        self.requester(self.env["GH_TOKEN"], "PUT", PUBLIC + "/contents/" + REGISTRY, {
+            "branch": "main", "sha": blob,
+            "message": "Archive proven failed cloud prebusiness admission for one retry",
+            "content": base64.b64encode((json.dumps(next_state, indent=2) + "\n").encode()).decode(),
+        })
+        c, saved, _ = self.load()
+        need(c == cfg and saved == next_state, "cloud_recovery_commit_unverified")
+        return {"status": "cloud_admission_recovery_attested", "taskId": key,
+                "originalRunId": run["id"], "businessVerified": False,
+                "archived": True, "dispatches": 0}
+
     def retire_prebusiness_hold(self, task, day):
         """One strictly attested pre-strategy failure may be re-dispatched.
 
@@ -221,6 +413,8 @@ class ProductionPorts(ReadOnlyPorts):
         old = [x for x in state["tasks"] if x.get("id") == key]
         need(len(old) == 1, "prebusiness_original_task_missing")
         row = old[0]
+        if row.get("status") == "reserved":
+            return self.retire_failed_cloud_admission(cfg, state, blob, row)
         need(row.get("status") == "hold" and row.get("task") in ("stock_a", "stock_us")
              and row["task"] == task and row.get("route") == "windows"
              and row.get("publicationMode") in ("formal", "theoretical_catchup")
@@ -396,10 +590,22 @@ class ProductionPorts(ReadOnlyPorts):
              "ports_reservation_drift")
         need(readiness(self, cfg, state, task, day, self.clock) == (arm["route"], arm["sourceSha"]),
              "ports_dispatch_readiness_changed")
-        response = self.requester(self.env.get("CHAONPU_ACTIONS_READ_TOKEN", ""), "POST",
-            PRIVATE + "/actions/workflows/" + workflow + "/dispatches", payload)
-        rid = response.get("workflow_run_id") if isinstance(response, dict) else None
-        need(type(rid) is int and RUN_ID.fullmatch(str(rid)), "ports_dispatch_id_unknown_no_retry")
+        try:
+            response = self.requester(self.env.get("CHAONPU_ACTIONS_READ_TOKEN", ""), "POST",
+                PRIVATE + "/actions/workflows/" + workflow + "/dispatches", payload)
+            rid = response.get("workflow_run_id") if isinstance(response, dict) else None
+        except RegistryGuard as exc:
+            if str(exc) != "ports_response_uncertain_no_retry":
+                raise
+            rid = None
+        # Recover the original task identity only from a uniquely matching
+        # workflow run AND its job binding; never repeat an ambiguous POST.
+        if rid is None:
+            rid = self.recover_uncertain_dispatch(
+                key, workflow, arm, context(self.env), arm["publicationMode"],
+                rows[0]["createdAt"])
+        need(type(rid) is int and RUN_ID.fullmatch(str(rid)),
+             "ports_dispatch_id_unknown_no_retry")
         self._accepted[key] = {"runId": rid, "sourceSha": arm["sourceSha"]}
         return {"workflow_run_id": rid}
 

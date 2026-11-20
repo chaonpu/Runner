@@ -37,8 +37,10 @@ class Backend:
         self.target = {"id": TARGET, "repository": {"full_name": "chaonpu/Stock"},
             "path": ".github/workflows/run-us.yml", "event": "workflow_dispatch",
             "head_branch": "main", "head_sha": SOURCE, "run_attempt": 1,
+            "created_at": "2026-10-17T06:00:59Z",
             "status": "queued", "conclusion": None}
         self.post_timeout, self.put_lost, self.source_changed = False, False, False
+        self.post_receipt_visible = False
         self.source_reads = 0
 
     def request(self, token, method, path, body=None):
@@ -56,8 +58,9 @@ class Backend:
             if self.put_lost: raise TimeoutError("accepted PUT but response lost")
             return {"content": {"sha": record("state/tasks.json", self.state)["sha"]}}
         if method == "POST" and path == PRIVATE + "/actions/workflows/run-us.yml/dispatches":
-            if self.post_timeout: raise TimeoutError("accepted POST but response lost")
             self.target["inputs"] = deepcopy(body["inputs"])
+            if self.post_timeout:
+                raise RegistryGuard("ports_response_uncertain_no_retry")
             return {"workflow_run_id": TARGET}
         raise AssertionError("unexpected API request")
 
@@ -70,6 +73,15 @@ class Backend:
                     return deepcopy(backend.evidence)
                 if path == PRIVATE + f"/actions/runs/{EVIDENCE_RUN}/jobs?filter=latest&per_page=100":
                     return deepcopy(backend.evidence_jobs)
+                if path.startswith(PRIVATE + "/actions/workflows/run-us.yml/runs?event=workflow_dispatch&branch=main&created="):
+                    found = backend.post_receipt_visible and bool(backend.target.get("inputs"))
+                    return {"total_count": 1 if found else 0,
+                            "workflow_runs": [deepcopy(backend.target)] if found else []}
+                if path == PRIVATE + f"/actions/runs/{TARGET}/jobs?filter=latest&per_page=100":
+                    inputs = backend.target.get("inputs", {})
+                    name = (f"effect-v1:{inputs.get('task_id')}:"
+                            f"{inputs.get('coordinator_run_id')}:formal")
+                    return {"total_count": 1, "jobs": [{"run_id": TARGET, "name": name}]}
                 if path == PRIVATE + f"/actions/runs/{TARGET}": return deepcopy(backend.target)
                 raise AssertionError("unexpected private metadata request")
         return Reader()
@@ -286,11 +298,43 @@ class PortsTests(unittest.TestCase):
     def test_post_timeout_consumes_instance_arm_and_never_resends(self):
         self.backend.post_timeout = True
         ports = self.ports()
-        with self.assertRaises(RegistryGuard): self.begin(ports)
+        with patch("scheduler.production_ports.time.sleep"):
+            with self.assertRaisesRegex(RegistryGuard, "original_dispatch_unconfirmed_no_retry"):
+                self.begin(ports)
         self.assertEqual(self.backend.state["tasks"][0]["status"], "reserved")
         self.assertEqual(ports._armed, {})
         with self.assertRaises(RegistryGuard): self.begin(self.ports())
         self.assertEqual(len(self.effects("POST")), 1)
+
+    def test_lost_post_response_binds_the_one_proven_original_run(self):
+        self.backend.post_timeout = True
+        self.backend.post_receipt_visible = True
+        session = self.begin(self.ports())
+        self.assertEqual(session["runId"], TARGET)
+        self.assertEqual(self.backend.state["tasks"][0]["status"], "dispatched")
+        self.assertEqual(len(self.effects("POST")), 1)
+        self.assertTrue(any("/jobs?filter=latest" in p for p in self.backend.private_paths))
+
+    def test_lost_post_response_rejects_unbound_or_foreign_job(self):
+        self.backend.post_timeout = True
+        self.backend.post_receipt_visible = True
+        original_reader = self.backend.reader
+        def wrong_job(token):
+            reader = original_reader(token)
+            class Reader:
+                def get(self, path):
+                    value = reader.get(path)
+                    if path.endswith(f"/actions/runs/{TARGET}/jobs?filter=latest&per_page=100"):
+                        value["jobs"][0]["name"] = "effect-v1:stock_us:other:1:formal"
+                    return value
+            return Reader()
+        ports = self.ports()
+        ports.reader_factory = wrong_job
+        with patch("scheduler.production_ports.time.sleep"):
+            with self.assertRaisesRegex(RegistryGuard, "original_dispatch_unconfirmed_no_retry"):
+                self.begin(ports)
+        self.assertEqual(len(self.effects("POST")), 1)
+        self.assertEqual(self.backend.state["tasks"][0]["status"], "reserved")
 
     def test_new_instance_cannot_dispatch_a_preexisting_reservation(self):
         cfg = self.backend.config
