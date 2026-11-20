@@ -78,12 +78,12 @@
       "publicationMode": "formal",
       "repo": "chaonpu/Stock",
       "route": "cloud",
+      "runId": 44692039256,
       "sourceSha": "77e91b916bb6f0d94bc89f999d5c7e97ef960545",
       "status": "hold",
       "task": "stock_a",
       "updatedAt": "2026-11-20T07:02:01.876208+00:00",
-      "workflow": "run-a-share.yml",
-      "runId": 44692039256
+      "workflow": "run-a-share.yml"
     }
   ],
   "retiredPrebusinessReservations": [
@@ -800,6 +800,19 @@
       "task": "stock_us",
       "updatedAt": "2026-11-19T23:56:46.226487+00:00",
       "workflow": "run-us.yml"
+    },
+    {
+      "coordinatorRunId": 44694996671,
+      "createdAt": "2026-11-20T07:28:23.181971+00:00",
+      "id": "stock_a:2026-11-20",
+      "publicationMode": "formal",
+      "repo": "chaonpu/Stock",
+      "route": "cloud",
+      "sourceSha": "77e91b916bb6f0d94bc89f999d5c7e97ef960545",
+      "status": "reserved",
+      "task": "stock_a",
+      "updatedAt": "2026-11-20T07:28:23.181971+00:00",
+      "workflow": "run-a-share.yml"
     }
   ]
 }
