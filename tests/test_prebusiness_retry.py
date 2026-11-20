@@ -43,6 +43,7 @@ def run():
         "path": ".github/workflows/run-a-share.yml@refs/heads/main",
         "event": "workflow_dispatch", "head_branch": "main",
         "head_sha": SHA, "run_attempt": 1,
+        "created_at": "2026-10-26T07:10:19Z",
         "actor": {"login": "chaonpu"},
         "status": "completed", "conclusion": "failure",
     }
@@ -89,6 +90,87 @@ class RecoveryTests(unittest.TestCase):
     def retire(self, obj):
         with patch("scheduler.production_ports.context", return_value=OWNER):
             return obj.retire_prebusiness_hold(TASK, DAY)
+
+    def cloud_fixture(self, *, job_value=None, run_value=None, listing_value=None):
+        cfg, original = data()
+        old = deepcopy(original["tasks"][0])
+        old["route"] = "cloud"
+        old["status"] = "reserved"
+        old.pop("runId")
+        memory = [{"schema": 1, "tasks": [old]}]
+        validate(cfg, memory[0])
+        target = ProductionPorts.__new__(ProductionPorts)
+        target.env = {"GH_TOKEN": "synthetic"}
+        target.load = Mock(side_effect=lambda: (cfg, deepcopy(memory[0]), "a" * 40))
+        proof = run() if run_value is None else run_value
+        target.run = Mock(return_value=proof)
+        failure = {"total_count": 1, "jobs": [{
+            "run_id": RUN, "name": f"effect-v1:{KEY}:{OWNER}:formal",
+            "status": "completed", "conclusion": "failure",
+            "steps": [
+                {"name": "Admit exact RUNNER task and Stock run binding before coordinated business",
+                 "conclusion": "failure"},
+                {"name": "Run A-share strategy with retry", "conclusion": "skipped"},
+                {"name": "Publish verified snapshot and ledger to private database", "conclusion": "skipped"},
+                {"name": "Save successful strategy state", "conclusion": "skipped"},
+                {"name": "Verify and attest published ledger receipt", "conclusion": "skipped"},
+                {"name": "Complete job", "conclusion": "success"},
+            ],
+        }]}
+        if job_value is not None:
+            failure = job_value
+        run_list = {"total_count": 1, "workflow_runs": [run()]}
+        if listing_value is not None:
+            run_list = listing_value
+        reader = Mock()
+        reader.get.side_effect = lambda path: (
+            deepcopy(failure) if path.endswith(f"/actions/runs/{RUN}/jobs?filter=latest&per_page=100")
+            else {"id": OWNER, "repository": {"full_name": "chaonpu/Runner"},
+                  "path": ".github/workflows/production-dispatch.yml",
+                  "event": "workflow_dispatch", "head_branch": "main",
+                  "run_attempt": 1, "status": "completed", "conclusion": "failure"}
+            if path.endswith(f"/actions/runs/{OWNER}") else deepcopy(run_list))
+        target.private_reader = Mock(return_value=reader)
+        def requester(token, method, path, body):
+            self.assertEqual(method, "PUT")
+            memory[0] = json.loads(base64.b64decode(body["content"]).decode())
+            return {"content": {"sha": "b" * 40}}
+        target.requester = Mock(side_effect=requester)
+        return cfg, target, memory, failure
+
+    def test_cloud_admission_failure_archived_only_after_exact_job_proof(self):
+        cfg, target, memory, _ = self.cloud_fixture()
+        result = self.retire(target)
+        self.assertEqual(result["originalRunId"], RUN)
+        self.assertEqual(result["dispatches"], 0)
+        self.assertEqual(memory[0]["tasks"], [])
+        old = memory[0]["retiredPrebusinessFailures"][0]
+        self.assertEqual((old["status"], old["runId"], old["route"]),
+                         ("hold", RUN, "cloud"))
+        validate(cfg, memory[0])
+        target.requester.assert_called_once()
+
+    def test_cloud_admission_recovery_rejects_effect_or_unknown_job(self):
+        for variant in ("business_started", "other_job", "missing_run"):
+            with self.subTest(variant=variant):
+                cfg, target, memory, failure = self.cloud_fixture()
+                if variant == "business_started":
+                    failure["jobs"][0]["steps"][1]["conclusion"] = "success"
+                    target.private_reader.return_value.get.side_effect = lambda path: (
+                        failure if "/jobs?" in path else
+                        {"total_count": 1, "workflow_runs": [run()]})
+                elif variant == "other_job":
+                    failure["jobs"][0]["name"] = "effect-v1:stock_a:other:1:formal"
+                    target.private_reader.return_value.get.side_effect = lambda path: (
+                        failure if "/jobs?" in path else
+                        {"total_count": 1, "workflow_runs": [run()]})
+                else:
+                    target.private_reader.return_value.get.side_effect = lambda path: (
+                        {"total_count": 0, "workflow_runs": []})
+                with self.assertRaises(RegistryGuard):
+                    self.retire(target)
+                target.requester.assert_not_called()
+                self.assertEqual(memory[0]["tasks"][0]["status"], "reserved")
 
     def test_verified_route_failure_is_archived_and_retry_unblocked(self):
         cfg, obj, memory = self.fixture()
