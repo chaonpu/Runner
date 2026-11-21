@@ -25,11 +25,12 @@
     "05f74e017684348716703c91af35b234edfddcb5": {
       "createdAt": "2026-11-21T04:31:59.641054+00:00",
       "liveSmoke": false,
-      "phase": "test_verified",
+      "phase": "signer_reserved",
       "route": "windows",
+      "signingRoute": "cloud",
       "sourceSha": "05f74e017684348716703c91af35b234edfddcb5",
       "testRunId": 44866569820,
-      "updatedAt": "2026-11-21T05:04:48.225822+00:00"
+      "updatedAt": "2026-11-21T05:04:54.305617+00:00"
     },
     "10e190571949815e33e03b5253172ef0a85f6c26": {
       "createdAt": "2026-11-13T06:34:34.243854+00:00",
