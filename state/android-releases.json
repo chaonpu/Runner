@@ -2179,7 +2179,7 @@
       "signingRunId": 45102298159,
       "updateLog": "v3.2.6\uff1a\n1. \u6301\u4ed3\u56fe\u8868\u7f29\u77ed\u4e3b\u56fe\u9ad8\u5ea6\uff0c\u4e3a\u5e95\u90e8\u72b6\u6001\u548c\u6765\u6e90\u8be6\u60c5\u4fdd\u7559\u5b8c\u6574\u663e\u793a\u7a7a\u95f4\u3002\n2. \u975e\u6301\u4ed3\u56fe\u8868\u53ca\u5206\u65f6\u3001\u65e5K\u3001\u5468K\u3001\u6708K\u884c\u60c5\u89c4\u5219\u4fdd\u6301\u4e0d\u53d8\u3002",
       "forceUpdate": false,
-      "phase": "prepared",
+      "phase": "dispatch_reserved",
       "publishRequest": {
         "sourceUrl": "https://github.com/chaonpu/Runner/releases/download/staged-apk-v3.2.6-signrun-45102298159/ziwuxilv-verified-v3.2.6.zip",
         "artifactSha256": "dd3276c83bba9f6954bad383db0fe3b26275d511dc99899d741eb6905a2317a0",
