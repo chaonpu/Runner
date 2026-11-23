@@ -23,6 +23,11 @@ on:
         type: boolean
         required: true
         default: false
+      recover_interrupted_test:
+        description: "已复核 Windows Test 编译被取消，允许原SHA一次完整重建（需执行+续跑）"
+        type: boolean
+        required: true
+        default: false
       source_sha:
         description: "源码 SHA（通常留空；续跑填原40位）"
         type: string
@@ -62,6 +67,7 @@ jobs:
       RESUME: ${{ inputs.resume }}
       RECOVER_LIVE_VALIDATION: ${{ inputs.recover_live_validation }}
       RECOVER_SIGNER_PREKEY: ${{ inputs.recover_signer_prekey }}
+      RECOVER_INTERRUPTED_TEST: ${{ inputs.recover_interrupted_test }}
       SOURCE_SHA: ${{ inputs.source_sha }}
       VERIFIED_TEST_RUN_ID: ${{ inputs.verified_test_run_id }}
     steps:
@@ -73,6 +79,7 @@ jobs:
       - name: Offline safety regressions
         run: |
           python3 -m unittest discover -s tests -p test_android_production.py -v
+          python3 -m unittest discover -s tests -p test_android_interrupted_recovery.py -v
           python3 -m unittest discover -s tests -p test_android_verified_test_recovery.py -v
           python3 -m unittest discover -s tests -p test_android_live_validation.py -v
           python3 -m unittest discover -s tests -p test_android_live_recovery.py -v
@@ -103,6 +110,7 @@ jobs:
           if [[ "$RESUME" == 'true' ]]; then args+=(--resume); fi
           if [[ "$RECOVER_LIVE_VALIDATION" == 'true' ]]; then args+=(--recover-live-validation); fi
           if [[ "$RECOVER_SIGNER_PREKEY" == 'true' ]]; then args+=(--recover-signer-prekey); fi
+          if [[ "$RECOVER_INTERRUPTED_TEST" == 'true' ]]; then args+=(--recover-interrupted-test); fi
           if [[ -n "$VERIFIED_TEST_RUN_ID" ]]; then args+=(--verified-test-run-id "$VERIFIED_TEST_RUN_ID"); fi
           python3 -m scheduler.android_production "${args[@]}" 2>&1 | tee "$RUNNER_TEMP/entry-result.jsonl"
       - name: Explain next manual step

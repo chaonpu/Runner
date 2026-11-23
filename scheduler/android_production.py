@@ -897,6 +897,150 @@ def retry_checkout_before_business(pub, test, source, entry, test_account, env, 
                   testRunId=fresh, retryCount=1, publication="not_authorized")
     return fresh
 
+def recover_reviewed_interrupted_test(pub, test, source, entry, test_account, sign_account, env, task):
+    """One owner-reviewed exact-SHA rebuild after a Windows Test job was cancelled.
+
+    A cancellation is not a compiler failure. Require original attempt-1 job
+    metadata to prove the Build step alone was cancelled, every downstream
+    test/handoff step was skipped, and no usable artifact was produced. Reserve
+    an immutable one-time recovery record before any new dispatch. No old APK,
+    test result, signing state, or previous run ID can be reused.
+    """
+    require(bool(SHA.fullmatch(source)) and entry.get("sourceSha") == source
+            and entry.get("phase") == "test_started"
+            and entry.get("route") == "windows" and entry.get("liveSmoke") is False,
+            "interrupted_recovery_original_entry_invalid")
+    require(not any(key in entry for key in (
+                "signingRunId", "signingRoute", "signingRecoveryHistory",
+                "recoveryFromSigningRunId", "verifiedTestRetry")),
+            "interrupted_recovery_signer_or_retry_already_started")
+    require(all(type(entry.get(key, 0)) is int and entry.get(key, 0) == 0
+                for key in ("testRetries", "testLiveRetries", "testInterruptedRetries"))
+            and not entry.get("failedTestRunIds")
+            and not entry.get("testInterruptedRecovery")
+            and not entry.get("testLiveRecovery"),
+            "interrupted_recovery_limit_reached")
+    old = entry.get("testRunId")
+    failure = entry.get("lastFailure")
+    require(type(old) is int and old > 0 and isinstance(failure, dict)
+            and failure.get("runId") == old and failure.get("stage") == "test"
+            and failure.get("code") in (
+                "android_test_or_artifact_failed_manual_review",
+                "android_test_cancelled_manual_review",
+                "private_workflow_cancelled_manual_review"),
+            "interrupted_recovery_reviewed_failure_missing")
+    original = api(test, TEST, "/actions/runs/" + str(old))
+    validate_run(original, TEST, TEST_WORKFLOW, old, source)
+    require(original.get("status") == "completed"
+            and original.get("conclusion") in ("failure", "cancelled"),
+            "interrupted_recovery_original_not_completed_failure")
+    response = api(test, TEST, "/actions/runs/" + str(old) + "/jobs?per_page=100")
+    jobs = response.get("jobs")
+    require(response.get("total_count") == 2 and isinstance(jobs, list)
+            and len(jobs) == 2 and all(isinstance(job, dict) for job in jobs),
+            "interrupted_recovery_jobs_ambiguous")
+    builds = [job for job in jobs if job.get("name") == "test"]
+    companions = [job for job in jobs if job.get("name") ==
+                  "Verify private Release handoff idempotence (no APK)"]
+    require(len(builds) == 1 and len(companions) == 1
+            and companions[0].get("conclusion") == "skipped"
+            and companions[0].get("steps") in (None, []),
+            "interrupted_recovery_companion_not_skipped")
+    job = builds[0]
+    require(job.get("run_id") == old and job.get("run_attempt") == 1
+            and job.get("status") == "completed"
+            and job.get("conclusion") == "cancelled"
+            and job.get("runner_name") == task["runnerName"]
+            and isinstance(job.get("steps"), list),
+            "interrupted_recovery_runner_or_job_invalid")
+    steps = job["steps"]
+    require(all(isinstance(step, dict) and isinstance(step.get("name"), str)
+                for step in steps),
+            "interrupted_recovery_steps_invalid")
+    results = {step["name"]: step.get("conclusion") for step in steps}
+    build_step = "Build unsigned Release APK on Windows"
+    required_before = (
+        "Verify Windows Runner", "Verify JDK 17", "Verify Git and Bash",
+        "Verify Python", "Verify Android SDK", "Verify exact checked out commit",
+        "Verify Gradle wrapper 9.5.0 and Android plugin",
+    )
+    guarded_after = (
+        "Verify release version and Test source guardrails",
+        "Test live chart evidence verifier",
+        "Clear prior test reports before validation",
+        "Run unit tests, release lint and debug APK build",
+        "Verify live chart execution evidence",
+        "Verify actual public calendar network execution",
+        "Verify release and debug notification manifests",
+        "Prepare private verified Windows signing handoff",
+        "Verify private Release transport policy",
+        "Publish verified Test handoff to PRIVATE Release Assets (not Actions Artifact)",
+    )
+    require(len(results) == len(steps)
+            and all(results.get(name) == "success" for name in required_before)
+            and results.get(build_step) == "cancelled"
+            and all(results.get(name) == "skipped" for name in guarded_after)
+            and {name for name, result in results.items() if result == "cancelled"}
+                == {build_step}
+            and not any(result == "failure" for result in results.values()),
+            "interrupted_recovery_cancellation_boundary_unverified")
+    arts = api(test, TEST, "/actions/runs/" + str(old) + "/artifacts?per_page=100")
+    require(arts.get("total_count") == 0 and arts.get("artifacts") == [],
+            "interrupted_recovery_original_artifacts_exist")
+    # The replacement must still dispatch on the same Test/main SHA; later
+    # wait_run independently validates the replacement Run's immutable head_sha.
+    try:
+        current = current_source((
+            env.get("TEST_SOURCE_READ_TOKEN", ""), test,
+            env.get("TEST_RUNNER_READ_TOKEN", ""),
+            env.get("TEST_BILLING_READ_TOKEN", "")))
+        require(current == source, "interrupted_recovery_source_no_longer_main")
+    except Hold as error:
+        if str(error) != "test_main_contents_read_permission_missing":
+            raise
+    for repo, workflow, account in (
+            (TEST, TEST_WORKFLOW, test_account),
+            (TEST, HOSTED_WORKFLOW, test_account),
+            (SIGNER, SIGN_WORKFLOW, sign_account),
+            (SIGNER, CLOUD_SIGN_WORKFLOW, sign_account)):
+        check_idle(repo, workflow, account, env)
+    require(runner_ready(TEST, task["runnerName"], test_account, env),
+            "interrupted_recovery_windows_runner_not_ready")
+    state, blob = json_file(pub, STATE_PATH)
+    row = state.get("builds", {}).get(source)
+    require(state.get("version") == 1 and row == entry,
+            "interrupted_recovery_record_changed_no_repeat")
+    row.update(
+        phase="test_retry_reserved", testInterruptedRetries=1,
+        failedTestRunIds=[old],
+        testInterruptedRecovery={
+            "originalTestRunId": old,
+            "reviewedFailure": dict(failure),
+            "mode": "explicit_cancelled_build_full_rebuild",
+        },
+        updatedAt=datetime.now(timezone.utc).isoformat())
+    payload = {
+        "branch": "main", "sha": blob,
+        "message": "Reserve one reviewed exact-SHA interrupted Android rebuild",
+        "content": base64.b64encode(
+            (json.dumps(state, indent=2, sort_keys=True) + "\n").encode()).decode(),
+    }
+    saved = api(pub, RUNNER, "/contents/" + STATE_PATH,
+                method="PUT", payload=payload)
+    require(bool(saved.get("commit", {}).get("sha")),
+            "interrupted_recovery_reservation_uncertain")
+    confirmed, _ = json_file(pub, STATE_PATH)
+    require(confirmed == state,
+            "interrupted_recovery_reservation_unconfirmed")
+    fresh = dispatch(test, TEST, TEST_WORKFLOW, test_inputs(False))
+    require(fresh != old, "interrupted_recovery_new_run_id_not_distinct")
+    put_state(pub, source, "test_started", test_run_id=fresh)
+    record_public(source, "test_interrupted_recovery_started",
+                  previousTestRunId=old, testRunId=fresh, retryCount=1,
+                  publication="not_authorized")
+    return fresh
+
+
 def recover_reviewed_live_test(pub, test, source, entry, test_account, sign_account, env, task):
     """One explicit full rebuild after a reviewed live-validation failure.
 
@@ -1131,9 +1275,14 @@ def verify_live_execution(token, rid):
 
 def run(env, *, execute=False, resume=False, requested_sha="", live_smoke=False,
         recover_live_validation=False, verified_test_run_id=0,
-        recover_signer_prekey=False):
+        recover_signer_prekey=False, recover_interrupted_test=False):
     require(not recover_live_validation or (execute and resume),
             "live_recovery_requires_explicit_execute_resume")
+    require(not recover_interrupted_test or
+            (execute and resume and bool(requested_sha)
+             and not recover_live_validation and not recover_signer_prekey
+             and not verified_test_run_id),
+            "interrupted_recovery_requires_explicit_owner_resume")
     require(type(verified_test_run_id) is int and verified_test_run_id >= 0,
             "verified_test_run_id_invalid")
     require(not recover_signer_prekey or
@@ -1241,6 +1390,9 @@ def run(env, *, execute=False, resume=False, requested_sha="", live_smoke=False,
     if recover_live_validation:
         require(isinstance(entry, dict) and entry.get("phase") == "test_started",
                 "live_recovery_no_failed_test_to_review")
+    if recover_interrupted_test:
+        require(isinstance(entry, dict) and entry.get("phase") == "test_started",
+                "interrupted_recovery_no_failed_test_to_review")
     if recover_signer_prekey:
         require(isinstance(entry, dict) and entry.get("phase") == "signer_started"
                 and entry.get("sourceSha") == source
@@ -1298,6 +1450,11 @@ def run(env, *, execute=False, resume=False, requested_sha="", live_smoke=False,
     if verified_test_run_id:
         entry = recover_independent_verified_test(
             pub, test, source, entry, verified_test_run_id, env)
+    if recover_interrupted_test:
+        recover_reviewed_interrupted_test(
+            pub, test, source, entry, test_account, sign_account, env, task)
+        state, _ = json_file(pub, STATE_PATH)
+        entry = state["builds"][source]
     if recover_live_validation:
         recover_reviewed_live_test(pub, test, source, entry, test_account, sign_account, env, task)
         state, _ = json_file(pub, STATE_PATH)
@@ -1454,6 +1611,7 @@ def main():
     parser.add_argument("--live-smoke", action="store_true")
     parser.add_argument("--recover-live-validation", action="store_true")
     parser.add_argument("--recover-signer-prekey", action="store_true")
+    parser.add_argument("--recover-interrupted-test", action="store_true")
     parser.add_argument("--source-sha", default="")
     parser.add_argument("--verified-test-run-id", type=int, default=0)
     args = parser.parse_args()
@@ -1463,7 +1621,8 @@ def main():
             requested_sha=args.source_sha, live_smoke=args.live_smoke,
             recover_live_validation=args.recover_live_validation,
             verified_test_run_id=args.verified_test_run_id,
-            recover_signer_prekey=args.recover_signer_prekey)
+            recover_signer_prekey=args.recover_signer_prekey,
+            recover_interrupted_test=args.recover_interrupted_test)
         return 0
     except Hold as exc:
         reason = str(exc)

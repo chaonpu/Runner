@@ -49,7 +49,7 @@ class WorkflowContractTests(unittest.TestCase):
         text = (WORKFLOWS/'android-production.yml').read_text()
         inputs = text.split('    inputs:\n', 1)[1].split('\npermissions:', 1)[0]
         self.assertEqual(set(re.findall(r'(?m)^      (\w+):', inputs)),
-                         {'execute', 'resume', 'recover_live_validation', 'recover_signer_prekey', 'source_sha', 'verified_test_run_id'})
+                         {'execute', 'resume', 'recover_live_validation', 'recover_signer_prekey', 'recover_interrupted_test', 'source_sha', 'verified_test_run_id'})
         self.assertNotIn('live_smoke', text)
         self.assertNotIn('LIVE_SMOKE', text)
         self.assertNotIn('--live-smoke', text)
@@ -59,6 +59,8 @@ class WorkflowContractTests(unittest.TestCase):
         self.assertIn('--recover-live-validation', text)
         self.assertIn('RECOVER_SIGNER_PREKEY: ${{ inputs.recover_signer_prekey }}', text)
         self.assertIn('--recover-signer-prekey', text)
+        self.assertIn('RECOVER_INTERRUPTED_TEST: ${{ inputs.recover_interrupted_test }}', text)
+        self.assertIn('--recover-interrupted-test', text)
 
     def test_maintenance_schedule_and_permissions(self):
         text = (WORKFLOWS/'private-history-cleanup.yml').read_text()
