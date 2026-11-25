@@ -692,11 +692,11 @@
     "7d11dd7fc38b8876ead52e95745891f198acf91f": {
       "createdAt": "2026-11-25T05:09:39.435910+00:00",
       "liveSmoke": false,
-      "phase": "test_started",
+      "phase": "test_verified",
       "route": "windows",
       "sourceSha": "7d11dd7fc38b8876ead52e95745891f198acf91f",
       "testRunId": 45551626185,
-      "updatedAt": "2026-11-25T05:09:42.893585+00:00"
+      "updatedAt": "2026-11-25T05:39:07.576957+00:00"
     },
     "7d615f353d724e9f6bc3148455aefd4cd2b54e48": {
       "createdAt": "2026-10-28T01:57:32.974845+00:00",
