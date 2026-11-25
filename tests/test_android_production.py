@@ -318,6 +318,65 @@ class Tests(unittest.TestCase):
                 a.wait_run("private", a.TEST, a.TEST_WORKFLOW, 9, sha)
             self.assertEqual(request.call_count, 2)  # both GET; never dispatch
 
+    def test_newly_dispatched_run_initial_404_is_retried_by_exact_id(self):
+        sha = "a" * 40
+        item = self.record(a.TEST, a.TEST_WORKFLOW, 42, sha)
+        item.update(status="completed", conclusion="success")
+        not_visible = a.Hold("github_http_404_anwpustudent-lab_run_state_no_retry")
+        with patch.object(a, "api", side_effect=[not_visible, not_visible, item]) as get:
+            with patch.object(a.time, "sleep") as sleep:
+                with patch.object(a, "dispatch", side_effect=AssertionError("redispatch forbidden")):
+                    a.wait_run("private", a.TEST, a.TEST_WORKFLOW, 42, sha)
+        self.assertEqual(get.call_count, 3)
+        self.assertEqual([x.args[0] for x in sleep.call_args_list], [2, 4])
+        for call in get.call_args_list:
+            self.assertEqual(call.args, ("private", a.TEST, "/actions/runs/42"))
+
+    def test_persistent_initial_404_holds_after_bounded_reads(self):
+        sha = "a" * 40
+        not_visible = a.Hold("github_http_404_anwpustudent-lab_run_state_no_retry")
+        with patch.object(a, "api", side_effect=[not_visible] * 5) as get:
+            with patch.object(a.time, "sleep") as sleep:
+                with patch.object(a, "dispatch", side_effect=AssertionError("redispatch forbidden")):
+                    with self.assertRaisesRegex(a.Hold, "github_http_404_anwpustudent-lab_run_state_no_retry"):
+                        a.wait_run("private", a.TEST, a.TEST_WORKFLOW, 42, sha)
+        self.assertEqual(get.call_count, a.INITIAL_RUN_404_RETRIES + 1)
+        self.assertEqual([x.args[0] for x in sleep.call_args_list], [2, 4, 8, 8])
+
+    def test_initial_403_is_never_retried_or_reclassified(self):
+        sha = "a" * 40
+        denied = a.Hold("github_http_403_anwpustudent-lab_run_state_no_retry")
+        with patch.object(a, "api", side_effect=denied) as get:
+            with patch.object(a.time, "sleep") as sleep:
+                with self.assertRaisesRegex(a.Hold, "github_http_403"):
+                    a.wait_run("private", a.TEST, a.TEST_WORKFLOW, 42, sha)
+        self.assertEqual(get.call_count, 1)
+        sleep.assert_not_called()
+
+    def test_initial_404_does_not_allow_wrong_sha_to_be_verified(self):
+        sha = "a" * 40
+        forged = self.record(a.TEST, a.TEST_WORKFLOW, 42, "b" * 40)
+        forged.update(status="completed", conclusion="success")
+        not_visible = a.Hold("github_http_404_anwpustudent-lab_run_state_no_retry")
+        with patch.object(a, "api", side_effect=[not_visible, forged]) as get:
+            with patch.object(a.time, "sleep") as sleep:
+                with self.assertRaisesRegex(a.Hold, "source_moved_during_dispatch"):
+                    a.wait_run("private", a.TEST, a.TEST_WORKFLOW, 42, sha)
+        self.assertEqual(get.call_count, 2)
+        sleep.assert_called_once_with(2)
+
+    def test_404_after_verified_identity_still_fails_closed(self):
+        sha = "a" * 40
+        queued = self.record(a.TEST, a.TEST_WORKFLOW, 42, sha)
+        queued.update(status="queued", conclusion=None)
+        not_visible = a.Hold("github_http_404_anwpustudent-lab_run_state_no_retry")
+        with patch.object(a, "api", side_effect=[queued, not_visible]) as get:
+            with patch.object(a.time, "sleep") as sleep:
+                with self.assertRaisesRegex(a.Hold, "github_http_404"):
+                    a.wait_run("private", a.TEST, a.TEST_WORKFLOW, 42, sha)
+        self.assertEqual(get.call_count, 2)
+        sleep.assert_called_once_with(a.POLL_SECONDS)
+
     def test_failure_record_preserves_phase_and_bound_source(self):
         import base64
         import json

@@ -34,6 +34,9 @@ PHASES = {"reserved", "test_started", "test_retry_reserved", "test_verified",
           "signer_reserved", "signer_started", "signer_retry_reserved", "signed_verified"}
 POLL_SECONDS = 30
 MAX_WAIT_SECONDS = 3 * 60 * 60
+# GitHub may return a transient 404 just after workflow_dispatch returns its run ID.
+# Only the first read of that exact recorded run may be retried.
+INITIAL_RUN_404_RETRIES = 4
 
 
 class Hold(Exception):
@@ -599,9 +602,26 @@ def verify_completed_signer_retry(token, workflow, rid, expected_runner):
 
 def wait_run(token, repo, workflow, rid, source=None):
     deadline = time.monotonic() + MAX_WAIT_SECONDS
+    initial_404s = 0
+    origin_verified = False
     while time.monotonic() < deadline:
-        item = api(token, repo, "/actions/runs/" + str(rid))
+        try:
+            # This is a read of the original dispatch-returned ID, never a
+            # lookup by "latest" run and never another workflow dispatch.
+            item = api(token, repo, "/actions/runs/" + str(rid))
+        except Hold as exc:
+            # The run-details endpoint can lag a successful dispatch. Retry
+            # only its initial 404 (not 401/403, network errors or mismatched
+            # metadata), and preserve the original failure if it persists.
+            not_visible = f"github_http_404_{repo.split('/')[0]}_run_state_no_retry"
+            if (not origin_verified and str(exc) == not_visible
+                    and initial_404s < INITIAL_RUN_404_RETRIES):
+                initial_404s += 1
+                time.sleep(min(2 ** initial_404s, 8))
+                continue
+            raise
         validate_run(item, repo, workflow, rid, source)
+        origin_verified = True
         if item.get("status") == "completed":
             conclusion = item.get("conclusion")
             if conclusion == "cancelled":
