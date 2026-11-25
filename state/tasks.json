@@ -894,9 +894,9 @@
       "route": "cloud",
       "runId": 45565085446,
       "sourceSha": "d15dab9240f063bf98a8b9fbd7a6aa594e371d4a",
-      "status": "awaiting_effect_verification",
+      "status": "verified",
       "task": "stock_a",
-      "updatedAt": "2026-11-25T07:10:22.627288+00:00",
+      "updatedAt": "2026-11-25T07:10:27.203110+00:00",
       "workflow": "run-a-share.yml"
     }
   ]
