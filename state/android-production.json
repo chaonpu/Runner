@@ -960,11 +960,12 @@
     "a5bc020937ee2917358549d38f6f26380e5bc05a": {
       "createdAt": "2026-11-26T14:29:02.790688+00:00",
       "liveSmoke": false,
-      "phase": "test_verified",
+      "phase": "signer_reserved",
       "route": "windows",
+      "signingRoute": "cloud",
       "sourceSha": "a5bc020937ee2917358549d38f6f26380e5bc05a",
       "testRunId": 45839465686,
-      "updatedAt": "2026-11-26T14:59:32.498209+00:00"
+      "updatedAt": "2026-11-26T14:59:42.731626+00:00"
     },
     "a6945c3fb1044ef442daa82a12f1200d32153888": {
       "createdAt": "2026-11-17T05:33:37.628905+00:00",
