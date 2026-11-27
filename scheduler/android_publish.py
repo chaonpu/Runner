@@ -347,14 +347,19 @@ def verify_public(req, token=""):
     return url
 
 
-def wait_public(rid, token=""):
+def wait_public(rid, token="", *, approved_attempt=1):
+    # A second attempt is accepted only when the manual Runner entry explicitly
+    # names the same original public run. The default stays fail-closed.
+    need(type(approved_attempt) is int and approved_attempt in (1, 2),
+         "public_recovery_attempt_unapproved")
     deadline = time.monotonic() + 20 * 60
     while time.monotonic() < deadline:
         run = public_api("/actions/runs/" + str(rid), token)
         need(run.get("id") == rid and run.get("repository", {}).get("full_name") == REPO
              and run.get("path", "").split("@")[0] == ".github/workflows/" + WORKFLOW
              and run.get("event") == "workflow_dispatch" and run.get("head_branch") == "main"
-             and run.get("run_attempt") == 1 and run.get("actor", {}).get("login") == "chaonpu",
+             and run.get("run_attempt") == approved_attempt
+             and run.get("actor", {}).get("login") == "chaonpu",
              "publication_run_origin_mismatch")
         if run.get("status") == "completed":
             need(run.get("conclusion") == "success", "publication_failed_review_original_run")
@@ -464,6 +469,11 @@ def run(env, *, source, version, code, log, mode="prepare", execute=False):
     state, _ = build.json_file(env["GH_TOKEN"], STATE)
     key = str(code)
     row = state.get("releases", {}).get(key)
+    recovery_run_id = env.get("PUBLIC_RECOVERY_RUN_ID", "").strip()
+    if recovery_run_id:
+        need(row is not None and row.get("phase") == "publishing"
+             and recovery_run_id == str(row.get("publicRunId")),
+             "public_recovery_requires_exact_publishing_run")
     if row:
         need(all(row.get(k) == req[k] for k in req), "version_publication_identity_conflict")
     if mode == "publish" and execute:
@@ -540,7 +550,8 @@ def run(env, *, source, version, code, log, mode="prepare", execute=False):
         row = next_row
     need(row["phase"] != "dispatch_reserved", "publication_dispatch_unknown_no_repeat")
     if row["phase"] == "publishing":
-        wait_public(row["publicRunId"], env.get("CHAONPU_ACTIONS_READ_TOKEN", ""))
+        wait_public(row["publicRunId"], env.get("CHAONPU_ACTIONS_READ_TOKEN", ""),
+                    approved_attempt=2 if recovery_run_id else 1)
         verify_public(publish_request, env.get("CHAONPU_ACTIONS_READ_TOKEN", ""))
         publication_verified = True
         next_row = dict(row, phase="published")
