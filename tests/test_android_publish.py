@@ -42,7 +42,7 @@ class Tests(unittest.TestCase):
                     p.signed_request(ENV,SOURCE,'2.3.5',118,'Log')
 
     def invoke(self, state=None, mode='prepare', execute=False, token=False, fail_stage=False, bad_response=False,
-               fail_verify=False, fail_cleanup=False, fail_preview=False):
+               fail_verify=False, fail_cleanup=False, fail_preview=False, recovery_run_id=""):
         registry={'version':1,'releases':{}}
         if state: registry['releases']['118']=deepcopy(state)
         self.events=[]
@@ -67,6 +67,7 @@ class Tests(unittest.TestCase):
             return {'status':'deleted','releaseId':999}
         env=dict(ENV)
         if token:env['CHAONPU_ACTIONS_READ_TOKEN']='fake-chaonpu-actions'
+        if recovery_run_id:env['PUBLIC_RECOVERY_RUN_ID']=recovery_run_id
         with tempfile.TemporaryDirectory() as directory:
             old=Path.cwd()
             import os
@@ -83,6 +84,7 @@ class Tests(unittest.TestCase):
                                   if fail_preview else None) as preview_check:
                     self.cleanup_mock=clean
                     self.preview_mock=preview_check
+                    self.wait_mock=wait
                     result=p.run(env,source=SOURCE,version='2.3.5',code=118,log='Test update',mode=mode,execute=execute)
                     self.wait_count=wait.call_count
                     self.verify_count=verify.call_count
@@ -151,6 +153,25 @@ class Tests(unittest.TestCase):
         self.assertEqual(self.events,['dispatch_reserved','POST','publishing','published','cleanup_recorded'])
         self.assertEqual(self.wait_count,1)
 
+
+    def test_explicit_recovery_requires_exact_original_publishing_run(self):
+        state=dict(REQ,phase='publishing',publishRequest=PUBLISH,publicRunId=789)
+        for run_id in ('788', 'not-a-run-id'):
+            with self.subTest(run_id=run_id),self.assertRaisesRegex(
+                    p.build.Hold,'public_recovery_requires_exact_publishing_run'):
+                self.invoke(state=state,mode='publish',execute=True,token=True,
+                            recovery_run_id=run_id)
+            self.assertEqual(self.events,[])
+
+    def test_approved_second_attempt_reuses_original_run_without_redispatch(self):
+        state=dict(REQ,phase='publishing',publishRequest=PUBLISH,publicRunId=789)
+        result=self.invoke(state=state,mode='publish',execute=True,token=True,
+                           recovery_run_id='789')
+        self.assertTrue(result['published'])
+        self.wait_mock.assert_called_once_with(
+            789, 'fake-chaonpu-actions', approved_attempt=2)
+        self.assertEqual(self.events,['published','cleanup_recorded'])
+
     def test_preview_cannot_operate_on_publishing_or_published_version(self):
         for phase in ('staging_reserved','dispatch_reserved','publishing','published'):
             with self.subTest(phase=phase),self.assertRaisesRegex(
@@ -217,6 +238,35 @@ class Tests(unittest.TestCase):
             self.invoke(state=dict(REQ,sourceCommit='f'*40,phase='prepared'),execute=True)
         self.assertEqual(self.events,[])
 
+
+
+
+class PublicRunAttemptRecoveryTests(unittest.TestCase):
+    def payload(self, attempt, actor='chaonpu'):
+        return {'id':789, 'repository':{'full_name':p.REPO},
+                'path':'.github/workflows/'+p.WORKFLOW,
+                'event':'workflow_dispatch', 'head_branch':'main',
+                'run_attempt':attempt, 'actor':{'login':actor},
+                'status':'completed', 'conclusion':'success'}
+
+    def test_unapproved_second_attempt_stays_blocked(self):
+        with patch.object(p,'public_api',return_value=self.payload(2)):
+            with self.assertRaisesRegex(p.build.Hold,'publication_run_origin_mismatch'):
+                p.wait_public(789,'read-token')
+
+    def test_approved_second_attempt_keeps_original_identity_binding(self):
+        with patch.object(p,'public_api',return_value=self.payload(2)) as api:
+            p.wait_public(789,'read-token',approved_attempt=2)
+            api.assert_called_once_with('/actions/runs/789','read-token')
+        with patch.object(p,'public_api',return_value=self.payload(2,actor='other')):
+            with self.assertRaisesRegex(p.build.Hold,'publication_run_origin_mismatch'):
+                p.wait_public(789,'read-token',approved_attempt=2)
+
+    def test_unsupported_attempt_never_reads_or_dispatches(self):
+        with patch.object(p,'public_api') as api:
+            with self.assertRaisesRegex(p.build.Hold,'public_recovery_attempt_unapproved'):
+                p.wait_public(789,'read-token',approved_attempt=3)
+            api.assert_not_called()
 
 
 class RegistryCommitConfirmationTests(unittest.TestCase):
