@@ -910,9 +910,11 @@
     "9c3d4908a2878f204718c554623974406b86b174": {
       "createdAt": "2026-11-27T13:16:21.331033+00:00",
       "liveSmoke": false,
-      "phase": "reserved",
+      "phase": "test_started",
       "route": "windows",
-      "sourceSha": "9c3d4908a2878f204718c554623974406b86b174"
+      "sourceSha": "9c3d4908a2878f204718c554623974406b86b174",
+      "testRunId": 46005677503,
+      "updatedAt": "2026-11-27T13:16:25.275374+00:00"
     },
     "9e3ebb62510de56e5d697ff771d54cf9084d46ce": {
       "createdAt": "2026-10-31T01:30:36.714054+00:00",
