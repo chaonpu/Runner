@@ -144,11 +144,12 @@ class WorkflowContractTests(unittest.TestCase):
         text = (WORKFLOWS/'android-publish.yml').read_text()
         self.assertIn('scheduler.android_publish', text)
         inputs = text.split('    inputs:\n', 1)[1].split('\npermissions:', 1)[0]
-        self.assertEqual(set(re.findall(r'(?m)^      (\w+):', inputs)), {'update_log', 'release_mode'})
+        self.assertEqual(set(re.findall(r'(?m)^      (\w+):', inputs)), {'update_log', 'release_mode', 'public_recovery_run_id'})
         self.assertIn('type: choice', inputs)
         self.assertIn('          - "预览"', inputs)
         self.assertIn('          - "正式"', inputs)
         self.assertIn('RELEASE_MODE: ${{ inputs.release_mode }}', text)
+        self.assertIn('PUBLIC_RECOVERY_RUN_ID: ${{ inputs.public_recovery_run_id }}', text)
         self.assertIn('--release-mode "$mode"', text)
         self.assertNotIn('inputs.mode', text)
         self.assertNotIn('inputs.source_sha', text)

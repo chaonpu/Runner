@@ -16,6 +16,11 @@ on:
         type: string
         required: false
         default: ""
+      public_recovery_run_id:
+        description: "仅原公开发布失败且核对后填写其 Run ID；正常留空"
+        type: string
+        required: false
+        default: ""
 
 permissions:
   contents: write
@@ -38,6 +43,7 @@ jobs:
       TEST_SOURCE_READ_TOKEN: ${{ secrets.TEST_SOURCE_READ_TOKEN }}
       UPDATE_LOG: ${{ inputs.update_log }}
       RELEASE_MODE: ${{ inputs.release_mode }}
+      PUBLIC_RECOVERY_RUN_ID: ${{ inputs.public_recovery_run_id }}
     steps:
       - uses: actions/checkout@v4
         with:
